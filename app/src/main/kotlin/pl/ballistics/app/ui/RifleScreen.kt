@@ -86,7 +86,7 @@ fun RifleScreen(
                     Text(stringResource(R.string.error_no_weapon))
                 } else {
                     Picker(
-                        stringResource(R.string.label_rifle), w, data.weapons, { it.name },
+                        stringResource(R.string.label_rifle), ImageVector.vectorResource(R.drawable.ic_tab_rifle), w, data.weapons, { it.name },
                         onSelect = { onSelectWeapon(it.id) },
                         editLabel = stringResource(R.string.action_edit_rifle),
                         onEdit = { onEditWeapon(w) },
@@ -97,6 +97,7 @@ fun RifleScreen(
                     val choose = stringResource(R.string.choose)
                     Picker(
                         stringResource(R.string.label_load),
+                        ImageVector.vectorResource(R.drawable.ic_ammo),
                         load,
                         listOf<AmmoProfile?>(null) + shown,
                         { it?.name ?: choose },
@@ -146,6 +147,7 @@ fun RifleScreen(
 @Composable
 private fun <T> Picker(
     label: String,
+    icon: ImageVector,
     selected: T,
     options: List<T>,
     name: @Composable (T) -> String,
@@ -161,7 +163,8 @@ private fun <T> Picker(
                 onValueChange = {},
                 readOnly = true,
                 singleLine = true,
-                label = { Text(label) },
+                // The icon says what is picked; the label stays for screen readers.
+                leadingIcon = { Icon(icon, label) },
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = open) },
                 modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
             )

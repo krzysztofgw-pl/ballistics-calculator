@@ -16,7 +16,7 @@ your scope's reticle, and syncs everything to the cloud.
 The first tab: the rifle and load in use, picked from full-width dropdowns, with a wrench next to each
 to edit it, a one-line summary (caliber, scope, zero, muzzle velocity) and the profile list. Help and
 settings sit at its top right; there is no title bar, the tabs name the screen. When the rifle has a
-suppressor configured, a switch says whether it is on; a small suppressor badge on the Rifle tab shows it on every tab.
+suppressor configured, a switch says whether it is on; the rifle on the Rifle tab icon then carries a suppressor. Rifles and loads are marked with rifle and cartridge icons instead of their names (the pickers on the Rifle tab, the profile list, the editors).
 
 ### Profiles
 Settings → Profiles (or the Profiles button on the Rifle tab) lists and edits rifles and loads.

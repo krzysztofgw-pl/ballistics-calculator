@@ -24,7 +24,9 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.vectorResource
 import pl.ballistics.app.R
 import androidx.compose.ui.unit.dp
 import pl.ballistics.app.data.AmmoProfile
@@ -49,7 +51,7 @@ fun ProfilesScreen(
         modifier.verticalScroll(rememberScrollState()).padding(12.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Section(stringResource(R.string.section_rifles)) {
+        Section(stringResource(R.string.section_rifles), ImageVector.vectorResource(R.drawable.ic_tab_rifle)) {
             data.weapons.forEach { w ->
                 ProfileRow(
                     title = w.name,
@@ -66,7 +68,7 @@ fun ProfilesScreen(
             }
         }
 
-        Section(stringResource(R.string.section_loads)) {
+        Section(stringResource(R.string.section_loads), ImageVector.vectorResource(R.drawable.ic_ammo)) {
             data.ammo
                 .sortedWith(compareBy({ it.diameterInOrMax() }, { it.caliberGroup() }, { it.name }))
                 .groupBy { it.caliberGroup() }
