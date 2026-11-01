@@ -13,6 +13,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import pl.ballistics.app.data.AmmoProfile
 import pl.ballistics.app.data.AppData
+import pl.ballistics.app.data.BulletLibrary
 import pl.ballistics.app.data.CloudSync
 import pl.ballistics.app.data.SyncState
 import pl.ballistics.app.data.Conditions
@@ -40,6 +41,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     init {
         recalculate(debounce = false)
+        viewModelScope.launch { BulletLibrary.refresh(application) }
     }
 
     private fun update(transform: (AppData) -> AppData) {

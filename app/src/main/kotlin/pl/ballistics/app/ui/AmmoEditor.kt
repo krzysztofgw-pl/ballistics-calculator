@@ -17,6 +17,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -29,6 +30,7 @@ import pl.ballistics.app.R
 import pl.ballistics.app.TargetInputs
 import androidx.compose.ui.unit.dp
 import pl.ballistics.app.data.AmmoProfile
+import pl.ballistics.app.data.Bullet
 import pl.ballistics.app.data.BulletLibrary
 import pl.ballistics.app.data.Cartridges
 import pl.ballistics.app.toNumber
@@ -44,9 +46,9 @@ import kotlin.math.roundToInt
 private enum class Picker { BULLET, FACTORY }
 
 /** Cartridges that have bullets in the library, smallest first. */
-private val bulletFilters: List<String> by lazy {
-    val diameters = BulletLibrary.bullets.map { it.diameterIn }.distinct()
-    Cartridges.all.filter { c -> diameters.any { Cartridges.sameDiameter(it, c.bulletDiameterIn) } }
+private fun bulletFilters(bullets: List<Bullet>): List<String> {
+    val diameters = bullets.map { it.diameterIn }.distinct()
+    return Cartridges.all.filter { c -> diameters.any { Cartridges.sameDiameter(it, c.bulletDiameterIn) } }
         .sortedBy { it.bulletDiameterIn }
         .map { it.name }
 }
@@ -148,13 +150,14 @@ fun AmmoEditor(
         }
     }
 
+    val bullets = BulletLibrary.state.collectAsState().value.current
     when (picker) {
         Picker.BULLET -> LibraryDialog(
             title = stringResource(R.string.title_bullets),
-            options = BulletLibrary.bullets,
+            options = bullets,
             label = { it.label },
             group = { Cartridges.caliberName(it.diameterIn) },
-            filters = bulletFilters,
+            filters = remember(bullets) { bulletFilters(bullets) },
             filterLabel = { it },
             matches = { b, f -> Cartridges.find(f)?.let { Cartridges.sameDiameter(it.bulletDiameterIn, b.diameterIn) } ?: true },
             initialFilter = Cartridges.find(a.cartridge)?.name,
