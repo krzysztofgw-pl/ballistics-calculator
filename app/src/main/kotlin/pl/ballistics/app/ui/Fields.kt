@@ -1,5 +1,6 @@
 package pl.ballistics.app.ui
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,6 +12,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Card
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -23,9 +25,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import pl.ballistics.app.R
 import pl.ballistics.app.toNumber
 
 @Composable
@@ -46,6 +50,8 @@ fun NumberField(
     modifier: Modifier = Modifier,
     optional: Boolean = false,
     placeholder: String? = null,
+    /** Given, the unit becomes a button that switches it. */
+    onUnitClick: (() -> Unit)? = null,
     onChange: (String) -> Unit,
 ) {
     OutlinedTextField(
@@ -53,7 +59,19 @@ fun NumberField(
         onValueChange = onChange,
         label = { Text(label) },
         placeholder = placeholder?.let { { Text(it) } },
-        suffix = { Text(unit) },
+        suffix = { if (onUnitClick == null) Text(unit) },
+        trailingIcon = if (onUnitClick == null) null else {
+            {
+                Text(
+                    unit,
+                    Modifier
+                        .clickable(onClickLabel = stringResource(R.string.action_switch_unit), onClick = onUnitClick)
+                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                    color = MaterialTheme.colorScheme.primary,
+                    style = MaterialTheme.typography.labelLarge,
+                )
+            }
+        },
         singleLine = true,
         isError = !(optional && value.isBlank()) && value.toNumber() == null,
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
@@ -66,6 +84,16 @@ fun NumberField(
 fun FieldRow(content: @Composable (Modifier) -> Unit) {
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         content(Modifier.weight(1f))
+    }
+}
+
+/** A choice between two named options, as two chips; [onChange] gets whether the first is picked. */
+@Composable
+fun TwoOptions(label: String, first: String, second: String, firstSelected: Boolean, onChange: (Boolean) -> Unit) {
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(label, Modifier.weight(1f))
+        FilterChip(selected = firstSelected, onClick = { onChange(true) }, label = { Text(first) })
+        FilterChip(selected = !firstSelected, onClick = { onChange(false) }, label = { Text(second) })
     }
 }
 

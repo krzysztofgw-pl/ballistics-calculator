@@ -17,7 +17,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.FilterChip
@@ -217,7 +216,7 @@ private fun WindAndAzimuthDial(i: Conditions, ui: UiSettings, update: ((Conditio
 
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         OutlinedButton(onClick = { withPermission { forecast = true } }, modifier = Modifier.weight(1f)) {
-            Icon(Icons.Filled.Refresh, contentDescription = null, modifier = Modifier.size(ButtonDefaults.IconSize))
+            Icon(ImageVector.vectorResource(R.drawable.ic_forecast), contentDescription = null, modifier = Modifier.size(ButtonDefaults.IconSize))
             Spacer(Modifier.width(ButtonDefaults.IconSpacing))
             Text(stringResource(R.string.action_forecast_short), maxLines = 1)
         }

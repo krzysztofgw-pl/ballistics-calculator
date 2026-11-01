@@ -112,14 +112,15 @@
     <string name="label_test_barrel">in a barrel of</string>
     <string name="measured_in_rifle">%1$s: %2$s m/s measured</string>
     <string name="label_barrel_length">Barrel length</string>
+    <string name="action_switch_unit">Switch unit</string>
     <string name="label_rifle_velocity">Muzzle velocity in this rifle (chronograph)</string>
     <string name="reference_velocity">Load data: %1$s m/s.</string>
-    <string name="reference_velocity_barrel">Load data: %1$s m/s from a %2$s cm barrel.</string>
+    <string name="reference_velocity_barrel">Load data: %1$s m/s from a %2$s barrel.</string>
     <string name="test_barrel_unknown">Its barrel length is not given.</string>
     <string name="barrel_unknown">Enter this rifle\'s barrel length to compare.</string>
     <string name="barrel_same">This rifle\'s barrel is the same length.</string>
-    <string name="barrel_shorter">This rifle\'s %1$s cm barrel is %2$s cm shorter.</string>
-    <string name="barrel_longer">This rifle\'s %1$s cm barrel is %2$s cm longer.</string>
+    <string name="barrel_shorter">This rifle\'s %1$s barrel is %2$s shorter.</string>
+    <string name="barrel_longer">This rifle\'s %1$s barrel is %2$s longer.</string>
     <string name="velocity_used_rifle">Using the velocity measured with this rifle.</string>
     <string name="velocity_used_reference">Using the load data; measure the velocity with this rifle for accurate dope.</string>
     <string name="label_powder_sensitivity">Powder temp sensitivity</string>
@@ -143,7 +144,9 @@
     <string name="label_humidity">Humidity</string>
     <string name="label_pressure_qnh">Pressure (QNH)</string>
     <string name="label_pressure_station">Station pressure</string>
-    <string name="label_station_pressure">Station pressure (off: QNH)</string>
+    <string name="label_pressure">Pressure</string>
+    <string name="option_qnh">QNH</string>
+    <string name="option_station">Station</string>
     <string name="section_devices">External devices</string>
     <string name="section_about">About</string>
     <string name="app_version">Version %1$s</string>
@@ -292,6 +295,7 @@
     <string name="field_pressure">pressure</string>
     <string name="field_humidity">humidity</string>
     <string name="field_zero_pressure">pressure at zeroing</string>
+    <string name="field_zero_altitude">altitude at zeroing</string>
     <string name="field_zero_temperature">temperature at zeroing</string>
     <string name="field_wind_speed">wind speed</string>
     <string name="field_wind_direction">wind direction</string>
@@ -383,4 +387,31 @@
     <string name="label_location_altitude">Forecast sets the altitude (terrain height)</string>
     <string name="action_forecast_short">Forecast</string>
     <string name="action_compass_short">Compass</string>
+
+    <!-- Help: each answer's paragraphs are separated by a blank line (\n\n). -->
+    <string name="title_help">Help</string>
+    <string name="help_start_title">Where do I start?</string>
+    <string name="help_start">Profiles: add your rifle with its scope and zero, and your load (from the library or your own data). Pick the rifle; its zeroed load comes with it.\n\nConditions: set the wind, temperature, pressure and altitude, and the shot angle if you shoot up or down.\n\nTable gives the dope for every range; Target gives the correction for one distance, drawn on your reticle.</string>
+    <string name="help_zero_title">What goes into the zero?</string>
+    <string name="help_zero">The zero range and the temperature and pressure on the day you zeroed. The app computes the bore angle that hits at that range in those conditions, and keeps it for every other shot.\n\nIf you zeroed in very different weather, entering it moves the whole table by the difference.</string>
+    <string name="help_pressure_title">QNH or station pressure?</string>
+    <string name="help_pressure">QNH is the pressure reduced to sea level: weather reports, forecasts and airports give it. With QNH the app also needs the altitude, to work out the pressure where you stand.\n\nStation pressure is what a barometer reads where you are: a Kestrel or a Garmin watch. It needs no altitude.\n\nPick the one you actually have; using QNH as station pressure at altitude is a large error.</string>
+    <string name="help_velocity_title">Which muzzle velocity is used?</string>
+    <string name="help_velocity">The velocity you measured with this rifle and this load, if you entered one in the rifle\'s zero section. Otherwise the load\'s reference velocity, which was measured in its test barrel: a shorter barrel is usually slower.\n\nThe velocity follows the air temperature with the load\'s powder sensitivity.</string>
+    <string name="help_wind_title">How do I enter the wind?</string>
+    <string name="help_wind">Tap the dial to unlock it (its rim turns coloured), then tap or drag to set it; a tap anywhere else locks it, so scrolling over it changes nothing. With north up, the shot goes out along the azimuth and the wind comes from its true bearing; otherwise the line of fire points up and the wind reads like a clock.\n\nForecast fills in the wind for your location and a chosen time window; the wind bracket on Target shows the lightest and strongest case.</string>
+    <string name="help_angle_title">How do I measure the shot angle?</string>
+    <string name="help_angle">Tap the camera between Shot angle and Cant and aim the crosshair at the target: the gravity sensor gives the angle.\n\nCalibrate once per orientation: aim at a mark, then turn the phone over and aim again. This removes the camera\'s tilt in the phone.</string>
+    <string name="help_target_title">How do I read the Target screen?</string>
+    <string name="help_target">Set the distance with the field, the arrows or the slider. The corners of the reticle say what to dial and what to hold for elevation and windage; the red points are where the bullet goes at each distance.\n\nWhether each axis is dialed or held is set per reticle in Settings. Dial corrections are whole clicks, holds are to 0.05.</string>
+    <string name="help_moving_title">How does the moving target work?</string>
+    <string name="help_moving">Tick Moving target, enter its speed and set its course on the small dial in the reticle\'s corner (tap it first to unlock it): up is away from you, right is to the right.\n\nThe blue point is where to hold so the bullet meets the target, using the time of flight.</string>
+    <string name="help_table_title">What is in the table?</string>
+    <string name="help_table">For each range: drop, elevation and clicks, wind drift and windage, velocity, energy, time of flight and Mach. Its range and step are set below it.</string>
+    <string name="help_sync_title">How are my profiles kept?</string>
+    <string name="help_sync">Sign in with Google in Settings to sync between phones. Export writes all profiles to a file you can import again, here or in the web version.</string>
+    <string name="help_update_title">How do I update the app?</string>
+    <string name="help_update">Settings, About, Check for update downloads the newest build and opens the installer. Turn on the check at start to be told when there is one.</string>
+    <string name="help_accuracy_title">How far can I trust it?</string>
+    <string name="help_accuracy">It is only as good as its inputs: muzzle velocity, BC, the zero and the wind matter most. Confirm the dope with live fire at the distances you use, and correct the velocity until the table matches your hits.</string>
 </resources>

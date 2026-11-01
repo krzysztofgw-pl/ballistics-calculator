@@ -59,6 +59,7 @@ private sealed interface Editor {
     data class Weapon(val profile: WeaponProfile) : Editor
     data class Ammo(val profile: AmmoProfile) : Editor
     data object Settings : Editor
+    data object Help : Editor
 }
 
 private const val TARGET_TAB = 3
@@ -102,6 +103,11 @@ fun App(vm: MainViewModel = viewModel()) {
             )
             return
         }
+        Editor.Help -> {
+            BackHandler { editor = null }
+            HelpScreen(onClose = { editor = null })
+            return
+        }
         Editor.Settings -> {
             BackHandler { editor = null }
             SettingsScreen(
@@ -139,11 +145,15 @@ fun App(vm: MainViewModel = viewModel()) {
     }
 
     Scaffold(
+        modifier = Modifier.lockDialsOnOutsideTap(),
         topBar = {
             Column {
                 TopAppBar(
                     title = { Text(stringResource(tabs[tab].title)) },
                     actions = {
+                        IconButton(onClick = { editor = Editor.Help }) {
+                            Icon(ImageVector.vectorResource(R.drawable.ic_help), stringResource(R.string.title_help))
+                        }
                         IconButton(onClick = { editor = Editor.Settings }) {
                             Icon(Icons.Filled.Settings, stringResource(R.string.title_settings))
                         }

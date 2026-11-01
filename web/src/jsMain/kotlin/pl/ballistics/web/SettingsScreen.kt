@@ -27,8 +27,9 @@ object SettingsScreen {
             root.card(S.sectionCorrections) {
                 el("p", "hint", w.name)
                 val now = ui.correction(w.reticleId)
-                switch(S.labelDialElevation, now.dialElevation) { v -> setCorrection(w.reticleId) { it.copy(dialElevation = v) } }
-                switch(S.labelDialWindage, now.dialWindage) { v -> setCorrection(w.reticleId) { it.copy(dialWindage = v) } }
+                val dialOrHold = listOf(true to S.optionDial, false to S.optionHold)
+                select(S.labelElevationCorrection, dialOrHold, now.dialElevation) { v -> setCorrection(w.reticleId) { it.copy(dialElevation = v) } }
+                select(S.labelWindageCorrection, dialOrHold, now.dialWindage) { v -> setCorrection(w.reticleId) { it.copy(dialWindage = v) } }
             }
         }
         root.card(S.sectionBackup) {

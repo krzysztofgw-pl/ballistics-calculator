@@ -95,10 +95,13 @@ object Calculator {
         } else {
             Atmosphere(altitude, pressurePa, temperature, humidity)
         }
-        val zeroAtmosphere = Atmosphere(
-            stationPressurePa = num(w.zeroPressureHpa, R.string.field_zero_pressure, true) * Units.HPA,
-            temperatureC = num(w.zeroTemperatureC, R.string.field_zero_temperature),
-        )
+        val zeroPressurePa = num(w.zeroPressureHpa, R.string.field_zero_pressure, true) * Units.HPA
+        val zeroTemperature = num(w.zeroTemperatureC, R.string.field_zero_temperature)
+        val zeroAtmosphere = if (w.zeroPressureIsQnh) {
+            Atmosphere.fromSeaLevelPressure(zeroPressurePa, num(w.zeroAltitudeM, R.string.field_zero_altitude), zeroTemperature)
+        } else {
+            Atmosphere(stationPressurePa = zeroPressurePa, temperatureC = zeroTemperature)
+        }
 
         val windSpeed = num(c.windSpeed, R.string.field_wind_speed)
         val winds = if (windSpeed != 0.0) listOf(Wind.fromClock(windSpeed, num(c.windDirectionDeg, R.string.field_wind_direction) / 30)) else emptyList()

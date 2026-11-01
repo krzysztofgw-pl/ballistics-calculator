@@ -13,9 +13,10 @@ your scope's reticle, and syncs everything to the cloud.
 ## Features
 
 ### Profiles
-- **Rifles**: name, barrel length, scope (turret unit MRAD or MOA, click value, reticle and its scale step when the scope's differs
+- **Rifles**: name, barrel length (inches or cm: tap the unit), scope (turret unit MRAD or MOA, click value, reticle and its scale step when the scope's differs
   from the design (e.g. 0.1 MRAD), first or second focal plane,
-  calibration and maximum magnification), sight height, zero range and the load it is zeroed with.
+  calibration and maximum magnification), sight height, zero range and the load it is zeroed with, and the zeroing
+  temperature and pressure (station pressure, or QNH with the zeroing altitude).
 - **Sight height helper**: compute it from a caliper measurement, or estimate it from the objective diameter,
   ring height and rail.
 - **Loads**: reference muzzle velocity with the barrel length it was measured in, powder temperature sensitivity, bullet weight, diameter, length and twist,
@@ -40,7 +41,8 @@ Coriolis (latitude), spin drift and aerodynamic jump. Each tab keeps its scroll 
 - **Wind and azimuth dial**: one 360° dial for both, with a switch for which one a tap or drag sets.
   North up it reads like a map: the shot goes out along the azimuth and the wind comes in from its true
   bearing. Otherwise the line of fire points up, the wind reads as a clock and a north marker shows the
-  azimuth. Moving the azimuth keeps the wind where it is in the frame shown.
+  azimuth. Moving the azimuth keeps the wind where it is in the frame shown. A dial takes touches only after a
+  tap unlocks it (its rim turns coloured); a tap anywhere else locks it, so scrolling over it changes nothing.
 - **Phone compass** for the azimuth, corrected for magnetic declination when the location is known. Each
   reading is checked: the phone's own calibration status and heading accuracy, and the measured field
   against the Earth's field at the location. A warning suggests a figure-eight calibration away from steel.
@@ -86,6 +88,10 @@ or held. Dial corrections are whole clicks and holds are to 0.05; the reticle sh
   group (rifle) and how well the wind and the distance are known. Each source's spread comes from the
   full solution; a 5-shot group is taken as three standard deviations.
 - Ranging with the reticle: distance from the target size and its reading in the reticle.
+
+### Help
+The question mark next to the gear: short answers on getting started, the zero, QNH or station pressure,
+muzzle velocity, wind, shot angle, the Target screen, moving targets, sync, updates and accuracy.
 
 ### Settings
 The gear in the top bar: light, dark or system theme; keep the screen on; tabs and sub-tabs at the top

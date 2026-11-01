@@ -18,7 +18,7 @@ object ConditionsScreen {
                 numberField(S.labelPressure, c.pressureHpa, "hPa") { v -> Store.updateConditions { it.copy(pressureHpa = v) } }
                 numberField(S.labelAltitude, c.altitudeM, "m") { v -> Store.updateConditions { it.copy(altitudeM = v) } }
             }
-            switch(S.labelStationPressure, !c.pressureIsQnh) { v -> Store.updateConditions { it.copy(pressureIsQnh = !v) } }
+            select(S.labelPressureKind, listOf(true to S.optionQnh, false to S.optionStation), c.pressureIsQnh) { v -> Store.updateConditions { it.copy(pressureIsQnh = v) } }
         }
         root.card(S.sectionWind) {
             row {
