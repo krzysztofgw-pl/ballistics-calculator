@@ -52,10 +52,30 @@ data class WeaponProfile(
     /** The zero pressure is QNH, reduced to station pressure with [zeroAltitudeM]; off, it is station pressure. */
     val zeroPressureIsQnh: Boolean = false,
     val zeroAltitudeM: String = "0",
+    val suppressor: Boolean = false,
+    val suppressorMounted: Boolean = true,
+    val zeroSuppressed: Boolean = true,
+    val suppressorShiftUp: String = "",
+    val suppressorShiftRight: String = "",
     val ammoId: String? = null,
     val groupMoa: String = "",
     val muzzleVelocities: Map<String, String> = emptyMap(),
 ) {
+    /** Impact shift (up, right) in [angularUnit] against the zero while the suppressor is not as zeroed; null when it is. */
+    fun suppressorShift(): Pair<Double, Double>? {
+        if (!suppressor || suppressorMounted == zeroSuppressed) return null
+        val up = suppressorShiftUp.toNumber() ?: 0.0
+        val right = suppressorShiftRight.toNumber() ?: 0.0
+        return if (up == 0.0 && right == 0.0) null else Pair(up, right)
+    }
+
+    /** Zeroing in the other state: the shift is now measured from there, so it changes sign. */
+    fun withZeroSuppressed(suppressed: Boolean): WeaponProfile {
+        if (suppressed == zeroSuppressed) return this
+        fun flip(v: String) = v.trim().let { if (it.isEmpty() || it.trimStart('-').replace(',', '.').toDoubleOrNull() == 0.0) it else if (it.startsWith("-")) it.removePrefix("-") else "-$it" }
+        return copy(zeroSuppressed = suppressed, suppressorShiftUp = flip(suppressorShiftUp), suppressorShiftRight = flip(suppressorShiftRight))
+    }
+
     fun measuredVelocity(ammo: AmmoProfile): String? = muzzleVelocities[ammo.id]?.takeIf { it.isNotBlank() }
 
     fun muzzleVelocityFor(ammo: AmmoProfile): String = measuredVelocity(ammo) ?: ammo.muzzleVelocity

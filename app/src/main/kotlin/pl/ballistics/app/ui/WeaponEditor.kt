@@ -157,6 +157,24 @@ fun WeaponEditor(
             if (w.zeroPressureIsQnh) {
                 NumberField(stringResource(R.string.label_altitude), w.zeroAltitudeM, "m") { w = w.copy(zeroAltitudeM = it) }
             }
+            SwitchRow(stringResource(R.string.label_suppressor), w.suppressor) { w = w.copy(suppressor = it) }
+            if (w.suppressor) {
+                TwoOptions(
+                    stringResource(R.string.label_zeroed),
+                    stringResource(R.string.option_suppressed), stringResource(R.string.option_bare),
+                    w.zeroSuppressed,
+                ) { w = w.withZeroSuppressed(it) }
+                // Where the impact goes in the other state than the zero; switching the zero flips the signs.
+                val other = stringResource(if (w.zeroSuppressed) R.string.option_bare else R.string.option_suppressed)
+                FieldRow { m ->
+                    NumberField(stringResource(R.string.label_poi_up_in, other), w.suppressorShiftUp, w.angularUnit.label, m, optional = true) {
+                        w = w.copy(suppressorShiftUp = it)
+                    }
+                    NumberField(stringResource(R.string.label_poi_right_in, other), w.suppressorShiftRight, w.angularUnit.label, m, optional = true) {
+                        w = w.copy(suppressorShiftRight = it)
+                    }
+                }
+            }
         }
     }
 

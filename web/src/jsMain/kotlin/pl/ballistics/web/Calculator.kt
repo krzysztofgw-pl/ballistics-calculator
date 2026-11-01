@@ -20,6 +20,7 @@ import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.sin
+import kotlin.math.tan
 
 /** Accepts both "0.5" and the Polish "0,5". */
 fun String.toNumber(): Double? = trim().replace(',', '.').toDoubleOrNull()
@@ -40,12 +41,19 @@ data class Setup(
     val conditions: ShotConditions,
     val zeroAtmosphere: Atmosphere,
     val options: SolverOptions,
+    /** Impact shift (up, right) from a suppressor put on or taken off since zeroing. */
+    val shiftUpRad: Double = 0.0,
+    val shiftRightRad: Double = 0.0,
 ) {
+    fun shifted(p: TrajectoryPoint): TrajectoryPoint =
+        if (shiftUpRad == 0.0 && shiftRightRad == 0.0) p
+        else p.copy(dropM = p.dropM + tan(shiftUpRad) * p.rangeM, windageM = p.windageM + tan(shiftRightRad) * p.rangeM)
+
     /** The point at exactly [rangeM]; [zeroElevationRad] from an earlier solution skips zeroing. */
     fun pointAt(rangeM: Double, zeroElevationRad: Double): TrajectoryPoint? =
         Solver(options.copy(maxRangeM = rangeM, stepM = rangeM))
             .solve(rifle, ammo, conditions, zeroAtmosphere, zeroElevationRad)
-            .points.lastOrNull()?.takeIf { abs(it.rangeM - rangeM) < 1e-6 }
+            .points.lastOrNull()?.takeIf { abs(it.rangeM - rangeM) < 1e-6 }?.let(::shifted)
 
     /** A target moving at [speedMps] in [directionDeg] from the line of fire (0 = away, 90 = to the right). */
     fun lead(rangeM: Double, zeroElevationRad: Double, speedMps: Double, directionDeg: Double): Lead? {
@@ -74,7 +82,8 @@ object Calculator {
         if (weapon == null) throw InputError(S.errorNoWeapon)
         if (ammo == null) throw InputError(S.errorNoAmmo(weapon.name))
         val setup = setup(weapon, ammo, c)
-        CalcResult.Ok(Solver(setup.options).solve(setup.rifle, setup.ammo, setup.conditions, setup.zeroAtmosphere), weapon, ammo, setup)
+        val solution = Solver(setup.options).solve(setup.rifle, setup.ammo, setup.conditions, setup.zeroAtmosphere)
+        CalcResult.Ok(solution.copy(points = solution.points.map(setup::shifted)), weapon, ammo, setup)
     } catch (e: InputError) {
         CalcResult.Error(e.message ?: S.errorCannotSolve)
     } catch (e: IllegalArgumentException) {
@@ -151,7 +160,12 @@ object Calculator {
             aerodynamicJump = c.aerodynamicJump,
             coriolis = c.coriolis,
         )
-        return Setup(rifle, ammo, conditions, zeroAtmosphere, options)
+        val shift = w.suppressorShift()
+        return Setup(
+            rifle, ammo, conditions, zeroAtmosphere, options,
+            shiftUpRad = (shift?.first ?: 0.0) * w.angularUnit.radians,
+            shiftRightRad = (shift?.second ?: 0.0) * w.angularUnit.radians,
+        )
     }
 
     /** One "Mach Cd" pair per line; separators: space, tab, semicolon, or comma between numbers. */

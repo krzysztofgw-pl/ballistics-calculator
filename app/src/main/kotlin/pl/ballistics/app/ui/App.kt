@@ -1,6 +1,12 @@
 package pl.ballistics.app.ui
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.Alignment
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.Row
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -48,7 +54,7 @@ import pl.ballistics.app.data.WeaponProfile
 private data class MainTab(@StringRes val title: Int, val icon: @Composable () -> ImageVector)
 
 private val tabs = listOf(
-    MainTab(R.string.tab_profiles) { Icons.Filled.Person },
+    MainTab(R.string.tab_rifle) { Icons.Filled.Person },
     MainTab(R.string.tab_conditions) { Icons.Filled.Place },
     MainTab(R.string.tab_table) { Icons.AutoMirrored.Filled.List },
     MainTab(R.string.tab_target) { ImageVector.vectorResource(R.drawable.ic_tab_target) },
@@ -60,6 +66,7 @@ private sealed interface Editor {
     data class Ammo(val profile: AmmoProfile) : Editor
     data object Settings : Editor
     data object Help : Editor
+    data object Profiles : Editor
 }
 
 private const val TARGET_TAB = 3
@@ -72,6 +79,11 @@ fun App(vm: MainViewModel = viewModel()) {
     val sync by vm.syncState.collectAsStateWithLifecycle()
     var tab by rememberSaveable { mutableIntStateOf(2) }
     var editor by remember { mutableStateOf<Editor?>(null) }
+    // A rifle or load opened from the profile list goes back to the list when closed.
+    var fromProfiles by remember { mutableStateOf(false) }
+    val closeEditor = { editor = if (fromProfiles) Editor.Profiles else null }
+    // The profile list goes back to where it was opened: Settings or the Rifle tab.
+    var profilesReturn by remember { mutableStateOf<Editor?>(null) }
     val saved = rememberSaveableStateHolder()
     val updater = rememberAppUpdater()
     // Keyed on the setting, so it still runs when the saved settings load after the first frame.
@@ -80,26 +92,37 @@ fun App(vm: MainViewModel = viewModel()) {
 
     when (val e = editor) {
         is Editor.Weapon -> {
-            BackHandler { editor = null }
+            BackHandler { closeEditor() }
             WeaponEditor(
                 initial = e.profile,
                 ammo = data.ammo,
                 isNew = data.weapons.none { it.id == e.profile.id },
-                onSave = { vm.saveWeapon(it); editor = null },
-                onDelete = { vm.deleteWeapon(e.profile.id); editor = null },
-                onClose = { editor = null },
+                onSave = { vm.saveWeapon(it); closeEditor() },
+                onDelete = { vm.deleteWeapon(e.profile.id); closeEditor() },
+                onClose = { closeEditor() },
             )
             return
         }
         is Editor.Ammo -> {
-            BackHandler { editor = null }
+            BackHandler { closeEditor() }
             AmmoEditor(
                 initial = e.profile,
                 weapons = data.weapons,
                 isNew = data.ammo.none { it.id == e.profile.id },
-                onSave = { vm.saveAmmo(it); editor = null },
-                onDelete = { vm.deleteAmmo(e.profile.id); editor = null },
-                onClose = { editor = null },
+                onSave = { vm.saveAmmo(it); closeEditor() },
+                onDelete = { vm.deleteAmmo(e.profile.id); closeEditor() },
+                onClose = { closeEditor() },
+            )
+            return
+        }
+        Editor.Profiles -> {
+            BackHandler { fromProfiles = false; editor = profilesReturn }
+            ProfilesListScreen(
+                data = data,
+                onSelectWeapon = vm::selectWeapon,
+                onEditWeapon = { fromProfiles = true; editor = Editor.Weapon(it) },
+                onEditAmmo = { fromProfiles = true; editor = Editor.Ammo(it) },
+                onClose = { fromProfiles = false; editor = profilesReturn },
             )
             return
         }
@@ -121,6 +144,7 @@ fun App(vm: MainViewModel = viewModel()) {
                 onExport = vm::exportData,
                 onImport = vm::importData,
                 onCheckUpdate = { updater.check(asked = true) },
+                onOpenProfiles = { fromProfiles = true; profilesReturn = Editor.Settings; editor = Editor.Profiles },
                 onClose = { editor = null },
             )
             return
@@ -149,7 +173,21 @@ fun App(vm: MainViewModel = viewModel()) {
         topBar = {
             Column {
                 TopAppBar(
-                    title = { Text(stringResource(tabs[tab].title)) },
+                    title = {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(stringResource(tabs[tab].title))
+                            // A small reminder that the suppressor is on, on every tab.
+                            if (data.activeWeapon?.let { it.suppressor && it.suppressorMounted } == true) {
+                                Spacer(Modifier.width(8.dp))
+                                Icon(
+                                    ImageVector.vectorResource(R.drawable.ic_suppressor),
+                                    stringResource(R.string.label_suppressor_on),
+                                    Modifier.size(20.dp),
+                                    tint = MaterialTheme.colorScheme.primary,
+                                )
+                            }
+                        }
+                    },
                     actions = {
                         IconButton(onClick = { editor = Editor.Help }) {
                             Icon(ImageVector.vectorResource(R.drawable.ic_help), stringResource(R.string.title_help))
@@ -199,11 +237,13 @@ fun App(vm: MainViewModel = viewModel()) {
         // Each tab keeps its scroll position while another one is open.
         saved.SaveableStateProvider(tab) {
         when (tab) {
-            0 -> ProfilesScreen(
+            0 -> RifleScreen(
                 data = data,
                 onSelectWeapon = vm::selectWeapon,
-                onEditWeapon = { editor = Editor.Weapon(it) },
-                onEditAmmo = { editor = Editor.Ammo(it) },
+                onUpdateWeapon = vm::updateActiveWeapon,
+                onEditWeapon = { fromProfiles = false; editor = Editor.Weapon(it) },
+                onEditAmmo = { fromProfiles = false; editor = Editor.Ammo(it) },
+                onOpenProfiles = { fromProfiles = true; profilesReturn = null; editor = Editor.Profiles },
                 modifier = modifier,
             )
             1 -> ConditionsScreen(data.conditions, data.ui, vm::updateConditions, modifier)

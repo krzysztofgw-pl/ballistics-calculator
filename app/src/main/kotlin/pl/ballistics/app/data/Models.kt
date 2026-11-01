@@ -63,6 +63,16 @@ data class WeaponProfile(
     val zeroPressureIsQnh: Boolean = false,
     val zeroAltitudeM: String = "0",
 
+    /** The rifle has a suppressor; the rest of these fields count only then. */
+    val suppressor: Boolean = false,
+    /** The suppressor is on now. */
+    val suppressorMounted: Boolean = true,
+    /** The zero was shot with the suppressor on. */
+    val zeroSuppressed: Boolean = true,
+    /** Where the impact goes in the state the rifle was not zeroed in, against the zero, in [angularUnit]: up and right positive. */
+    val suppressorShiftUp: String = "",
+    val suppressorShiftRight: String = "",
+
     /** Ammunition this rifle is zeroed with. */
     val ammoId: String? = null,
     /** Extreme spread of a 5-shot group in MOA; used for the hit probability. */
@@ -70,6 +80,21 @@ data class WeaponProfile(
     /** Muzzle velocity measured with this rifle, by ammo id; it overrides the load's reference velocity. */
     val muzzleVelocities: Map<String, String> = emptyMap(),
 ) {
+    /** Impact shift (up, right) in [angularUnit] against the zero while the suppressor is not as zeroed; null when it is. */
+    fun suppressorShift(): Pair<Double, Double>? {
+        if (!suppressor || suppressorMounted == zeroSuppressed) return null
+        val up = suppressorShiftUp.trim().replace(',', '.').toDoubleOrNull() ?: 0.0
+        val right = suppressorShiftRight.trim().replace(',', '.').toDoubleOrNull() ?: 0.0
+        return if (up == 0.0 && right == 0.0) null else Pair(up, right)
+    }
+
+    /** Zeroing in the other state: the shift is now measured from there, so it changes sign. */
+    fun withZeroSuppressed(suppressed: Boolean): WeaponProfile {
+        if (suppressed == zeroSuppressed) return this
+        fun flip(v: String) = v.trim().let { if (it.isEmpty() || it.trimStart('-').replace(',', '.').toDoubleOrNull() == 0.0) it else if (it.startsWith("-")) it.removePrefix("-") else "-$it" }
+        return copy(zeroSuppressed = suppressed, suppressorShiftUp = flip(suppressorShiftUp), suppressorShiftRight = flip(suppressorShiftRight))
+    }
+
     fun measuredVelocity(ammo: AmmoProfile): String? = muzzleVelocities[ammo.id]?.takeIf { it.isNotBlank() }
 
     /** The velocity the solver uses: measured with this rifle if known, else the load's reference velocity. */
