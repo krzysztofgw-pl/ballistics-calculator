@@ -9,7 +9,7 @@ fun main() {
 }
 
 private enum class Tab(val title: () -> String, val icon: String) {
-    PROFILES({ S.tabProfiles }, Icons.PERSON),
+    PROFILES({ S.tabProfiles }, Icons.RIFLE),
     CONDITIONS({ S.tabConditions }, Icons.PLACE),
     TABLE({ S.tabTable }, Icons.LIST),
     TARGET({ S.tabTarget }, Icons.TARGET),
@@ -123,4 +123,9 @@ object Icons {
     val BACK = svg("M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z")
     val CAMERA = svg("M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4zM9 2 7.17 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3.17L15 2H9z")
     val WARNING = svg("M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z")
+
+    /** The app's own rifle silhouette, the same drawing as the Android Rifle tab (traced in image pixels, scaled into 24 units). */
+    val RIFLE = """<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><g transform="translate(-0.0634,3.1734) scale(0.01878)">""" +
+        """<path fill="currentColor" d="M36,464L76,462L250,463L285,474L322,468L350,440L915,434L919,446L912,478L440,498L352,492L330,540L312,575L285,577L275,555L255,532L80,590L75,598L40,602ZM915,431H1238V433H1250V445H1238V447H915ZM330,368H345V407H330A6,6 0 0 1 324,401V374A6,6 0 0 1 330,368ZM345,377H630V398H345ZM620,377L678,362H708A5,5 0 0 1 713,367V411A5,5 0 0 1 708,416H678L620,398ZM483,352H501V378H483ZM428,372H448V433H428ZM556,372H576V433H556ZM364,446L376,446L392,478A10,10 0 1 1 378,484Z"/>""" +
+        """<path fill="none" stroke="currentColor" stroke-width="14" stroke-linecap="round" d="M356,492C358,530 372,537 400,537C424,537 433,528 434,500M388,495Q383,510 386,525"/></g></svg>"""
 }
