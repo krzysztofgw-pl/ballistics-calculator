@@ -88,6 +88,10 @@ or held. Dial corrections are whole clicks and holds are to 0.05; the reticle sh
   full solution; a 5-shot group is taken as three standard deviations.
 - Ranging with the reticle: distance from the target size and its reading in the reticle.
 
+### Help
+The question mark next to the gear: short answers on getting started, the zero, QNH or station pressure,
+muzzle velocity, wind, shot angle, the Target screen, moving targets, sync, updates and accuracy.
+
 ### Settings
 The gear in the top bar: light, dark or system theme; keep the screen on; tabs and sub-tabs at the top
 or the bottom; QNH (default) or station pressure; external devices (Garmin watch for pressure); whether location sets the latitude and the altitude;

@@ -12,6 +12,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Card
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -83,6 +84,16 @@ fun NumberField(
 fun FieldRow(content: @Composable (Modifier) -> Unit) {
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         content(Modifier.weight(1f))
+    }
+}
+
+/** A choice between two named options, as two chips; [onChange] gets whether the first is picked. */
+@Composable
+fun TwoOptions(label: String, first: String, second: String, firstSelected: Boolean, onChange: (Boolean) -> Unit) {
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(label, Modifier.weight(1f))
+        FilterChip(selected = firstSelected, onClick = { onChange(true) }, label = { Text(first) })
+        FilterChip(selected = !firstSelected, onClick = { onChange(false) }, label = { Text(second) })
     }
 }
 

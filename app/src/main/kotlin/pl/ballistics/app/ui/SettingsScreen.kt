@@ -112,7 +112,11 @@ fun SettingsScreen(
             }
 
             Section(stringResource(R.string.section_measurements)) {
-                SwitchRow(stringResource(R.string.label_station_pressure), !pressureIsQnh) { onPressureIsQnh(!it) }
+                TwoOptions(
+                    stringResource(R.string.label_pressure),
+                    stringResource(R.string.option_qnh), stringResource(R.string.option_station),
+                    pressureIsQnh, onPressureIsQnh,
+                )
                 SwitchRow(stringResource(R.string.label_location_latitude), ui.locationSetsLatitude) { v ->
                     onUi { it.copy(locationSetsLatitude = v) }
                 }
@@ -198,10 +202,5 @@ private fun DialOrHold(dial: Boolean, onChange: (Boolean) -> Unit) {
 }
 
 @Composable
-private fun Placement(label: String, atTop: Boolean, onChange: (Boolean) -> Unit) {
-    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(label, Modifier.weight(1f))
-        FilterChip(selected = atTop, onClick = { onChange(true) }, label = { Text(stringResource(R.string.placement_top)) })
-        FilterChip(selected = !atTop, onClick = { onChange(false) }, label = { Text(stringResource(R.string.placement_bottom)) })
-    }
-}
+private fun Placement(label: String, atTop: Boolean, onChange: (Boolean) -> Unit) =
+    TwoOptions(label, stringResource(R.string.placement_top), stringResource(R.string.placement_bottom), atTop, onChange)

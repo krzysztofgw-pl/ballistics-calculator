@@ -149,7 +149,11 @@ fun WeaponEditor(
                     w.zeroPressureHpa, "hPa", m,
                 ) { w = w.copy(zeroPressureHpa = it) }
             }
-            SwitchRow(stringResource(R.string.label_zero_qnh), w.zeroPressureIsQnh) { w = w.copy(zeroPressureIsQnh = it) }
+            TwoOptions(
+                stringResource(R.string.label_pressure),
+                stringResource(R.string.option_qnh), stringResource(R.string.option_station),
+                w.zeroPressureIsQnh,
+            ) { w = w.copy(zeroPressureIsQnh = it) }
             if (w.zeroPressureIsQnh) {
                 NumberField(stringResource(R.string.label_altitude), w.zeroAltitudeM, "m") { w = w.copy(zeroAltitudeM = it) }
             }

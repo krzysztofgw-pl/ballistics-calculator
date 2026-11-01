@@ -75,7 +75,9 @@ object ProfilesScreen {
             numberField(S.labelZeroPressure, w.zeroPressureHpa, "hPa") { w = w.copy(zeroPressureHpa = it) }
             lateinit var altitude: org.w3c.dom.HTMLInputElement
             fun showAltitude() { (altitude.closest("label") as? org.w3c.dom.HTMLElement)?.style?.display = if (w.zeroPressureIsQnh) "" else "none" }
-            switch(S.labelZeroQnh, w.zeroPressureIsQnh) { w = w.copy(zeroPressureIsQnh = it); showAltitude() }
+            select(S.labelPressureKind, listOf(true to S.optionQnh, false to S.optionStation), w.zeroPressureIsQnh) {
+                w = w.copy(zeroPressureIsQnh = it); showAltitude()
+            }
             altitude = numberField(S.labelZeroAltitude, w.zeroAltitudeM, "m") { w = w.copy(zeroAltitudeM = it) }
             showAltitude()
             velocity = numberField(S.labelRifleVelocity, loads.find { it.id == w.ammoId }?.let { w.measuredVelocity(it) }.orEmpty(), "m/s") { v ->
