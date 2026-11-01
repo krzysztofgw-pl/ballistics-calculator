@@ -61,13 +61,19 @@ data class WeaponProfile(
     val groupMoa: String = "",
     val muzzleVelocities: Map<String, String> = emptyMap(),
 ) {
-    /** Impact shift (up, right) in [angularUnit] from mounting or removing the suppressor since zeroing; null when as zeroed. */
+    /** Impact shift (up, right) in [angularUnit] against the zero while the suppressor is not as zeroed; null when it is. */
     fun suppressorShift(): Pair<Double, Double>? {
         if (!suppressor || suppressorMounted == zeroSuppressed) return null
-        val sign = if (suppressorMounted) 1.0 else -1.0
         val up = suppressorShiftUp.toNumber() ?: 0.0
         val right = suppressorShiftRight.toNumber() ?: 0.0
-        return if (up == 0.0 && right == 0.0) null else Pair(sign * up, sign * right)
+        return if (up == 0.0 && right == 0.0) null else Pair(up, right)
+    }
+
+    /** Zeroing in the other state: the shift is now measured from there, so it changes sign. */
+    fun withZeroSuppressed(suppressed: Boolean): WeaponProfile {
+        if (suppressed == zeroSuppressed) return this
+        fun flip(v: String) = v.trim().let { if (it.isEmpty() || it.trimStart('-').replace(',', '.').toDoubleOrNull() == 0.0) it else if (it.startsWith("-")) it.removePrefix("-") else "-$it" }
+        return copy(zeroSuppressed = suppressed, suppressorShiftUp = flip(suppressorShiftUp), suppressorShiftRight = flip(suppressorShiftRight))
     }
 
     fun measuredVelocity(ammo: AmmoProfile): String? = muzzleVelocities[ammo.id]?.takeIf { it.isNotBlank() }

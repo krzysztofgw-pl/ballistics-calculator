@@ -23,8 +23,8 @@ Settings → Profiles (or the Profiles button on the Rifle tab) lists and edits 
   from the design (e.g. 0.1 MRAD), first or second focal plane,
   calibration and maximum magnification), sight height, zero range and the load it is zeroed with, and the zeroing
   temperature and pressure (station pressure, or QNH with the zeroing altitude).
-- **Suppressor**: whether the zero was shot suppressed or bare, and how far the impact moves when the
-  suppressor goes on (up and right, in the turret unit). With the suppressor in the other state than at
+- **Suppressor**: whether the zero was shot suppressed or bare, and where the impact goes in the other
+  state (up and right from the zero, in the turret unit; switching the zero state flips the signs). With the suppressor in the other state than at
   zeroing, every correction (table, target, holds) includes that shift.
 - **Sight height helper**: compute it from a caliper measurement, or estimate it from the objective diameter,
   ring height and rail.
