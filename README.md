@@ -50,7 +50,7 @@ Coriolis (latitude), spin drift and aerodynamic jump. Each tab keeps its scroll 
   picks the telephoto lens where there is one) and the gravity sensor gives the angle, in portrait or
   landscape. A two-aim calibration (the second with the phone turned over) removes the camera's tilt in
   the body; the sensor's own error, typically 0.5–1°, remains.
-- **Latitude** with an N/S button for the hemisphere, or from the phone's location with one tap (its accuracy shows under the pin).
+- **Latitude** with its hemisphere as the unit (tap °N to switch to °S), or from the phone's location with the Locate button (its accuracy shows under it).
 - **Pressure from a Garmin watch**: the barometer's station pressure, sent by a small Connect IQ watch
   app through Garmin Connect. See [garmin](garmin/README.md) for installing it.
 - **Wind from the forecast**: the hourly forecast for the phone's location
