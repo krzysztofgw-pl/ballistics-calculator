@@ -112,10 +112,13 @@ fun <T> Choice(label: String, selected: T, options: List<T>, name: @Composable (
         // The label keeps its width; a long choice wraps inside its button instead of squeezing the label.
         Text(label, Modifier.padding(end = 12.dp))
         Box(Modifier.weight(1f), contentAlignment = Alignment.CenterEnd) {
-            OutlinedButton(onClick = { open = true }) { Text(name(selected), textAlign = TextAlign.Center) }
-            DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
-                options.forEach {
-                    DropdownMenuItem(text = { Text(name(it)) }, onClick = { onSelect(it); open = false })
+            // The menu shares a box with the button only, so it drops down from the button.
+            Box {
+                OutlinedButton(onClick = { open = true }) { Text(name(selected), textAlign = TextAlign.Center) }
+                DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+                    options.forEach {
+                        DropdownMenuItem(text = { Text(name(it)) }, onClick = { onSelect(it); open = false })
+                    }
                 }
             }
         }
