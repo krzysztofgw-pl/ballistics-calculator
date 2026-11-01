@@ -43,6 +43,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import pl.ballistics.app.R
 import pl.ballistics.app.data.AmmoProfile
@@ -90,7 +91,7 @@ fun RifleScreen(
                     Text(stringResource(R.string.error_no_weapon))
                 } else {
                     Picker(
-                        stringResource(R.string.label_rifle), ImageVector.vectorResource(R.drawable.ic_tab_rifle), w, data.weapons, { it.name },
+                        stringResource(R.string.label_rifle), ImageVector.vectorResource(R.drawable.ic_tab_rifle), RIFLE_ICON, w, data.weapons, { it.name },
                         onSelect = { onSelectWeapon(it.id) },
                         editLabel = stringResource(R.string.action_edit_rifle),
                         onEdit = { onEditWeapon(w) },
@@ -101,7 +102,8 @@ fun RifleScreen(
                     val choose = stringResource(R.string.choose)
                     Picker(
                         stringResource(R.string.label_load),
-                        ImageVector.vectorResource(R.drawable.ic_ammo),
+                        ImageVector.vectorResource(R.drawable.ic_cartridge),
+                        LOAD_ICON,
                         load,
                         listOf<AmmoProfile?>(null) + shown,
                         { it?.name ?: choose },
@@ -146,8 +148,8 @@ fun RifleScreen(
     }
 }
 
-private val BIG_ICON_WIDTH = 180.dp
-private val BIG_ICON_HEIGHT = 64.dp
+private val RIFLE_ICON = DpSize(200.dp, 64.dp)
+private val LOAD_ICON = DpSize(140.dp, 32.dp)
 
 /** A full-width dropdown that opens under its field, with a wrench to its right that edits the picked item. */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -155,6 +157,7 @@ private val BIG_ICON_HEIGHT = 64.dp
 private fun <T> Picker(
     label: String,
     icon: ImageVector,
+    iconSize: DpSize,
     selected: T,
     options: List<T>,
     name: @Composable (T) -> String,
@@ -169,7 +172,7 @@ private fun <T> Picker(
         Image(
             icon,
             contentDescription = label,
-            modifier = Modifier.size(BIG_ICON_WIDTH, BIG_ICON_HEIGHT),
+            modifier = Modifier.size(iconSize),
             contentScale = ContentScale.Crop,
             colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary),
         )
