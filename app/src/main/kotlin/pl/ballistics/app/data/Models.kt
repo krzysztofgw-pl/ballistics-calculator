@@ -38,7 +38,10 @@ data class WeaponProfile(
     val caliber: String = "",
     val twistIn: String = "10",
     val rightHandTwist: Boolean = true,
+    /** Stored in cm whatever unit the editor shows. */
     val barrelLengthCm: String = "",
+    /** The editor shows the barrel length in inches; off, in cm. */
+    val barrelInches: Boolean = true,
 
     val scopeName: String = "",
     val angularUnit: AngularUnit = AngularUnit.MRAD,
@@ -56,6 +59,9 @@ data class WeaponProfile(
     val zeroRangeM: String = "100",
     val zeroTemperatureC: String = "15",
     val zeroPressureHpa: String = "1013.25",
+    /** The zero pressure is QNH, reduced to station pressure with [zeroAltitudeM]; off, it is station pressure. */
+    val zeroPressureIsQnh: Boolean = false,
+    val zeroAltitudeM: String = "0",
 
     /** Ammunition this rifle is zeroed with. */
     val ammoId: String? = null,

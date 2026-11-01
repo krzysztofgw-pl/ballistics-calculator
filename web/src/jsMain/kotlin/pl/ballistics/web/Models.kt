@@ -35,6 +35,7 @@ data class WeaponProfile(
     val twistIn: String = "10",
     val rightHandTwist: Boolean = true,
     val barrelLengthCm: String = "",
+    val barrelInches: Boolean = true,
     val scopeName: String = "",
     val angularUnit: AngularUnit = AngularUnit.MRAD,
     val clickValue: String = "0.1",
@@ -48,6 +49,9 @@ data class WeaponProfile(
     val zeroRangeM: String = "100",
     val zeroTemperatureC: String = "15",
     val zeroPressureHpa: String = "1013.25",
+    /** The zero pressure is QNH, reduced to station pressure with [zeroAltitudeM]; off, it is station pressure. */
+    val zeroPressureIsQnh: Boolean = false,
+    val zeroAltitudeM: String = "0",
     val ammoId: String? = null,
     val groupMoa: String = "",
     val muzzleVelocities: Map<String, String> = emptyMap(),

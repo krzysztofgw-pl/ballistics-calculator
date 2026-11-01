@@ -112,14 +112,16 @@
     <string name="label_test_barrel">in a barrel of</string>
     <string name="measured_in_rifle">%1$s: %2$s m/s measured</string>
     <string name="label_barrel_length">Barrel length</string>
+    <string name="action_switch_unit">Switch unit</string>
+    <string name="label_zero_qnh">QNH (off: station pressure)</string>
     <string name="label_rifle_velocity">Muzzle velocity in this rifle (chronograph)</string>
     <string name="reference_velocity">Load data: %1$s m/s.</string>
-    <string name="reference_velocity_barrel">Load data: %1$s m/s from a %2$s cm barrel.</string>
+    <string name="reference_velocity_barrel">Load data: %1$s m/s from a %2$s barrel.</string>
     <string name="test_barrel_unknown">Its barrel length is not given.</string>
     <string name="barrel_unknown">Enter this rifle\'s barrel length to compare.</string>
     <string name="barrel_same">This rifle\'s barrel is the same length.</string>
-    <string name="barrel_shorter">This rifle\'s %1$s cm barrel is %2$s cm shorter.</string>
-    <string name="barrel_longer">This rifle\'s %1$s cm barrel is %2$s cm longer.</string>
+    <string name="barrel_shorter">This rifle\'s %1$s barrel is %2$s shorter.</string>
+    <string name="barrel_longer">This rifle\'s %1$s barrel is %2$s longer.</string>
     <string name="velocity_used_rifle">Using the velocity measured with this rifle.</string>
     <string name="velocity_used_reference">Using the load data; measure the velocity with this rifle for accurate dope.</string>
     <string name="label_powder_sensitivity">Powder temp sensitivity</string>
@@ -292,6 +294,7 @@
     <string name="field_pressure">pressure</string>
     <string name="field_humidity">humidity</string>
     <string name="field_zero_pressure">pressure at zeroing</string>
+    <string name="field_zero_altitude">altitude at zeroing</string>
     <string name="field_zero_temperature">temperature at zeroing</string>
     <string name="field_wind_speed">wind speed</string>
     <string name="field_wind_direction">wind direction</string>

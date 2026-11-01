@@ -59,7 +59,16 @@ fun WeaponEditor(
                 w = w.copy(caliber = it)
             }
             FieldRow { m ->
-                NumberField(stringResource(R.string.label_barrel_length), w.barrelLengthCm, "cm", m, optional = true) { w = w.copy(barrelLengthCm = it) }
+                // The field keeps what was typed; the profile keeps cm. Tapping the unit converts the value.
+                var barrel by remember(w.barrelInches) { mutableStateOf(w.barrelLengthCm.toNumber()?.let { fmtLength(it, w.barrelInches) } ?: w.barrelLengthCm) }
+                NumberField(
+                    stringResource(R.string.label_barrel_length), barrel, if (w.barrelInches) "in" else "cm", m, optional = true,
+                    onUnitClick = { w = w.copy(barrelInches = !w.barrelInches) },
+                ) { v ->
+                    barrel = v
+                    val cm = v.toNumber()?.let { if (w.barrelInches) it * INCH_CM else it }
+                    w = w.copy(barrelLengthCm = cm?.let { String.format(Locale.US, "%.2f", it).trimEnd('0').trimEnd('.') } ?: v)
+                }
                 NumberField(stringResource(R.string.label_twist), w.twistIn, "in", m, optional = true) { w = w.copy(twistIn = it) }
             }
             SwitchRow(stringResource(R.string.label_right_twist), w.rightHandTwist) { w = w.copy(rightHandTwist = it) }
@@ -135,7 +144,14 @@ fun WeaponEditor(
             NumberField(stringResource(R.string.label_zero_range), w.zeroRangeM, "m") { w = w.copy(zeroRangeM = it) }
             FieldRow { m ->
                 NumberField(stringResource(R.string.label_temperature), w.zeroTemperatureC, "°C", m) { w = w.copy(zeroTemperatureC = it) }
-                NumberField(stringResource(R.string.label_pressure_station), w.zeroPressureHpa, "hPa", m) { w = w.copy(zeroPressureHpa = it) }
+                NumberField(
+                    stringResource(if (w.zeroPressureIsQnh) R.string.label_pressure_qnh else R.string.label_pressure_station),
+                    w.zeroPressureHpa, "hPa", m,
+                ) { w = w.copy(zeroPressureHpa = it) }
+            }
+            SwitchRow(stringResource(R.string.label_zero_qnh), w.zeroPressureIsQnh) { w = w.copy(zeroPressureIsQnh = it) }
+            if (w.zeroPressureIsQnh) {
+                NumberField(stringResource(R.string.label_altitude), w.zeroAltitudeM, "m") { w = w.copy(zeroAltitudeM = it) }
             }
         }
     }
@@ -154,7 +170,7 @@ fun velocitySource(w: WeaponProfile, load: AmmoProfile): String {
     val test = load.testBarrelCm.toNumber()?.takeIf { it > 0 }
     val own = w.barrelLengthCm.toNumber()?.takeIf { it > 0 }
     val reference = if (test != null) {
-        stringResource(R.string.reference_velocity_barrel, load.muzzleVelocity, fmtCm(test))
+        stringResource(R.string.reference_velocity_barrel, load.muzzleVelocity, fmtLength(test, w.barrelInches, unit = true))
     } else {
         stringResource(R.string.reference_velocity, load.muzzleVelocity)
     }
@@ -162,14 +178,20 @@ fun velocitySource(w: WeaponProfile, load: AmmoProfile): String {
         test == null -> stringResource(R.string.test_barrel_unknown)
         own == null -> stringResource(R.string.barrel_unknown)
         own == test -> stringResource(R.string.barrel_same)
-        own < test -> stringResource(R.string.barrel_shorter, fmtCm(own), fmtCm(test - own))
-        else -> stringResource(R.string.barrel_longer, fmtCm(own), fmtCm(own - test))
+        own < test -> stringResource(R.string.barrel_shorter, fmtLength(own, w.barrelInches, true), fmtLength(test - own, w.barrelInches, true))
+        else -> stringResource(R.string.barrel_longer, fmtLength(own, w.barrelInches, true), fmtLength(own - test, w.barrelInches, true))
     }
     val used = if (w.measuredVelocity(load) != null) R.string.velocity_used_rifle else R.string.velocity_used_reference
     return "$reference $comparison ${stringResource(used)}"
 }
 
-private fun fmtCm(v: Double): String = String.format(Locale.US, "%.1f", v).removeSuffix(".0")
+private const val INCH_CM = 2.54
+
+/** A length kept in cm, shown in inches or cm to a tenth. */
+private fun fmtLength(cm: Double, inches: Boolean, unit: Boolean = false): String {
+    val v = String.format(Locale.US, "%.1f", if (inches) cm / INCH_CM else cm).removeSuffix(".0")
+    return if (unit) "$v ${if (inches) "in" else "cm"}" else v
+}
 
 @Composable
 fun TextInput(label: String, value: String, onChange: (String) -> Unit) {

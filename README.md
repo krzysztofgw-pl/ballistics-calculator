@@ -13,9 +13,10 @@ your scope's reticle, and syncs everything to the cloud.
 ## Features
 
 ### Profiles
-- **Rifles**: name, barrel length, scope (turret unit MRAD or MOA, click value, reticle and its scale step when the scope's differs
+- **Rifles**: name, barrel length (inches or cm: tap the unit), scope (turret unit MRAD or MOA, click value, reticle and its scale step when the scope's differs
   from the design (e.g. 0.1 MRAD), first or second focal plane,
-  calibration and maximum magnification), sight height, zero range and the load it is zeroed with.
+  calibration and maximum magnification), sight height, zero range and the load it is zeroed with, and the zeroing
+  temperature and pressure (station pressure, or QNH with the zeroing altitude).
 - **Sight height helper**: compute it from a caliper measurement, or estimate it from the objective diameter,
   ring height and rail.
 - **Loads**: reference muzzle velocity with the barrel length it was measured in, powder temperature sensitivity, bullet weight, diameter, length and twist,
