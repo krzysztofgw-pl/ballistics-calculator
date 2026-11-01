@@ -432,7 +432,7 @@
     <string name="help_accuracy">It is only as good as its inputs: muzzle velocity, BC, the zero and the wind matter most. Confirm the dope with live fire at the distances you use, and correct the velocity until the table matches your hits.</string>
     <!-- Suggesting a bullet to the community database -->
     <string name="action_ok">OK</string>
-    <string name="action_suggest_bullet">Suggest to the bullet database</string>
+    <string name="action_suggest_bullet">Suggest to database</string>
     <string name="suggest_title">Suggest a bullet</string>
     <string name="suggest_intro">Add this bullet to the open bullet database used by everyone with this app. Use the maker\'s published figures or your own Doppler measurement, not a BC trued to your rifle. Every suggestion is reviewed before it appears.</string>
     <string name="suggest_intro_correction">Correct this bullet in the open bullet database. Use the maker\'s published figures or your own Doppler measurement, not a BC trued to your rifle. Every suggestion is reviewed before it appears.</string>
