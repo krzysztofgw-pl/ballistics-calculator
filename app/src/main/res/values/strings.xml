@@ -36,6 +36,7 @@
     <string name="action_import">Import</string>
     <string name="action_sign_in_google">Sign in with Google</string>
     <string name="action_sign_out">Sign out</string>
+    <string name="sign_out_prompt">Sign out %1$s?</string>
     <string name="action_factory_load">Factory ammo</string>
     <string name="action_bullet">Bullet for handload</string>
     <string name="action_sight_height_helper">Help me find the sight height</string>

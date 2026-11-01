@@ -32,13 +32,18 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.AlertDialog
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -167,7 +172,7 @@ fun SettingsScreen(
             Section(stringResource(R.string.section_sync)) {
                 when (sync) {
                     SyncState.Unavailable -> Unit
-                    SyncState.SignedOut -> GoogleSignInButton {
+                    SyncState.SignedOut -> GoogleButton(stringResource(R.string.action_sign_in_google)) {
                         scope.launch {
                             onSignIn(context)?.let { Toast.makeText(context, it, Toast.LENGTH_LONG).show() }
                         }
@@ -204,9 +209,9 @@ fun SettingsScreen(
 
 private val CHIP_WIDTH = 80.dp
 
-/** The icon-only Sign in with Google button: a white circle with the Google "G" in its own colours. */
+/** The icon-only Google button: a white circle with the Google "G" in its own colours. */
 @Composable
-private fun GoogleSignInButton(onClick: () -> Unit) {
+private fun GoogleButton(description: String, onClick: () -> Unit) {
     OutlinedIconButton(
         onClick = onClick,
         modifier = Modifier.size(48.dp),
@@ -215,16 +220,17 @@ private fun GoogleSignInButton(onClick: () -> Unit) {
     ) {
         Image(
             painterResource(R.drawable.ic_google),
-            contentDescription = stringResource(R.string.action_sign_in_google),
+            contentDescription = description,
             modifier = Modifier.size(20.dp),
         )
     }
 }
 
-/** The signed-in account with a synced (or failed) cloud, and sign-out as an icon. */
+/** Signed in: whether the cloud copy is in sync, and the Google button, which asks before signing out of the account. */
 @Composable
 private fun SignedInRow(sync: SyncState.SignedIn, onSignOut: () -> Unit) {
     val failed = sync.error != null
+    var confirm by remember { mutableStateOf(false) }
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Icon(
             ImageVector.vectorResource(R.drawable.ic_cloud_done),
@@ -233,13 +239,18 @@ private fun SignedInRow(sync: SyncState.SignedIn, onSignOut: () -> Unit) {
             tint = if (failed) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
         )
         Spacer(Modifier.width(12.dp))
-        Column(Modifier.weight(1f)) {
-            Text(sync.email ?: stringResource(R.string.sync_signed_in), style = MaterialTheme.typography.bodyLarge)
+        Box(Modifier.weight(1f)) {
             sync.error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
         }
-        IconButton(onClick = onSignOut) {
-            Icon(Icons.AutoMirrored.Filled.ExitToApp, stringResource(R.string.action_sign_out))
-        }
+        GoogleButton(stringResource(R.string.action_sign_out)) { confirm = true }
+    }
+    if (confirm) {
+        AlertDialog(
+            onDismissRequest = { confirm = false },
+            text = { Text(stringResource(R.string.sign_out_prompt, sync.email ?: stringResource(R.string.sync_signed_in))) },
+            confirmButton = { TextButton(onClick = { confirm = false; onSignOut() }) { Text(stringResource(R.string.action_sign_out)) } },
+            dismissButton = { TextButton(onClick = { confirm = false }) { Text(stringResource(R.string.action_cancel)) } },
+        )
     }
 }
 
