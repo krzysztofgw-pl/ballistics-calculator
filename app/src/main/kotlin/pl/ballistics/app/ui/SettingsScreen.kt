@@ -15,6 +15,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -59,6 +62,7 @@ fun SettingsScreen(
     onExport: () -> String,
     onImport: (String) -> Boolean,
     onCheckUpdate: () -> Unit,
+    onOpenProfiles: () -> Unit,
     onClose: () -> Unit,
 ) {
     val context = LocalContext.current
@@ -93,6 +97,12 @@ fun SettingsScreen(
             Modifier.padding(padding).verticalScroll(rememberScrollState()).padding(12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
+            OutlinedButton(onClick = onOpenProfiles, modifier = Modifier.fillMaxWidth()) {
+                Icon(Icons.Filled.Person, contentDescription = null, modifier = Modifier.size(ButtonDefaults.IconSize))
+                Spacer(Modifier.width(ButtonDefaults.IconSpacing))
+                Text(stringResource(R.string.action_profiles))
+            }
+
             Section(stringResource(R.string.section_appearance)) {
                 ThemeMode.entries.forEach { mode ->
                     Row(

@@ -12,11 +12,20 @@ your scope's reticle, and syncs everything to the cloud.
 
 ## Features
 
+### Rifle
+The first tab: the rifle and load in use, picked from the profiles, with a one-line summary (caliber,
+scope, zero, muzzle velocity), shortcuts to edit them, and the profile list. When the rifle has a
+suppressor, a switch says whether it is on; a small suppressor icon in the top bar shows it on every tab.
+
 ### Profiles
+Settings → Profiles (or the Profiles button on the Rifle tab) lists and edits rifles and loads.
 - **Rifles**: name, barrel length (inches or cm: tap the unit), scope (turret unit MRAD or MOA, click value, reticle and its scale step when the scope's differs
   from the design (e.g. 0.1 MRAD), first or second focal plane,
   calibration and maximum magnification), sight height, zero range and the load it is zeroed with, and the zeroing
   temperature and pressure (station pressure, or QNH with the zeroing altitude).
+- **Suppressor**: whether the zero was shot suppressed or bare, and how far the impact moves when the
+  suppressor goes on (up and right, in the turret unit). With the suppressor in the other state than at
+  zeroing, every correction (table, target, holds) includes that shift.
 - **Sight height helper**: compute it from a caliper measurement, or estimate it from the objective diameter,
   ring height and rail.
 - **Loads**: reference muzzle velocity with the barrel length it was measured in, powder temperature sensitivity, bullet weight, diameter, length and twist,

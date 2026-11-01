@@ -29,6 +29,7 @@ private val topics = listOf(
     Topic(R.string.help_zero_title, R.string.help_zero),
     Topic(R.string.help_pressure_title, R.string.help_pressure),
     Topic(R.string.help_velocity_title, R.string.help_velocity),
+    Topic(R.string.help_suppressor_title, R.string.help_suppressor),
     Topic(R.string.help_wind_title, R.string.help_wind),
     Topic(R.string.help_angle_title, R.string.help_angle),
     Topic(R.string.help_target_title, R.string.help_target),

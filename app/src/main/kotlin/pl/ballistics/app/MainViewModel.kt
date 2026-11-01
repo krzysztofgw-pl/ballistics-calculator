@@ -106,6 +106,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun selectWeapon(id: String) = update { it.copy(activeWeaponId = id) }
 
+    /** Changes the selected rifle in place: its load or whether its suppressor is on. */
+    fun updateActiveWeapon(change: (WeaponProfile) -> WeaponProfile) = update { d ->
+        val active = d.activeWeapon ?: return@update d
+        d.copy(weapons = d.weapons.map { if (it.id == active.id) change(it) else it })
+    }
+
     fun saveWeapon(weapon: WeaponProfile) = update { d ->
         val exists = d.weapons.any { it.id == weapon.id }
         d.copy(

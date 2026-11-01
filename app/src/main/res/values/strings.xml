@@ -4,6 +4,20 @@
 
     <!-- Navigation -->
     <string name="tab_profiles">Profiles</string>
+    <string name="tab_rifle">Rifle</string>
+    <string name="label_rifle">Rifle</string>
+    <string name="label_suppressor">Suppressor</string>
+    <string name="label_suppressor_on">Suppressor on</string>
+    <string name="label_zeroed">Zeroed</string>
+    <string name="option_suppressed">Suppressed</string>
+    <string name="option_bare">Bare</string>
+    <string name="label_poi_shift_up">POI shift up</string>
+    <string name="label_poi_shift_right">POI shift right</string>
+    <string name="suppressor_correction">Not as zeroed: impact moves %1$s %2$s, %3$s %4$s %5$s</string>
+    <string name="action_profiles">Profiles</string>
+    <string name="action_edit_rifle">Edit rifle</string>
+    <string name="action_edit_load">Edit load</string>
+    <string name="zero_short">zero %1$s m</string>
     <string name="tab_conditions">Conditions</string>
     <string name="tab_table">Table</string>
     <string name="tab_target">Target</string>
@@ -274,7 +288,7 @@
     <string name="left">left</string>
 
     <!-- Validation -->
-    <string name="error_no_weapon">Add a rifle profile on the Profiles tab.</string>
+    <string name="error_no_weapon">Add a rifle in Settings, Profiles.</string>
     <string name="error_no_ammo">Choose a load for %1$s.</string>
     <string name="error_cannot_solve">Cannot compute the trajectory</string>
     <string name="error_invalid_value">Invalid value: %1$s</string>
@@ -391,7 +405,9 @@
     <!-- Help: each answer's paragraphs are separated by a blank line (\n\n). -->
     <string name="title_help">Help</string>
     <string name="help_start_title">Where do I start?</string>
-    <string name="help_start">Profiles: add your rifle with its scope and zero, and your load (from the library or your own data). Pick the rifle; its zeroed load comes with it.\n\nConditions: set the wind, temperature, pressure and altitude, and the shot angle if you shoot up or down.\n\nTable gives the dope for every range; Target gives the correction for one distance, drawn on your reticle.</string>
+    <string name="help_start">Settings, Profiles: add your rifle with its scope and zero, and your load (from the library or your own data). The Rifle tab picks the rifle and load in use and whether the suppressor is on.\n\nConditions: set the wind, temperature, pressure and altitude, and the shot angle if you shoot up or down.\n\nTable gives the dope for every range; Target gives the correction for one distance, drawn on your reticle.</string>
+    <string name="help_suppressor_title">How does the suppressor work?</string>
+    <string name="help_suppressor">Turn on Suppressor in the rifle\'s zero section, say whether you zeroed with it on (Suppressed) or off (Bare), and enter how far the impact moves when it goes on, up and right in the turret unit (negative for down or left). Shoot a group with and without it at your zero range to find this.\n\nOn the Rifle tab, switch the suppressor on or off. When it differs from the zero, every correction includes the shift and a small suppressor icon shows when it is on.</string>
     <string name="help_zero_title">What goes into the zero?</string>
     <string name="help_zero">The zero range and the temperature and pressure on the day you zeroed. The app computes the bore angle that hits at that range in those conditions, and keeps it for every other shot.\n\nIf you zeroed in very different weather, entering it moves the whole table by the difference.</string>
     <string name="help_pressure_title">QNH or station pressure?</string>

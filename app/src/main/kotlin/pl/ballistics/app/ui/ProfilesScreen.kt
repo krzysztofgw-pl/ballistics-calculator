@@ -1,6 +1,10 @@
 package pl.ballistics.app.ui
 
 import androidx.compose.foundation.clickable
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -87,6 +91,30 @@ fun ProfilesScreen(
                 Text(stringResource(R.string.action_add_load))
             }
         }
+    }
+}
+
+/** The profile list on its own screen, opened from Settings or the Rifle tab. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ProfilesListScreen(
+    data: AppData,
+    onSelectWeapon: (String) -> Unit,
+    onEditWeapon: (WeaponProfile) -> Unit,
+    onEditAmmo: (AmmoProfile) -> Unit,
+    onClose: () -> Unit,
+) {
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(stringResource(R.string.tab_profiles)) },
+                navigationIcon = {
+                    IconButton(onClick = onClose) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.action_back)) }
+                },
+            )
+        },
+    ) { padding ->
+        ProfilesScreen(data, onSelectWeapon, onEditWeapon, onEditAmmo, Modifier.padding(padding))
     }
 }
 

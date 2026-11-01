@@ -157,6 +157,23 @@ fun WeaponEditor(
             if (w.zeroPressureIsQnh) {
                 NumberField(stringResource(R.string.label_altitude), w.zeroAltitudeM, "m") { w = w.copy(zeroAltitudeM = it) }
             }
+            SwitchRow(stringResource(R.string.label_suppressor), w.suppressor) { w = w.copy(suppressor = it) }
+            if (w.suppressor) {
+                TwoOptions(
+                    stringResource(R.string.label_zeroed),
+                    stringResource(R.string.option_suppressed), stringResource(R.string.option_bare),
+                    w.zeroSuppressed,
+                ) { w = w.copy(zeroSuppressed = it) }
+                // How the impact moves when the suppressor goes on; taking it off moves it back.
+                FieldRow { m ->
+                    NumberField(stringResource(R.string.label_poi_shift_up), w.suppressorShiftUp, w.angularUnit.label, m, optional = true) {
+                        w = w.copy(suppressorShiftUp = it)
+                    }
+                    NumberField(stringResource(R.string.label_poi_shift_right), w.suppressorShiftRight, w.angularUnit.label, m, optional = true) {
+                        w = w.copy(suppressorShiftRight = it)
+                    }
+                }
+            }
         }
     }
 

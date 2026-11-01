@@ -47,7 +47,8 @@ object Calculator {
         if (weapon == null) throw InputError(UiText.Res(R.string.error_no_weapon))
         if (ammo == null) throw InputError(UiText.Res(R.string.error_no_ammo, listOf(weapon.name)))
         val setup = setup(weapon, ammo, conditions)
-        CalcResult.Ok(Solver(setup.options).solve(setup.rifle, setup.ammo, setup.conditions, setup.zeroAtmosphere), weapon, ammo, setup)
+        val solution = Solver(setup.options).solve(setup.rifle, setup.ammo, setup.conditions, setup.zeroAtmosphere)
+        CalcResult.Ok(solution.copy(points = solution.points.map(setup::shifted)), weapon, ammo, setup)
     } catch (e: InputError) {
         CalcResult.Error(e.text)
     } catch (e: IllegalArgumentException) {
@@ -125,7 +126,12 @@ object Calculator {
             aerodynamicJump = c.aerodynamicJump,
             coriolis = c.coriolis,
         )
-        return Setup(rifle, ammo, conditions, zeroAtmosphere, options)
+        val shift = w.suppressorShift()
+        return Setup(
+            rifle, ammo, conditions, zeroAtmosphere, options,
+            shiftUpRad = (shift?.first ?: 0.0) * w.angularUnit.radians,
+            shiftRightRad = (shift?.second ?: 0.0) * w.angularUnit.radians,
+        )
     }
 
     /** One "Mach Cd" pair per line; separators: space, tab, semicolon, or comma between numbers. */
