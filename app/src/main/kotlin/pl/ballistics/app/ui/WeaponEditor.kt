@@ -72,6 +72,7 @@ fun WeaponEditor(
                 NumberField(stringResource(R.string.label_twist), w.twistIn, "in", m, optional = true) { w = w.copy(twistIn = it) }
             }
             SwitchRow(stringResource(R.string.label_right_twist), w.rightHandTwist) { w = w.copy(rightHandTwist = it) }
+            SwitchRow(stringResource(R.string.label_suppressor), w.suppressor) { w = w.copy(suppressor = it) }
             NumberField(
                 stringResource(R.string.label_group), w.groupMoa, "MOA", optional = true,
                 placeholder = TargetInputs.DEFAULT_GROUP_MOA.toString(),
@@ -157,7 +158,7 @@ fun WeaponEditor(
             if (w.zeroPressureIsQnh) {
                 NumberField(stringResource(R.string.label_altitude), w.zeroAltitudeM, "m") { w = w.copy(zeroAltitudeM = it) }
             }
-            SwitchRow(stringResource(R.string.label_suppressor), w.suppressor) { w = w.copy(suppressor = it) }
+            // The suppressor switch sits with the rifle; how the zero relates to it shows here once it is on.
             if (w.suppressor) {
                 TwoOptions(
                     stringResource(R.string.label_zeroed),
