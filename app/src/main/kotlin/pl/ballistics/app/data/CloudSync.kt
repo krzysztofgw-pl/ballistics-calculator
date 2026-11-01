@@ -7,6 +7,8 @@ import androidx.credentials.GetCredentialRequest
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.firebase.FirebaseApp
+import com.google.firebase.Timestamp
+import com.google.firebase.firestore.FieldValue
 import pl.ballistics.app.R
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
@@ -103,6 +105,58 @@ class CloudSync(private val context: Context, private val onRemote: (AppData) ->
         }
     }
 
+    /**
+     * Sends [suggestion] to the community database queue. The per-user quota
+     * document is updated in the same transaction; `firestore.rules` accept the
+     * pair only within the limits (one a minute, [DAILY_LIMIT] a day).
+     * Returns null on success, otherwise a message for the user.
+     */
+    suspend fun suggest(suggestion: BulletSuggestion, appVersion: String): String? {
+        if (!available) return context.getString(R.string.sync_not_configured)
+        val uid = auth.currentUser?.uid ?: return context.getString(R.string.suggest_sign_in)
+        val quotaRef = db.collection(QUOTA).document(uid)
+        val submissionRef = db.collection(SUBMISSIONS).document()
+        return try {
+            db.runTransaction { t ->
+                val quota = t.get(quotaRef)
+                val dayStart = quota.getTimestamp("dayStart")
+                val count = quota.getLong("count") ?: 0L
+                val now = Timestamp.now()
+                val sameDay = dayStart != null && now.seconds - dayStart.seconds < 24 * 3600
+                if (sameDay && count >= DAILY_LIMIT) throw QuotaExceeded()
+                quota.getTimestamp("last")?.let { if (now.seconds - it.seconds < 60) throw TooSoon() }
+                t.set(
+                    quotaRef,
+                    mapOf(
+                        "last" to FieldValue.serverTimestamp(),
+                        "dayStart" to if (sameDay) dayStart!! else FieldValue.serverTimestamp(),
+                        "count" to if (sameDay) count + 1 else 1L,
+                        "lastId" to submissionRef.id,
+                    ),
+                )
+                t.set(
+                    submissionRef,
+                    suggestion.toMap() + mapOf(
+                        "uid" to uid,
+                        "createdAt" to FieldValue.serverTimestamp(),
+                        "status" to "new",
+                        "app" to appVersion.take(40),
+                    ),
+                )
+            }.await()
+            null
+        } catch (e: Exception) {
+            when (e.cause ?: e) {
+                is QuotaExceeded -> context.getString(R.string.suggest_daily_limit, DAILY_LIMIT)
+                is TooSoon -> context.getString(R.string.suggest_too_soon)
+                else -> e.localizedMessage ?: context.getString(R.string.suggest_failed)
+            }
+        }
+    }
+
+    private class QuotaExceeded : RuntimeException()
+    private class TooSoon : RuntimeException()
+
     suspend fun signOut() {
         if (!available) return
         auth.signOut()
@@ -113,5 +167,8 @@ class CloudSync(private val context: Context, private val onRemote: (AppData) ->
         const val USERS = "users"
         const val FIELD_DATA = "data"
         const val FIELD_MODIFIED = "modifiedAt"
+        const val SUBMISSIONS = "submissions"
+        const val QUOTA = "quota"
+        const val DAILY_LIMIT = 10
     }
 }

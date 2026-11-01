@@ -139,3 +139,21 @@ jobs:
           path: |
             garmin/bin/*.prg
             garmin/bin/*.iq
+
+  # firestore.rules guard the bullet suggestion queue; check them in the emulator.
+  firestore-rules:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: tools/firestore-rules
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - run: npm install --no-audit --no-fund
+      - run: npx firebase emulators:exec --only firestore --project demo-rules "node test.mjs"

@@ -14,6 +14,7 @@ import kotlinx.coroutines.withContext
 import pl.ballistics.app.data.AmmoProfile
 import pl.ballistics.app.data.AppData
 import pl.ballistics.app.data.BulletLibrary
+import pl.ballistics.app.data.BulletSuggestion
 import pl.ballistics.app.data.CloudSync
 import pl.ballistics.app.data.SyncState
 import pl.ballistics.app.data.Conditions
@@ -74,6 +75,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     suspend fun signIn(activity: android.content.Context): String? = cloud.signIn(activity)
+
+    suspend fun suggestBullet(suggestion: BulletSuggestion): String? {
+        val app = getApplication<Application>()
+        val version = runCatching { app.packageManager.getPackageInfo(app.packageName, 0).versionName }.getOrNull().orEmpty()
+        return cloud.suggest(suggestion, version)
+    }
 
     fun signOut() {
         viewModelScope.launch { cloud.signOut() }

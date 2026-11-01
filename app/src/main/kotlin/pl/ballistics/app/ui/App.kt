@@ -39,6 +39,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import pl.ballistics.app.MainViewModel
 import pl.ballistics.app.R
+import pl.ballistics.app.data.SyncState
 import pl.ballistics.app.data.AmmoProfile
 import pl.ballistics.app.data.WeaponProfile
 
@@ -114,6 +115,8 @@ fun App(vm: MainViewModel = viewModel()) {
                 onSave = { vm.saveAmmo(it); closeEditor() },
                 onDelete = { vm.deleteAmmo(e.profile.id); closeEditor() },
                 onClose = { closeEditor() },
+                signedIn = sync is SyncState.SignedIn,
+                onSuggest = vm::suggestBullet,
             )
             return
         }
