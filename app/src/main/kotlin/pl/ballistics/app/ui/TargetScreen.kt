@@ -510,10 +510,7 @@ private fun DrawScope.label(measurer: TextMeasurer, s: String, center: Offset, c
     drawText(layout, topLeft = center - Offset(layout.size.width / 2f, layout.size.height / 2f))
 }
 
-private fun clock(deg: Double): String {
-    val hours = (deg / 30).mod(12.0).let { if (it == 0.0) 12.0 else it }
-    return if (hours % 1.0 == 0.0) hours.roundToInt().toString() else "%d:%02d".format(hours.toInt(), ((hours % 1.0) * 60).roundToInt())
-}
+private fun clock(deg: Double): String = clockText(deg)
 
 /** Spin drift by distance and the windage correction by wind speed and by wind direction at the chosen distance. */
 @Composable
