@@ -23,6 +23,8 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
@@ -202,18 +204,20 @@ fun SettingsScreen(
 
 private val CHIP_WIDTH = 80.dp
 
-/** The standard Sign in with Google button: white, the Google "G" in its own colours, and the fixed wording. */
+/** The icon-only Sign in with Google button: a white circle with the Google "G" in its own colours. */
 @Composable
 private fun GoogleSignInButton(onClick: () -> Unit) {
-    OutlinedButton(
+    OutlinedIconButton(
         onClick = onClick,
-        modifier = Modifier.fillMaxWidth(),
-        colors = ButtonDefaults.outlinedButtonColors(containerColor = Color.White, contentColor = Color(0xFF1F1F1F)),
+        modifier = Modifier.size(48.dp),
+        colors = IconButtonDefaults.outlinedIconButtonColors(containerColor = Color.White),
         border = BorderStroke(1.dp, Color(0xFF747775)),
     ) {
-        Image(painterResource(R.drawable.ic_google), contentDescription = null, modifier = Modifier.size(20.dp))
-        Spacer(Modifier.width(12.dp))
-        Text(stringResource(R.string.action_sign_in_google))
+        Image(
+            painterResource(R.drawable.ic_google),
+            contentDescription = stringResource(R.string.action_sign_in_google),
+            modifier = Modifier.size(20.dp),
+        )
     }
 }
 

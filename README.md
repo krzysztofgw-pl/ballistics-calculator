@@ -109,7 +109,7 @@ or the bottom; QNH (default) or station pressure; external devices (Garmin watch
 dial or hold for elevation and windage, per reticle; sync and backup.
 
 ### Sync and backup
-- Google sign-in (the standard Sign in with Google button) with live sync through Cloud Firestore (newer change wins). Signed in, Settings shows the account with a cloud icon and sign-out as an icon.
+- Google sign-in (the icon-only Sign in with Google button, the Google "G") with live sync through Cloud Firestore (newer change wins). Signed in, Settings shows the account with a cloud icon and sign-out as an icon.
 - JSON export and import of all profiles.
 - Android Auto Backup.
 
