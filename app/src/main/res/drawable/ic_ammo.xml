@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Load: a rifle cartridge pointing up and right, one colour for tinting. -->
+<!-- Load: a boat-tail bullet lying flat, pointing right, with a cannelure; one colour for tinting. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"
     android:viewportWidth="24"
     android:viewportHeight="24">
-    <group android:pivotX="12" android:pivotY="12" android:rotation="-45">
-        <path android:fillColor="#FF000000" android:pathData="M-1,9H0.2V9.6H1.2V9L14,9.15L16,10.3H18.5V13.7H16L14,14.85L1.2,15V14.4H0.2V15H-1Z" />
-        <path android:fillColor="#FF000000" android:pathData="M18.8,10.45H20.5C23,10.6 24.4,11.4 25,12C24.4,12.6 23,13.4 20.5,13.55H18.8Z" />
-    </group>
+    <path
+        android:fillColor="#FF000000"
+        android:pathData="M0.8,10.3L3.6,9.1H7.2V14.9H3.6L0.8,13.7ZM7.7,9.1H9.5C15,9.1 20.5,10.4 23.5,12C20.5,13.6 15,14.9 9.5,14.9H7.7Z" />
 </vector>
