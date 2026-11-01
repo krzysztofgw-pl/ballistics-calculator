@@ -48,7 +48,7 @@ private enum class Picker { BULLET, FACTORY }
 /** Cartridges that have bullets in the library, smallest first. */
 private fun bulletFilters(bullets: List<Bullet>): List<String> {
     val diameters = bullets.map { it.diameterIn }.distinct()
-    Cartridges.all.filter { c -> diameters.any { Cartridges.sameDiameter(it, c.bulletDiameterIn) } }
+    return Cartridges.all.filter { c -> diameters.any { Cartridges.sameDiameter(it, c.bulletDiameterIn) } }
         .sortedBy { it.bulletDiameterIn }
         .map { it.name }
 }
