@@ -31,6 +31,7 @@ import pl.ballistics.app.TargetInputs
 import androidx.compose.ui.unit.dp
 import pl.ballistics.app.data.AmmoProfile
 import pl.ballistics.app.data.Bullet
+import pl.ballistics.app.data.BulletSuggestion
 import pl.ballistics.app.data.BulletLibrary
 import pl.ballistics.app.data.Cartridges
 import pl.ballistics.app.toNumber
@@ -67,9 +68,12 @@ fun AmmoEditor(
     onSave: (AmmoProfile) -> Unit,
     onDelete: () -> Unit,
     onClose: () -> Unit,
+    signedIn: Boolean = false,
+    onSuggest: suspend (BulletSuggestion) -> String? = { null },
 ) {
     var a by remember { mutableStateOf(initial) }
     var picker by remember { mutableStateOf<Picker?>(null) }
+    var suggesting by remember { mutableStateOf(false) }
 
     EditorScaffold(
         title = if (isNew) stringResource(R.string.title_new_load) else a.name,
@@ -114,6 +118,9 @@ fun AmmoEditor(
                 NumberField(stringResource(R.string.label_diameter), a.diameterMm, "mm", m) { a = a.copy(diameterMm = it) }
             }
             NumberField(stringResource(R.string.label_bullet_length), a.lengthMm, "mm", optional = true) { a = a.copy(lengthMm = it) }
+            if (a.dragType != DragType.CUSTOM) {
+                TextButton(onClick = { suggesting = true }) { Text(stringResource(R.string.action_suggest_bullet)) }
+            }
         }
 
         Section(stringResource(R.string.section_velocity)) {
@@ -151,6 +158,14 @@ fun AmmoEditor(
     }
 
     val bullets = BulletLibrary.state.collectAsState().value.current
+    if (suggesting) {
+        SuggestBulletDialog(
+            initial = remember { BulletSuggestion.from(a, BulletLibrary.state.value.bullets) },
+            signedIn = signedIn,
+            onSend = onSuggest,
+            onDismiss = { suggesting = false },
+        )
+    }
     when (picker) {
         Picker.BULLET -> LibraryDialog(
             title = stringResource(R.string.title_bullets),

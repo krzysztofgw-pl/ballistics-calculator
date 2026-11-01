@@ -1,0 +1,98 @@
+rules_version = '2';
+
+// Paste into Firebase console → Firestore → Rules, then Publish.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function blocked() {
+      return exists(/databases/$(database)/documents/blocked/$(request.auth.uid));
+    }
+
+    // Profiles: each user reads and writes only their own document.
+    match /users/{uid} {
+      allow read, write: if signedIn() && request.auth.uid == uid;
+    }
+
+    // Accounts barred from suggesting bullets. Written only from the console.
+    match /blocked/{uid} {
+      allow read, write: if false;
+    }
+
+    // Per-user suggestion counter, written in the same transaction as each
+    // submission: at most one a minute and 10 per 24 hours.
+    match /quota/{uid} {
+      allow read: if signedIn() && request.auth.uid == uid;
+      allow create: if signedIn() && request.auth.uid == uid && !blocked()
+        && quotaShape()
+        && request.resource.data.dayStart == request.time
+        && request.resource.data.count == 1;
+      allow update: if signedIn() && request.auth.uid == uid && !blocked()
+        && quotaShape()
+        && request.time > resource.data.last + duration.value(60, 's')
+        && ((request.time < resource.data.dayStart + duration.value(1, 'd')
+             && request.resource.data.dayStart == resource.data.dayStart
+             && request.resource.data.count == resource.data.count + 1
+             && request.resource.data.count <= 10)
+          || (request.time >= resource.data.dayStart + duration.value(1, 'd')
+             && request.resource.data.dayStart == request.time
+             && request.resource.data.count == 1));
+    }
+
+    function quotaShape() {
+      let d = request.resource.data;
+      return d.keys().hasOnly(['last', 'dayStart', 'count', 'lastId'])
+        && d.last == request.time
+        && d.lastId is string
+        && !exists(/databases/$(database)/documents/submissions/$(d.lastId))
+        && existsAfter(/databases/$(database)/documents/submissions/$(d.lastId));
+    }
+
+    // Bullet suggestions for the community database. Users only create them
+    // (and read their own); a daily job in ballistics-bullets turns them into
+    // pull requests and updates their status with a service account.
+    match /submissions/{id} {
+      allow read: if signedIn() && resource.data.uid == request.auth.uid;
+      allow create: if signedIn() && !blocked()
+        && validSubmission(request.resource.data)
+        && getAfter(/databases/$(database)/documents/quota/$(request.auth.uid)).data.lastId == id
+        && getAfter(/databases/$(database)/documents/quota/$(request.auth.uid)).data.last == request.time;
+      allow update, delete: if false;
+    }
+
+    function inRange(v, lo, hi) {
+      return (v is int || v is float) && v >= lo && v <= hi;
+    }
+
+    function text(v, lo, hi) {
+      return v is string && v.size() >= lo && v.size() <= hi;
+    }
+
+    function validSubmission(d) {
+      return d.keys().hasAll(['maker', 'name', 'diameter_in', 'weight_gr', 'bc', 'source', 'uid', 'createdAt', 'status'])
+        && d.keys().hasOnly(['maker', 'name', 'diameter_in', 'weight_gr', 'bc', 'length_in', 'twist_in',
+                             'source', 'note', 'replaces', 'uid', 'createdAt', 'status', 'app'])
+        && d.uid == request.auth.uid
+        && d.createdAt == request.time
+        && d.status == 'new'
+        && text(d.maker, 1, 40)
+        && text(d.name, 1, 60)
+        && inRange(d.diameter_in, 0.1, 0.75)
+        && inRange(d.weight_gr, 10, 1000)
+        && d.bc is map && d.bc.size() > 0 && d.bc.keys().hasOnly(['g1', 'g7'])
+        && (!('g1' in d.bc) || inRange(d.bc.g1, 0.02, 1.3))
+        && (!('g7' in d.bc) || inRange(d.bc.g7, 0.02, 1.3))
+        && (!('length_in' in d) || inRange(d.length_in, 0.2, 5))
+        && (!('twist_in' in d) || inRange(d.twist_in, 5, 20))
+        && d.source is map && d.source.keys().hasOnly(['type', 'ref'])
+        && d.source.type in ['website', 'catalogue', 'box', 'doppler']
+        && text(d.source.ref, 3, 300)
+        && (!('note' in d) || text(d.note, 0, 500))
+        && (!('replaces' in d) || text(d.replaces, 1, 80))
+        && (!('app' in d) || text(d.app, 0, 40));
+    }
+  }
+}

@@ -7,3 +7,4 @@ local.properties
 .kotlin/
 garmin/bin/
 garmin/developer_key.der
+node_modules/
