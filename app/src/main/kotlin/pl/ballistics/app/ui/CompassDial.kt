@@ -193,6 +193,20 @@ private fun DrawScope.drawArrow(from: Offset, to: Offset, color: Color, scale: F
     drawPath(path, color)
 }
 
+/**
+ * A wind direction as a clock reading, written the British way: 3, 3.30, 12.45 (hours and minutes, never 3.5).
+ * [halfHours] rounds to the nearest half hour.
+ */
+fun clockText(deg: Double, halfHours: Boolean = false): String {
+    var h = deg.mod(360.0) / 30
+    if (halfHours) h = (h * 2).roundToInt() / 2.0
+    var hour = h.toInt()
+    var minutes = ((h - hour) * 60).roundToInt()
+    if (minutes == 60) { hour += 1; minutes = 0 }
+    hour = hour.mod(12).let { if (it == 0) 12 else it }
+    return if (minutes == 0) hour.toString() else String.format(java.util.Locale.US, "%d.%02d", hour, minutes)
+}
+
 /** Compass point for a bearing: N, NNE, NE … */
 fun compassPoint(deg: Double): String {
     val points = listOf("N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW")

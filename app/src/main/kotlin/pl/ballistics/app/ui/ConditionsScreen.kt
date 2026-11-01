@@ -105,12 +105,7 @@ fun ConditionsScreen(
 
 private fun deg(v: Double): String = v.roundToInt().mod(360).toString()
 
-private fun clockHour(deg: Double): String {
-    val h = deg.mod(360.0) / 30
-    val rounded = (h * 2).roundToInt() / 2.0
-    val v = if (rounded == 0.0 || rounded == 12.0) 12.0 else rounded
-    return if (v % 1.0 == 0.0) v.toInt().toString() else String.format(Locale.US, "%.1f", v)
-}
+private fun clockHour(deg: Double): String = clockText(deg, halfHours = true)
 
 private fun cardinal(deg: Int): String? = when (deg) {
     0 -> "N"
