@@ -16,8 +16,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.windowInsetsBottomHeight
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -51,8 +49,8 @@ import pl.ballistics.app.data.WeaponProfile
 private data class MainTab(@StringRes val title: Int, val icon: @Composable () -> ImageVector)
 
 private val tabs = listOf(
-    MainTab(R.string.tab_rifle) { Icons.Filled.Person },
-    MainTab(R.string.tab_conditions) { Icons.Filled.Place },
+    MainTab(R.string.tab_rifle) { ImageVector.vectorResource(R.drawable.ic_tab_rifle) },
+    MainTab(R.string.tab_conditions) { ImageVector.vectorResource(R.drawable.ic_forecast) },
     MainTab(R.string.tab_table) { Icons.AutoMirrored.Filled.List },
     MainTab(R.string.tab_target) { ImageVector.vectorResource(R.drawable.ic_tab_target) },
 )

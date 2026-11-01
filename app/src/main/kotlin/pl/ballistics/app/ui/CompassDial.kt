@@ -98,12 +98,16 @@ fun CompassDial(
                 .onGloballyPositioned { bounds = it.boundsInRoot(); if (active) DialFocus.bounds = bounds }
                 .pointerInput(stepDeg, active) {
                     detectTapGestures {
+                        // Only the round face counts; the corners of its square are outside the dial.
+                        if (!onFace(it, size)) return@detectTapGestures
                         if (active) current(angleAt(it, size)) else { DialFocus.active = key; DialFocus.bounds = bounds }
                     }
                 }
                 .then(
                     if (!active) Modifier else Modifier.pointerInput(stepDeg) {
-                        detectDragGestures(onDragStart = { current(angleAt(it, size)) }) { change, _ ->
+                        var onDial = false
+                        detectDragGestures(onDragStart = { onDial = onFace(it, size); if (onDial) current(angleAt(it, size)) }) { change, _ ->
+                            if (!onDial) return@detectDragGestures
                             change.consume()
                             current(angleAt(change.position, size))
                         }
@@ -144,17 +148,24 @@ fun CompassDial(
     }
 }
 
-/** The one dial that takes touches now, and where it is on screen; a tap anywhere else locks it again. */
+/** The one dial that takes touches now, and the square it is drawn in; a tap off its round face locks it again. */
 object DialFocus {
     var active by mutableStateOf<Any?>(null)
     var bounds = Rect.Zero
 }
 
-/** On the screen's root: a press outside the unlocked dial locks it. The press still goes on to what is under it. */
+/** Whether [p] lies on the round face of a dial drawn in a box of [size]. */
+private fun onFace(p: Offset, size: IntSize): Boolean {
+    val r = minOf(size.width, size.height) / 2f
+    return (p - Offset(size.width / 2f, size.height / 2f)).getDistance() <= r
+}
+
+/** On the screen's root: a press off the unlocked dial's round face locks it. The press still goes on to what is under it. */
 fun Modifier.lockDialsOnOutsideTap(): Modifier = pointerInput(Unit) {
     awaitEachGesture {
         val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
-        if (DialFocus.active != null && !DialFocus.bounds.contains(down.position)) DialFocus.active = null
+        val b = DialFocus.bounds
+        if (DialFocus.active != null && (down.position - b.center).getDistance() > b.minDimension / 2f) DialFocus.active = null
     }
 }
 
