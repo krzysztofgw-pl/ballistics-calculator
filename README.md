@@ -13,9 +13,10 @@ your scope's reticle, and syncs everything to the cloud.
 ## Features
 
 ### Rifle
-The first tab: the rifle and load in use, picked from the profiles, with a one-line summary (caliber,
-scope, zero, muzzle velocity), shortcuts to edit them, and the profile list. When the rifle has a
-suppressor, a switch says whether it is on; a small suppressor icon in the top bar shows it on every tab.
+The first tab: the rifle and load in use, picked from full-width dropdowns, with a wrench next to each
+to edit it, a one-line summary (caliber, scope, zero, muzzle velocity) and the profile list. Help and
+settings sit at its top right; there is no title bar, the tabs name the screen. When the rifle has a
+suppressor configured, a switch says whether it is on; a small suppressor badge on the Rifle tab shows it on every tab.
 
 ### Profiles
 Settings → Profiles (or the Profiles button on the Rifle tab) lists and edits rifles and loads.
@@ -99,11 +100,11 @@ or held. Dial corrections are whole clicks and holds are to 0.05; the reticle sh
 - Ranging with the reticle: distance from the target size and its reading in the reticle.
 
 ### Help
-The question mark next to the gear: short answers on getting started, the zero, QNH or station pressure,
+The question mark on the Rifle tab, next to the gear: short answers on getting started, the zero, QNH or station pressure,
 muzzle velocity, wind, shot angle, the Target screen, moving targets, sync, updates and accuracy.
 
 ### Settings
-The gear in the top bar: light, dark or system theme; keep the screen on; tabs and sub-tabs at the top
+The gear on the Rifle tab: light, dark or system theme; keep the screen on; tabs and sub-tabs at the top
 or the bottom; QNH (default) or station pressure; external devices (Garmin watch for pressure); whether location sets the latitude and the altitude;
 dial or hold for elevation and windage, per reticle; sync and backup.
 

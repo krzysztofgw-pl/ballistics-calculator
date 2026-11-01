@@ -1,12 +1,12 @@
 package pl.ballistics.app.ui
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.windowInsetsTopHeight
+import androidx.compose.material3.BadgedBox
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.Alignment
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.Row
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -18,17 +18,14 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Place
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -70,6 +67,24 @@ private sealed interface Editor {
 }
 
 private const val TARGET_TAB = 3
+private const val RIFLE_TAB = 0
+
+/** A tab's icon; the Rifle tab carries a small suppressor badge while the suppressor is on. */
+@Composable
+private fun TabIcon(t: MainTab, index: Int, suppressorOn: Boolean) {
+    if (index == RIFLE_TAB && suppressorOn) {
+        BadgedBox(badge = {
+            Icon(
+                ImageVector.vectorResource(R.drawable.ic_suppressor),
+                stringResource(R.string.label_suppressor_on),
+                Modifier.size(14.dp),
+                tint = MaterialTheme.colorScheme.primary,
+            )
+        }) { Icon(t.icon(), contentDescription = null) }
+    } else {
+        Icon(t.icon(), contentDescription = null)
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -168,35 +183,13 @@ fun App(vm: MainViewModel = viewModel()) {
         )
     }
 
+    val suppressorOn = data.activeWeapon?.let { it.suppressor && it.suppressorMounted } == true
     Scaffold(
         modifier = Modifier.lockDialsOnOutsideTap(),
         topBar = {
+            // No title bar: the tabs name the screen, and help and settings sit on the Rifle tab.
             Column {
-                TopAppBar(
-                    title = {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(stringResource(tabs[tab].title))
-                            // A small reminder that the suppressor is on, on every tab.
-                            if (data.activeWeapon?.let { it.suppressor && it.suppressorMounted } == true) {
-                                Spacer(Modifier.width(8.dp))
-                                Icon(
-                                    ImageVector.vectorResource(R.drawable.ic_suppressor),
-                                    stringResource(R.string.label_suppressor_on),
-                                    Modifier.size(20.dp),
-                                    tint = MaterialTheme.colorScheme.primary,
-                                )
-                            }
-                        }
-                    },
-                    actions = {
-                        IconButton(onClick = { editor = Editor.Help }) {
-                            Icon(ImageVector.vectorResource(R.drawable.ic_help), stringResource(R.string.title_help))
-                        }
-                        IconButton(onClick = { editor = Editor.Settings }) {
-                            Icon(Icons.Filled.Settings, stringResource(R.string.title_settings))
-                        }
-                    },
-                )
+                Spacer(Modifier.windowInsetsTopHeight(WindowInsets.statusBars))
                 if (data.ui.tabsAtTop) {
                     TabRow(selectedTabIndex = tab) {
                         tabs.forEachIndexed { index, t ->
@@ -204,7 +197,7 @@ fun App(vm: MainViewModel = viewModel()) {
                                 selected = tab == index,
                                 onClick = { tab = index },
                                 text = { Text(stringResource(t.title)) },
-                                icon = { Icon(t.icon(), contentDescription = null) },
+                                icon = { TabIcon(t, index, suppressorOn) },
                             )
                         }
                     }
@@ -222,7 +215,7 @@ fun App(vm: MainViewModel = viewModel()) {
                             NavigationBarItem(
                                 selected = tab == index,
                                 onClick = { tab = index },
-                                icon = { Icon(t.icon(), contentDescription = null) },
+                                icon = { TabIcon(t, index, suppressorOn) },
                                 label = { Text(stringResource(t.title)) },
                             )
                         }
@@ -244,6 +237,8 @@ fun App(vm: MainViewModel = viewModel()) {
                 onEditWeapon = { fromProfiles = false; editor = Editor.Weapon(it) },
                 onEditAmmo = { fromProfiles = false; editor = Editor.Ammo(it) },
                 onOpenProfiles = { fromProfiles = true; profilesReturn = null; editor = Editor.Profiles },
+                onOpenHelp = { editor = Editor.Help },
+                onOpenSettings = { editor = Editor.Settings },
                 modifier = modifier,
             )
             1 -> ConditionsScreen(data.conditions, data.ui, vm::updateConditions, modifier)

@@ -3,8 +3,6 @@ package pl.ballistics.app.ui
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -14,16 +12,28 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Build
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MenuAnchorType
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -41,7 +51,6 @@ import java.util.Locale
 import kotlin.math.abs
 
 /** The rifle and load in use, picked from the profiles, and whether the suppressor is on. */
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun RifleScreen(
     data: AppData,
@@ -50,6 +59,8 @@ fun RifleScreen(
     onEditWeapon: (WeaponProfile) -> Unit,
     onEditAmmo: (AmmoProfile) -> Unit,
     onOpenProfiles: () -> Unit,
+    onOpenHelp: () -> Unit,
+    onOpenSettings: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val w = data.activeWeapon
@@ -59,21 +70,40 @@ fun RifleScreen(
         modifier.verticalScroll(rememberScrollState()).padding(12.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
+        // Help and settings live here now that there is no title bar.
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+            IconButton(onClick = onOpenHelp) {
+                Icon(ImageVector.vectorResource(R.drawable.ic_help), stringResource(R.string.title_help))
+            }
+            IconButton(onClick = onOpenSettings) {
+                Icon(Icons.Filled.Settings, stringResource(R.string.title_settings))
+            }
+        }
+
         Card(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (w == null) {
                     Text(stringResource(R.string.error_no_weapon))
                 } else {
-                    Choice(stringResource(R.string.label_rifle), w, data.weapons, { it.name }) { onSelectWeapon(it.id) }
+                    Picker(
+                        stringResource(R.string.label_rifle), w, data.weapons, { it.name },
+                        onSelect = { onSelectWeapon(it.id) },
+                        editLabel = stringResource(R.string.action_edit_rifle),
+                        onEdit = { onEditWeapon(w) },
+                    )
                     val fitting = data.ammo.filter { it.fits(w) }
                     val shown = (fitting + listOfNotNull(load?.takeIf { it !in fitting }))
                         .sortedWith(compareBy({ it.diameterInOrMax() }, { it.caliberGroup() }, { it.name }))
-                    Choice(
+                    val choose = stringResource(R.string.choose)
+                    Picker(
                         stringResource(R.string.label_load),
                         load,
                         listOf<AmmoProfile?>(null) + shown,
-                        { it?.name ?: stringResource(R.string.choose) },
-                    ) { a -> onUpdateWeapon { it.copy(ammoId = a?.id) } }
+                        { it?.name ?: choose },
+                        onSelect = { a -> onUpdateWeapon { it.copy(ammoId = a?.id) } },
+                        editLabel = stringResource(R.string.action_edit_load),
+                        onEdit = load?.let { l -> { onEditAmmo(l) } },
+                    )
                     Text(summary(w, load, stringResource(R.string.zero_short, w.zeroRangeM)), style = MaterialTheme.typography.bodySmall)
                 }
             }
@@ -107,10 +137,45 @@ fun RifleScreen(
             }
         }
 
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            if (w != null) IconLabelButton(Icons.Filled.Edit, stringResource(R.string.action_edit_rifle)) { onEditWeapon(w) }
-            if (load != null) IconLabelButton(Icons.Filled.Edit, stringResource(R.string.action_edit_load)) { onEditAmmo(load) }
-            IconLabelButton(Icons.Filled.Person, stringResource(R.string.action_profiles), onOpenProfiles)
+        IconLabelButton(Icons.Filled.Person, stringResource(R.string.action_profiles), onOpenProfiles)
+    }
+}
+
+/** A full-width dropdown that opens under its field, with a wrench to its right that edits the picked item. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun <T> Picker(
+    label: String,
+    selected: T,
+    options: List<T>,
+    name: @Composable (T) -> String,
+    onSelect: (T) -> Unit,
+    editLabel: String,
+    onEdit: (() -> Unit)?,
+) {
+    var open by remember { mutableStateOf(false) }
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        ExposedDropdownMenuBox(expanded = open, onExpandedChange = { open = it }, modifier = Modifier.weight(1f)) {
+            OutlinedTextField(
+                value = name(selected),
+                onValueChange = {},
+                readOnly = true,
+                singleLine = true,
+                label = { Text(label) },
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = open) },
+                modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
+            )
+            ExposedDropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+                options.forEach { option ->
+                    DropdownMenuItem(
+                        text = { Text(name(option)) },
+                        onClick = { open = false; onSelect(option) },
+                    )
+                }
+            }
+        }
+        IconButton(onClick = { onEdit?.invoke() }, enabled = onEdit != null) {
+            Icon(Icons.Filled.Build, editLabel)
         }
     }
 }
