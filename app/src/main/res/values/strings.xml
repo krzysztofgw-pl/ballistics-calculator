@@ -399,13 +399,13 @@
     <string name="help_velocity_title">Which muzzle velocity is used?</string>
     <string name="help_velocity">The velocity you measured with this rifle and this load, if you entered one in the rifle\'s zero section. Otherwise the load\'s reference velocity, which was measured in its test barrel: a shorter barrel is usually slower.\n\nThe velocity follows the air temperature with the load\'s powder sensitivity.</string>
     <string name="help_wind_title">How do I enter the wind?</string>
-    <string name="help_wind">Drag on the dial. With north up, the shot goes out along the azimuth and the wind comes from its true bearing; otherwise the line of fire points up and the wind reads like a clock.\n\nForecast fills in the wind for your location and a chosen time window; the wind bracket on Target shows the lightest and strongest case.</string>
+    <string name="help_wind">Tap the dial to unlock it (its rim turns coloured), then tap or drag to set it; a tap anywhere else locks it, so scrolling over it changes nothing. With north up, the shot goes out along the azimuth and the wind comes from its true bearing; otherwise the line of fire points up and the wind reads like a clock.\n\nForecast fills in the wind for your location and a chosen time window; the wind bracket on Target shows the lightest and strongest case.</string>
     <string name="help_angle_title">How do I measure the shot angle?</string>
     <string name="help_angle">Tap the camera between Shot angle and Cant and aim the crosshair at the target: the gravity sensor gives the angle.\n\nCalibrate once per orientation: aim at a mark, then turn the phone over and aim again. This removes the camera\'s tilt in the phone.</string>
     <string name="help_target_title">How do I read the Target screen?</string>
     <string name="help_target">Set the distance with the field, the arrows or the slider. The corners of the reticle say what to dial and what to hold for elevation and windage; the red points are where the bullet goes at each distance.\n\nWhether each axis is dialed or held is set per reticle in Settings. Dial corrections are whole clicks, holds are to 0.05.</string>
     <string name="help_moving_title">How does the moving target work?</string>
-    <string name="help_moving">Tick Moving target, enter its speed and set its course on the small dial in the reticle\'s corner: up is away from you, right is to the right.\n\nThe blue point is where to hold so the bullet meets the target, using the time of flight.</string>
+    <string name="help_moving">Tick Moving target, enter its speed and set its course on the small dial in the reticle\'s corner (tap it first to unlock it): up is away from you, right is to the right.\n\nThe blue point is where to hold so the bullet meets the target, using the time of flight.</string>
     <string name="help_table_title">What is in the table?</string>
     <string name="help_table">For each range: drop, elevation and clicks, wind drift and windage, velocity, energy, time of flight and Mach. Its range and step are set below it.</string>
     <string name="help_sync_title">How are my profiles kept?</string>

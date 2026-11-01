@@ -41,7 +41,8 @@ Coriolis (latitude), spin drift and aerodynamic jump. Each tab keeps its scroll 
 - **Wind and azimuth dial**: one 360° dial for both, with a switch for which one a tap or drag sets.
   North up it reads like a map: the shot goes out along the azimuth and the wind comes in from its true
   bearing. Otherwise the line of fire points up, the wind reads as a clock and a north marker shows the
-  azimuth. Moving the azimuth keeps the wind where it is in the frame shown.
+  azimuth. Moving the azimuth keeps the wind where it is in the frame shown. A dial takes touches only after a
+  tap unlocks it (its rim turns coloured); a tap anywhere else locks it, so scrolling over it changes nothing.
 - **Phone compass** for the azimuth, corrected for magnetic declination when the location is known. Each
   reading is checked: the phone's own calibration status and heading accuracy, and the measured field
   against the Earth's field at the location. A warning suggests a figure-eight calibration away from steel.
