@@ -48,7 +48,6 @@
     <string name="section_sync">Sync</string>
     <string name="no_ammo">no load selected</string>
     <string name="sync_signed_in">signed in</string>
-    <string name="sync_signed_in_as">Cloud: %1$s</string>
     <string name="sync_not_configured">Cloud sync is not configured in this build</string>
     <string name="sync_missing_client_id">The Firebase configuration has no Google client ID</string>
     <string name="sync_sign_in_failed">Sign-in failed</string>

@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
@@ -29,7 +28,6 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -38,6 +36,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
+import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import pl.ballistics.app.R
@@ -160,25 +165,22 @@ fun SettingsScreen(
             Section(stringResource(R.string.section_sync)) {
                 when (sync) {
                     SyncState.Unavailable -> Unit
-                    SyncState.SignedOut -> Button(onClick = {
+                    SyncState.SignedOut -> GoogleSignInButton {
                         scope.launch {
                             onSignIn(context)?.let { Toast.makeText(context, it, Toast.LENGTH_LONG).show() }
                         }
-                    }) { Text(stringResource(R.string.action_sign_in_google)) }
-                    is SyncState.SignedIn -> {
-                        Text(
-                            stringResource(R.string.sync_signed_in_as, sync.email ?: stringResource(R.string.sync_signed_in)),
-                            style = MaterialTheme.typography.bodyMedium,
-                        )
-                        sync.error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
-                        TextButton(onClick = onSignOut) { Text(stringResource(R.string.action_sign_out)) }
                     }
+                    is SyncState.SignedIn -> SignedInRow(sync, onSignOut)
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedButton(onClick = { exportLauncher.launch("ballistics-${LocalDate.now()}.json") }) {
+                        Icon(ImageVector.vectorResource(R.drawable.ic_export), null, Modifier.size(ButtonDefaults.IconSize))
+                        Spacer(Modifier.width(ButtonDefaults.IconSpacing))
                         Text(stringResource(R.string.action_export))
                     }
                     OutlinedButton(onClick = { importLauncher.launch(arrayOf("application/json", "text/plain", "*/*")) }) {
+                        Icon(ImageVector.vectorResource(R.drawable.ic_import), null, Modifier.size(ButtonDefaults.IconSize))
+                        Spacer(Modifier.width(ButtonDefaults.IconSpacing))
                         Text(stringResource(R.string.action_import))
                     }
                 }
@@ -199,6 +201,43 @@ fun SettingsScreen(
 }
 
 private val CHIP_WIDTH = 80.dp
+
+/** The standard Sign in with Google button: white, the Google "G" in its own colours, and the fixed wording. */
+@Composable
+private fun GoogleSignInButton(onClick: () -> Unit) {
+    OutlinedButton(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
+        colors = ButtonDefaults.outlinedButtonColors(containerColor = Color.White, contentColor = Color(0xFF1F1F1F)),
+        border = BorderStroke(1.dp, Color(0xFF747775)),
+    ) {
+        Image(painterResource(R.drawable.ic_google), contentDescription = null, modifier = Modifier.size(20.dp))
+        Spacer(Modifier.width(12.dp))
+        Text(stringResource(R.string.action_sign_in_google))
+    }
+}
+
+/** The signed-in account with a synced (or failed) cloud, and sign-out as an icon. */
+@Composable
+private fun SignedInRow(sync: SyncState.SignedIn, onSignOut: () -> Unit) {
+    val failed = sync.error != null
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        Icon(
+            ImageVector.vectorResource(R.drawable.ic_cloud_done),
+            contentDescription = stringResource(R.string.sync_signed_in),
+            modifier = Modifier.size(32.dp),
+            tint = if (failed) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+        )
+        Spacer(Modifier.width(12.dp))
+        Column(Modifier.weight(1f)) {
+            Text(sync.email ?: stringResource(R.string.sync_signed_in), style = MaterialTheme.typography.bodyLarge)
+            sync.error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
+        }
+        IconButton(onClick = onSignOut) {
+            Icon(Icons.AutoMirrored.Filled.ExitToApp, stringResource(R.string.action_sign_out))
+        }
+    }
+}
 
 /** A chip that reads Dial when selected and Hold otherwise; a tap switches it. */
 @Composable
