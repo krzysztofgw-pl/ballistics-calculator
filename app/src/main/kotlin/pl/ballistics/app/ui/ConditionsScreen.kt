@@ -22,7 +22,6 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -296,7 +295,7 @@ private fun LatitudeInput(i: Conditions, update: ((Conditions) -> Conditions) ->
     var reading by remember { mutableStateOf(false) }
     var accuracyM by remember { mutableStateOf<Int?>(null) }
 
-    // The field holds the size of the latitude and the button its hemisphere, so south needs no minus key.
+    // The field holds the size of the latitude and its unit the hemisphere (tap to switch), so south needs no minus key.
     val raw = i.latitudeDeg.trim()
     var south by remember { mutableStateOf(raw.startsWith("-")) }
     LaunchedEffect(raw) { if (raw.isNotEmpty() && raw != "-") south = raw.startsWith("-") }
@@ -306,16 +305,16 @@ private fun LatitudeInput(i: Conditions, update: ((Conditions) -> Conditions) ->
     }
 
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-        NumberField(stringResource(R.string.label_latitude), raw.removePrefix("-"), "°", Modifier.weight(1f)) { v ->
+        NumberField(
+            stringResource(R.string.label_latitude), raw.removePrefix("-"),
+            "°" + stringResource(if (south) R.string.hemisphere_south else R.string.hemisphere_north), Modifier.weight(1f),
+            onUnitClick = { accuracyM = null; store(raw.removePrefix("-"), !south) },
+        ) { v ->
             accuracyM = null
             if (v.startsWith("-")) store(v.removePrefix("-"), true) else store(v, south)
         }
-        OutlinedButton(
-            onClick = { accuracyM = null; store(raw.removePrefix("-"), !south) },
-            contentPadding = PaddingValues(horizontal = 12.dp),
-        ) { Text(stringResource(if (south) R.string.hemisphere_south else R.string.hemisphere_north)) }
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            IconButton(enabled = !reading, onClick = {
+            OutlinedButton(enabled = !reading, contentPadding = PaddingValues(horizontal = 12.dp), onClick = {
                 withPermission {
                     scope.launch {
                         reading = true
@@ -332,8 +331,10 @@ private fun LatitudeInput(i: Conditions, update: ((Conditions) -> Conditions) ->
                     }
                 }
             }) {
-                if (reading) CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
-                else Icon(Icons.Filled.LocationOn, stringResource(R.string.action_my_location))
+                if (reading) CircularProgressIndicator(Modifier.size(ButtonDefaults.IconSize), strokeWidth = 2.dp)
+                else Icon(Icons.Filled.LocationOn, contentDescription = null, modifier = Modifier.size(ButtonDefaults.IconSize))
+                Spacer(Modifier.width(ButtonDefaults.IconSpacing))
+                Text(stringResource(R.string.action_locate_short), maxLines = 1)
             }
             accuracyM?.let { Text(stringResource(R.string.location_accuracy, it), style = MaterialTheme.typography.labelSmall) }
         }
