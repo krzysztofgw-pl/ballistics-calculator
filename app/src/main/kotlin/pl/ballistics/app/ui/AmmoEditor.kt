@@ -1,6 +1,11 @@
 package pl.ballistics.app.ui
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.material3.Icon
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -119,7 +124,11 @@ fun AmmoEditor(
             }
             NumberField(stringResource(R.string.label_bullet_length), a.lengthMm, "mm", optional = true) { a = a.copy(lengthMm = it) }
             if (a.dragType != DragType.CUSTOM) {
-                TextButton(onClick = { suggesting = true }) { Text(stringResource(R.string.action_suggest_bullet)) }
+                OutlinedButton(onClick = { suggesting = true }) {
+                    Icon(ImageVector.vectorResource(R.drawable.ic_suggest_bullet), null, Modifier.size(ButtonDefaults.IconSize))
+                    Spacer(Modifier.width(ButtonDefaults.IconSpacing))
+                    Text(stringResource(R.string.action_suggest_bullet))
+                }
             }
         }
 
