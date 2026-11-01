@@ -39,7 +39,10 @@ Settings → Profiles (or the Profiles button on the Rifle tab) lists and edits 
   when a load names none), with a switch to show the rest.
 - **Bullet library**: over 600 rifle bullets from Barnes, Berger, Hornady, Lapua, Sierra and Speer with
   published G1 and G7 BCs (Berger with length and twist), searchable by maker, name and caliber, plus common
-  factory loads with their test barrel lengths. See [tools/bullet-library](tools/bullet-library/README.md) for sources and how to update it.
+  factory loads with their test barrel lengths. The bullets come from the open community database
+  [ballistics-bullets](https://github.com/krzysztofgw-pl/ballistics-bullets): the app ships a snapshot
+  (`tools/update-bullets.sh` refreshes it) and downloads newer versions once a day. Additions and
+  corrections go there as pull requests.
 
 Muzzle velocity follows the air temperature (taken as the powder temperature) with the load's sensitivity, or a
 standard 1.0 m/s per °C when none is entered; factory velocities are referenced to 21 °C (SAAMI, CIP).
