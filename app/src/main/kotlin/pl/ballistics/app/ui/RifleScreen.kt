@@ -102,7 +102,7 @@ fun RifleScreen(
                     val choose = stringResource(R.string.choose)
                     Picker(
                         stringResource(R.string.label_load),
-                        ImageVector.vectorResource(R.drawable.ic_ammo),
+                        ImageVector.vectorResource(R.drawable.ic_cartridge),
                         LOAD_ICON,
                         load,
                         listOf<AmmoProfile?>(null) + shown,
@@ -149,7 +149,7 @@ fun RifleScreen(
 }
 
 private val RIFLE_ICON = DpSize(200.dp, 64.dp)
-private val LOAD_ICON = DpSize(96.dp, 32.dp)
+private val LOAD_ICON = DpSize(140.dp, 32.dp)
 
 /** A full-width dropdown that opens under its field, with a wrench to its right that edits the picked item. */
 @OptIn(ExperimentalMaterial3Api::class)

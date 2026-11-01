@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Load, where there is room: a 6.5 Creedmoor cartridge lying flat at its real proportions (rim, extractor groove, shoulder, neck, HPBT bullet); one colour for tinting. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FF000000"
+        android:pathData="M0.5,10.09H0.94L1.08,10.37H1.33L1.52,10.09L12.98,10.13L14.1,10.8H16.12V13.2H14.1L12.98,13.87L1.52,13.91L1.33,13.63H1.08L0.94,13.91H0.5Z" />
+    <path
+        android:fillColor="#FF000000"
+        android:pathData="M16.12,10.925H17.46C20.5,10.925 22.6,11.5 23.48,11.88V12.12C22.6,12.5 20.5,13.075 17.46,13.075H16.12Z" />
+</vector>
