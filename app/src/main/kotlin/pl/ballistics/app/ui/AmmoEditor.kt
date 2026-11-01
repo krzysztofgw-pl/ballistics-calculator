@@ -22,7 +22,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.vectorResource
 import pl.ballistics.app.R
 import pl.ballistics.app.TargetInputs
 import androidx.compose.ui.unit.dp
@@ -81,7 +83,7 @@ fun AmmoEditor(
             }
         }
 
-        Section(stringResource(R.string.section_bullet)) {
+        Section(stringResource(R.string.section_bullet), ImageVector.vectorResource(R.drawable.ic_ammo)) {
             TextInput(stringResource(R.string.label_name), a.name) { a = a.copy(name = it) }
             CaliberField(
                 stringResource(R.string.label_cartridge),

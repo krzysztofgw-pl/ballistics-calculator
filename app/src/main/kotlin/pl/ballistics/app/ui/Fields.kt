@@ -8,11 +8,13 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Card
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -25,6 +27,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -33,10 +36,12 @@ import pl.ballistics.app.R
 import pl.ballistics.app.toNumber
 
 @Composable
-fun Section(title: String, content: @Composable ColumnScope.() -> Unit) {
+fun Section(title: String, icon: ImageVector? = null, content: @Composable ColumnScope.() -> Unit) {
     Card(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(title, style = MaterialTheme.typography.titleMedium)
+            // An icon stands in for the title where one says it as well; the title stays for screen readers.
+            if (icon != null) Icon(icon, title, Modifier.size(28.dp), tint = MaterialTheme.colorScheme.primary)
+            else Text(title, style = MaterialTheme.typography.titleMedium)
             content()
         }
     }
@@ -106,11 +111,19 @@ fun SwitchRow(label: String, checked: Boolean, onChange: (Boolean) -> Unit) {
 }
 
 @Composable
-fun <T> Choice(label: String, selected: T, options: List<T>, name: @Composable (T) -> String, onSelect: (T) -> Unit) {
+fun <T> Choice(
+    label: String,
+    selected: T,
+    options: List<T>,
+    name: @Composable (T) -> String,
+    icon: ImageVector? = null,
+    onSelect: (T) -> Unit,
+) {
     var open by remember { mutableStateOf(false) }
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         // The label keeps its width; a long choice wraps inside its button instead of squeezing the label.
-        Text(label, Modifier.padding(end = 12.dp))
+        if (icon != null) Icon(icon, label, Modifier.padding(end = 12.dp))
+        else Text(label, Modifier.padding(end = 12.dp))
         Box(Modifier.weight(1f), contentAlignment = Alignment.CenterEnd) {
             // The menu shares a box with the button only, so it drops down from the button.
             Box {

@@ -3,10 +3,6 @@ package pl.ballistics.app.ui
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsTopHeight
-import androidx.compose.material3.BadgedBox
-import androidx.compose.ui.unit.dp
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.foundation.layout.size
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -67,18 +63,11 @@ private sealed interface Editor {
 private const val TARGET_TAB = 3
 private const val RIFLE_TAB = 0
 
-/** A tab's icon; the Rifle tab carries a small suppressor badge while the suppressor is on. */
+/** A tab's icon; while the suppressor is on, the Rifle tab's rifle carries it on the muzzle. */
 @Composable
 private fun TabIcon(t: MainTab, index: Int, suppressorOn: Boolean) {
     if (index == RIFLE_TAB && suppressorOn) {
-        BadgedBox(badge = {
-            Icon(
-                ImageVector.vectorResource(R.drawable.ic_suppressor),
-                stringResource(R.string.label_suppressor_on),
-                Modifier.size(14.dp),
-                tint = MaterialTheme.colorScheme.primary,
-            )
-        }) { Icon(t.icon(), contentDescription = null) }
+        Icon(ImageVector.vectorResource(R.drawable.ic_tab_rifle_suppressed), stringResource(R.string.label_suppressor_on))
     } else {
         Icon(t.icon(), contentDescription = null)
     }

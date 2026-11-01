@@ -15,7 +15,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.vectorResource
 import pl.ballistics.app.R
 import pl.ballistics.app.TargetInputs
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -53,7 +55,7 @@ fun WeaponEditor(
         onDelete = onDelete,
         onClose = onClose,
     ) {
-        Section(stringResource(R.string.section_rifle)) {
+        Section(stringResource(R.string.section_rifle), ImageVector.vectorResource(R.drawable.ic_tab_rifle)) {
             TextInput(stringResource(R.string.label_name), w.name) { w = w.copy(name = it) }
             CaliberField(stringResource(R.string.label_caliber), w.caliber, null) {
                 w = w.copy(caliber = it)
@@ -126,6 +128,7 @@ fun WeaponEditor(
                 selected,
                 listOf<AmmoProfile?>(null) + shown,
                 { it?.name ?: stringResource(R.string.choose) },
+                icon = ImageVector.vectorResource(R.drawable.ic_ammo),
             ) { w = w.copy(ammoId = it?.id) }
             if (fitting.isEmpty() && w.caliber.isNotBlank()) {
                 Text(stringResource(R.string.no_fitting_loads, w.caliber), style = MaterialTheme.typography.bodySmall)
