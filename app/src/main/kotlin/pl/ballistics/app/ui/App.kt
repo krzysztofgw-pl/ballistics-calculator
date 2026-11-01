@@ -145,6 +145,7 @@ fun App(vm: MainViewModel = viewModel()) {
     }
 
     Scaffold(
+        modifier = Modifier.lockDialsOnOutsideTap(),
         topBar = {
             Column {
                 TopAppBar(

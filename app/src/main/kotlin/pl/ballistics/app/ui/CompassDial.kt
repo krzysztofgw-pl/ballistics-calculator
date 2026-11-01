@@ -1,6 +1,16 @@
 package pl.ballistics.app.ui
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
@@ -61,6 +71,11 @@ fun CompassDial(
     maxSize: Dp = 360.dp,
 ) {
     val current by rememberUpdatedState(onChange)
+    // A dial takes touches only after a tap unlocks it, so a swipe over it scrolls the screen.
+    val key = remember { Any() }
+    val active = DialFocus.active === key
+    var bounds by remember { mutableStateOf(Rect.Zero) }
+    DisposableEffect(key) { onDispose { if (DialFocus.active === key) DialFocus.active = null } }
     val measurer = rememberTextMeasurer()
     val colors = MaterialTheme.colorScheme
     val outerStyle = MaterialTheme.typography.labelMedium.copy(color = colors.onSurfaceVariant, textAlign = TextAlign.Center)
@@ -80,18 +95,25 @@ fun CompassDial(
                 .widthIn(max = maxSize)
                 .fillMaxWidth()
                 .aspectRatio(1f)
-                .pointerInput(stepDeg) { detectTapGestures { current(angleAt(it, size)) } }
-                .pointerInput(stepDeg) {
-                    detectDragGestures(onDragStart = { current(angleAt(it, size)) }) { change, _ ->
-                        change.consume()
-                        current(angleAt(change.position, size))
+                .onGloballyPositioned { bounds = it.boundsInRoot(); if (active) DialFocus.bounds = bounds }
+                .pointerInput(stepDeg, active) {
+                    detectTapGestures {
+                        if (active) current(angleAt(it, size)) else { DialFocus.active = key; DialFocus.bounds = bounds }
                     }
-                },
+                }
+                .then(
+                    if (!active) Modifier else Modifier.pointerInput(stepDeg) {
+                        detectDragGestures(onDragStart = { current(angleAt(it, size)) }) { change, _ ->
+                            change.consume()
+                            current(angleAt(change.position, size))
+                        }
+                    },
+                ),
         ) {
             val c = center
             val r = size.minDimension / 2 - 4.dp.toPx()
             drawCircle(colors.surfaceVariant, r, c)
-            drawCircle(colors.outline, r, c, style = Stroke(2.dp.toPx()))
+            drawCircle(if (active) colors.primary else colors.outline, r, c, style = Stroke((if (active) 4.dp else 2.dp).toPx()))
 
             for (d in 0 until 360 step if (outerLabel == null) 30 else 10) {
                 val major = d % 30 == 0
@@ -119,6 +141,20 @@ fun CompassDial(
             drawCircle(colors.surface, r * (if (outerLabel == null) 0.42f else 0.26f), c)
             label(measurer.measure(centerText, centerStyle), c)
         }
+    }
+}
+
+/** The one dial that takes touches now, and where it is on screen; a tap anywhere else locks it again. */
+object DialFocus {
+    var active by mutableStateOf<Any?>(null)
+    var bounds = Rect.Zero
+}
+
+/** On the screen's root: a press outside the unlocked dial locks it. The press still goes on to what is under it. */
+fun Modifier.lockDialsOnOutsideTap(): Modifier = pointerInput(Unit) {
+    awaitEachGesture {
+        val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+        if (DialFocus.active != null && !DialFocus.bounds.contains(down.position)) DialFocus.active = null
     }
 }
 
