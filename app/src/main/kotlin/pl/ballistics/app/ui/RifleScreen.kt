@@ -36,6 +36,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.Image
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
@@ -119,7 +123,7 @@ fun RifleScreen(
                     ) {
                         Icon(ImageVector.vectorResource(R.drawable.ic_suppressor), contentDescription = null)
                         Spacer(Modifier.width(12.dp))
-                        Text(stringResource(R.string.label_suppressor_on), Modifier.weight(1f))
+                        Text(stringResource(R.string.label_suppressor), Modifier.weight(1f))
                         Switch(checked = w.suppressorMounted, onCheckedChange = { v -> onUpdateWeapon { it.copy(suppressorMounted = v) } })
                     }
                     w.suppressorShift()?.let { (up, right) ->
@@ -142,6 +146,9 @@ fun RifleScreen(
     }
 }
 
+private val BIG_ICON_WIDTH = 180.dp
+private val BIG_ICON_HEIGHT = 64.dp
+
 /** A full-width dropdown that opens under its field, with a wrench to its right that edits the picked item. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -156,6 +163,17 @@ private fun <T> Picker(
     onEdit: (() -> Unit)?,
 ) {
     var open by remember { mutableStateOf(false) }
+    // A large silhouette above the field says what is picked; the label stays for screen readers.
+    // The icons are drawn in a narrow band across a square, so the square is cropped to that band.
+    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+        Image(
+            icon,
+            contentDescription = label,
+            modifier = Modifier.size(BIG_ICON_WIDTH, BIG_ICON_HEIGHT),
+            contentScale = ContentScale.Crop,
+            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary),
+        )
+    }
     Row(verticalAlignment = Alignment.CenterVertically) {
         ExposedDropdownMenuBox(expanded = open, onExpandedChange = { open = it }, modifier = Modifier.weight(1f)) {
             OutlinedTextField(
@@ -163,8 +181,6 @@ private fun <T> Picker(
                 onValueChange = {},
                 readOnly = true,
                 singleLine = true,
-                // The icon says what is picked; the label stays for screen readers.
-                leadingIcon = { Icon(icon, label) },
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = open) },
                 modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
             )

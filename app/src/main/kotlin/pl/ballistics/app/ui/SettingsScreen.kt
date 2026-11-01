@@ -19,25 +19,37 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.AlertDialog
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import pl.ballistics.app.R
@@ -160,25 +172,22 @@ fun SettingsScreen(
             Section(stringResource(R.string.section_sync)) {
                 when (sync) {
                     SyncState.Unavailable -> Unit
-                    SyncState.SignedOut -> Button(onClick = {
+                    SyncState.SignedOut -> GoogleButton(stringResource(R.string.action_sign_in_google)) {
                         scope.launch {
                             onSignIn(context)?.let { Toast.makeText(context, it, Toast.LENGTH_LONG).show() }
                         }
-                    }) { Text(stringResource(R.string.action_sign_in_google)) }
-                    is SyncState.SignedIn -> {
-                        Text(
-                            stringResource(R.string.sync_signed_in_as, sync.email ?: stringResource(R.string.sync_signed_in)),
-                            style = MaterialTheme.typography.bodyMedium,
-                        )
-                        sync.error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
-                        TextButton(onClick = onSignOut) { Text(stringResource(R.string.action_sign_out)) }
                     }
+                    is SyncState.SignedIn -> SignedInRow(sync, onSignOut)
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedButton(onClick = { exportLauncher.launch("ballistics-${LocalDate.now()}.json") }) {
+                        Icon(ImageVector.vectorResource(R.drawable.ic_export), null, Modifier.size(ButtonDefaults.IconSize))
+                        Spacer(Modifier.width(ButtonDefaults.IconSpacing))
                         Text(stringResource(R.string.action_export))
                     }
                     OutlinedButton(onClick = { importLauncher.launch(arrayOf("application/json", "text/plain", "*/*")) }) {
+                        Icon(ImageVector.vectorResource(R.drawable.ic_import), null, Modifier.size(ButtonDefaults.IconSize))
+                        Spacer(Modifier.width(ButtonDefaults.IconSpacing))
                         Text(stringResource(R.string.action_import))
                     }
                 }
@@ -199,6 +208,51 @@ fun SettingsScreen(
 }
 
 private val CHIP_WIDTH = 80.dp
+
+/** The icon-only Google button: a white circle with the Google "G" in its own colours. */
+@Composable
+private fun GoogleButton(description: String, onClick: () -> Unit) {
+    OutlinedIconButton(
+        onClick = onClick,
+        modifier = Modifier.size(48.dp),
+        colors = IconButtonDefaults.outlinedIconButtonColors(containerColor = Color.White),
+        border = BorderStroke(1.dp, Color(0xFF747775)),
+    ) {
+        Image(
+            painterResource(R.drawable.ic_google),
+            contentDescription = description,
+            modifier = Modifier.size(20.dp),
+        )
+    }
+}
+
+/** Signed in: whether the cloud copy is in sync, and the Google button, which asks before signing out of the account. */
+@Composable
+private fun SignedInRow(sync: SyncState.SignedIn, onSignOut: () -> Unit) {
+    val failed = sync.error != null
+    var confirm by remember { mutableStateOf(false) }
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        Icon(
+            ImageVector.vectorResource(R.drawable.ic_cloud_done),
+            contentDescription = stringResource(R.string.sync_signed_in),
+            modifier = Modifier.size(32.dp),
+            tint = if (failed) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+        )
+        Spacer(Modifier.width(12.dp))
+        Box(Modifier.weight(1f)) {
+            sync.error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
+        }
+        GoogleButton(stringResource(R.string.action_sign_out)) { confirm = true }
+    }
+    if (confirm) {
+        AlertDialog(
+            onDismissRequest = { confirm = false },
+            text = { Text(stringResource(R.string.sign_out_prompt, sync.email ?: stringResource(R.string.sync_signed_in))) },
+            confirmButton = { TextButton(onClick = { confirm = false; onSignOut() }) { Text(stringResource(R.string.action_sign_out)) } },
+            dismissButton = { TextButton(onClick = { confirm = false }) { Text(stringResource(R.string.action_cancel)) } },
+        )
+    }
+}
 
 /** A chip that reads Dial when selected and Hold otherwise; a tap switches it. */
 @Composable
