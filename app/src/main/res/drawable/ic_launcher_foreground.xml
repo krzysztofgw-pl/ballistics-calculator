@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Reticle with a trajectory arc landing on a holdover mark. Content stays inside the 66dp safe zone. -->
+<!-- Reticle with the trajectory from the bore to a hit on the horizontal line, held for wind. Content stays inside the 66dp safe zone. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
@@ -29,15 +29,13 @@
         android:strokeColor="#FFEDE8DA"
         android:strokeWidth="1.2"
         android:fillColor="#00000000" />
-    <!-- Trajectory -->
+    <!-- Trajectory: leaves the bore below the sight line (6 o'clock), climbs above it, falls back
+         onto the horizontal line one windage mark right. It narrows with distance. -->
     <path
-        android:pathData="M30,47Q47,44 54,66"
-        android:strokeColor="#FFFF7043"
-        android:strokeWidth="2.6"
-        android:strokeLineCap="round"
-        android:fillColor="#00000000" />
+        android:pathData="M55.60,80.46L55.53,78.15L55.47,75.83L55.42,73.51L55.38,71.21L55.36,68.93L55.36,66.68L55.37,64.47L55.39,62.31L55.43,60.21L55.49,58.17L55.57,56.22L55.67,54.35L55.79,52.57L55.93,50.91L56.09,49.35L56.28,47.93L56.48,46.65L56.71,45.51L56.95,44.55L57.21,43.76L57.46,43.19L57.67,42.84L57.76,42.73L57.78,42.72L57.70,42.73L57.74,42.72L57.80,42.73L57.89,42.77L58.01,42.87L58.16,43.03L58.33,43.25L58.50,43.54L58.67,43.90L58.83,44.30L58.99,44.76L59.14,45.27L59.28,45.82L59.41,46.41L59.53,47.04L59.64,47.71L59.74,48.41L59.82,49.14L59.89,49.89L59.96,50.67L60.01,51.48L60.05,52.30L60.08,53.14L60.10,54.01L61.90,53.99L61.91,53.12L61.91,52.25L61.90,51.40L61.87,50.57L61.84,49.76L61.79,48.97L61.73,48.20L61.66,47.45L61.57,46.73L61.47,46.05L61.36,45.39L61.23,44.76L61.09,44.16L60.93,43.59L60.74,43.06L60.54,42.56L60.31,42.09L60.04,41.66L59.73,41.26L59.37,40.90L58.94,40.60L58.45,40.38L57.91,40.26L57.22,40.28L56.40,40.60L55.71,41.20L55.19,41.93L54.78,42.79L54.42,43.78L54.11,44.89L53.83,46.14L53.58,47.51L53.35,49.01L53.15,50.62L52.98,52.34L52.83,54.15L52.70,56.06L52.59,58.05L52.50,60.12L52.42,62.24L52.37,64.43L52.33,66.66L52.31,68.93L52.30,71.23L52.31,73.55L52.33,75.88L52.36,78.22L52.40,80.54Z"
+        android:fillColor="#FFFF7043" />
     <!-- Impact -->
     <path
-        android:pathData="M54,66m-3.6,0a3.6,3.6 0 1,0 7.2,0a3.6,3.6 0 1,0 -7.2,0"
+        android:pathData="M61,54m-3.6,0a3.6,3.6 0 1,0 7.2,0a3.6,3.6 0 1,0 -7.2,0"
         android:fillColor="#FFFF3D00" />
 </vector>
