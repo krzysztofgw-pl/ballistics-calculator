@@ -146,6 +146,7 @@ fun App(vm: MainViewModel = viewModel()) {
                 sync = sync,
                 onSignIn = vm::signIn,
                 onSignOut = vm::signOut,
+                onDeleteAccount = vm::deleteAccount,
                 onExport = vm::exportData,
                 onImport = vm::importData,
                 onCheckUpdate = { updater.check(asked = true) },

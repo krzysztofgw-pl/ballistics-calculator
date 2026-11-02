@@ -36,6 +36,11 @@
     <string name="action_import">Import</string>
     <string name="action_sign_in_google">Sign in with Google</string>
     <string name="action_sign_out">Sign out</string>
+    <string name="action_delete_account">Delete account</string>
+    <string name="delete_account_prompt">Delete the account %1$s? Profiles saved in the cloud are deleted for good; profiles on this phone stay. You will be asked to pick your Google account once more to confirm.</string>
+    <string name="delete_account_failed">The account could not be deleted.</string>
+    <string name="toast_account_deleted">Account deleted.</string>
+    <string name="action_privacy_policy">Privacy policy</string>
     <string name="sign_out_prompt">Sign out %1$s?</string>
     <string name="action_factory_load">Factory ammo</string>
     <string name="action_bullet">Bullet for handload</string>

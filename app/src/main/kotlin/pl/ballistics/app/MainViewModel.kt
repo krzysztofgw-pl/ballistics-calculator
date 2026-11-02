@@ -76,6 +76,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     suspend fun signIn(activity: android.content.Context): String? = cloud.signIn(activity)
 
+    suspend fun deleteAccount(activity: android.content.Context): String? = cloud.deleteAccount(activity)
+
     suspend fun suggestBullet(suggestion: BulletSuggestion): String? {
         val app = getApplication<Application>()
         val version = runCatching { app.packageManager.getPackageInfo(app.packageName, 0).versionName }.getOrNull().orEmpty()
