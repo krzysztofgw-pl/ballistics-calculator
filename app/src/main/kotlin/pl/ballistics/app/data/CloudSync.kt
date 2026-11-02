@@ -10,6 +10,7 @@ import com.google.firebase.FirebaseApp
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FieldValue
 import pl.ballistics.app.R
+import com.google.firebase.auth.AuthCredential
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.firestore.FirebaseFirestore
@@ -88,20 +89,52 @@ class CloudSync(private val context: Context, private val onRemote: (AppData) ->
     /** Google sign-in through Credential Manager; [activityContext] must be an Activity. */
     suspend fun signIn(activityContext: Context): String? {
         if (!available) return context.getString(R.string.sync_not_configured)
-        val clientIdRes = context.resources.getIdentifier("default_web_client_id", "string", context.packageName)
-        if (clientIdRes == 0) return context.getString(R.string.sync_missing_client_id)
         return try {
-            val option = GetGoogleIdOption.Builder()
-                .setFilterByAuthorizedAccounts(false)
-                .setServerClientId(context.getString(clientIdRes))
-                .build()
-            val request = GetCredentialRequest.Builder().addCredentialOption(option).build()
-            val credential = CredentialManager.create(activityContext).getCredential(activityContext, request).credential
-            val idToken = GoogleIdTokenCredential.createFrom(credential.data).idToken
-            auth.signInWithCredential(GoogleAuthProvider.getCredential(idToken, null)).await()
+            val credential = googleCredential(activityContext) ?: return context.getString(R.string.sync_missing_client_id)
+            auth.signInWithCredential(credential).await()
             null
         } catch (e: Exception) {
             e.localizedMessage ?: context.getString(R.string.sync_sign_in_failed)
+        }
+    }
+
+    /** Asks Credential Manager for a Google ID token; null when the build has no OAuth client id. */
+    private suspend fun googleCredential(activityContext: Context): AuthCredential? {
+        val clientIdRes = context.resources.getIdentifier("default_web_client_id", "string", context.packageName)
+        if (clientIdRes == 0) return null
+        val option = GetGoogleIdOption.Builder()
+            .setFilterByAuthorizedAccounts(false)
+            .setServerClientId(context.getString(clientIdRes))
+            .build()
+        val request = GetCredentialRequest.Builder().addCredentialOption(option).build()
+        val credential = CredentialManager.create(activityContext).getCredential(activityContext, request).credential
+        val idToken = GoogleIdTokenCredential.createFrom(credential.data).idToken
+        return GoogleAuthProvider.getCredential(idToken, null)
+    }
+
+    /**
+     * Deletes the signed-in account: the cloud copy of the profiles (users/{uid}) and
+     * the Firebase account. Firebase wants a recent sign-in for that, so the user
+     * picks their Google account once more. Profiles on this phone stay.
+     * Returns null on success, otherwise a message for the user.
+     */
+    suspend fun deleteAccount(activityContext: Context): String? {
+        if (!available) return context.getString(R.string.sync_not_configured)
+        val user = auth.currentUser ?: return null
+        return try {
+            val credential = googleCredential(activityContext) ?: return context.getString(R.string.sync_missing_client_id)
+            user.reauthenticate(credential).await()
+            // Stop listening first, or the empty document would trigger a fresh upload.
+            listener?.remove()
+            listener = null
+            db.collection(USERS).document(user.uid).delete().await()
+            user.delete().await()
+            runCatching { CredentialManager.create(context).clearCredentialState(ClearCredentialStateRequest()) }
+            null
+        } catch (e: Exception) {
+            // Listen again if the account is still there.
+            auth.currentUser?.let { if (listener == null) listen(it.uid) }
+            e.localizedMessage ?: context.getString(R.string.delete_account_failed)
         }
     }
 

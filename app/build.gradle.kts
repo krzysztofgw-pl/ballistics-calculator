@@ -15,16 +15,30 @@ val releasePassword = System.getenv("SIGNING_PASSWORD")
 
 android {
     namespace = "pl.ballistics.app"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.kgwlabs.ballistics"
         minSdk = 26
-        targetSdk = 35
+        targetSdk = 36
         // CI numbers each build, so a newer APK always installs over an older one.
         val build = System.getenv("BUILD_NUMBER")?.toIntOrNull()
         versionCode = build?.plus(100) ?: 2
         versionName = "0.2.0" + (build?.let { "-build.$it" } ?: "")
+    }
+
+    // github: APKs on the repository's releases, with the in-app updater.
+    // play: the Google Play bundle; Play forbids self-updates, so no updater and no install permission.
+    flavorDimensions += "store"
+    productFlavors {
+        create("github") {
+            dimension = "store"
+            buildConfigField("boolean", "SELF_UPDATE", "true")
+        }
+        create("play") {
+            dimension = "store"
+            buildConfigField("boolean", "SELF_UPDATE", "false")
+        }
     }
 
     signingConfigs {
@@ -53,6 +67,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 

@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Privacy policy – Ballistics by KGW Labs</title>
+<link rel="stylesheet" href="legal.css">
+</head>
+<body>
+<main>
+<h1>Privacy policy</h1>
+<p class="muted">Ballistics (Android app <code>com.kgwlabs.ballistics</code> and the web app) by KGW Labs. Last updated: 2 November 2026.</p>
+
+<p>The app works without an account and keeps your rifles, loads and settings on your device. It has no ads, no analytics and no tracking. Data leaves the device only for the optional features listed below, and only when you use them.</p>
+
+<h2>What is sent, and why</h2>
+<table>
+<tr><th>Feature</th><th>Data</th><th>Sent to</th></tr>
+<tr><td>Cloud sync (optional Google sign-in)</td><td>Your Google account name, e-mail address and account ID; your profiles (rifles, loads, settings)</td><td>Google Firebase (Authentication and Cloud Firestore)</td></tr>
+<tr><td>Bullet suggestions to the community database</td><td>The bullet data you enter, your account ID, the app version and the time</td><td>Google Firebase (Cloud Firestore); accepted bullet data is published in the public <a href="https://github.com/krzysztofgw-pl/ballistics-bullets">ballistics-bullets</a> repository without your name or e-mail</td></tr>
+<tr><td>Wind forecast</td><td>The coordinates of the place you ask about</td><td><a href="https://open-meteo.com/">Open-Meteo</a></td></tr>
+<tr><td>Bullet library</td><td>Nothing personal; the app downloads the public list</td><td>GitHub Pages</td></tr>
+<tr><td>Update check (GitHub build only)</td><td>Nothing personal; the app asks for the latest release</td><td>GitHub</td></tr>
+</table>
+<p>All connections are encrypted (HTTPS). Google, Open-Meteo and GitHub process these requests under their own privacy policies.</p>
+
+<h2>Used only on the device</h2>
+<ul>
+<li><b>Location</b> (optional): latitude for the Coriolis effect and magnetic declination for the compass. It is sent only when you ask for a wind forecast.</li>
+<li><b>Camera</b> (optional): to aim at the target and measure the shot angle. Images are not saved or sent.</li>
+<li><b>Garmin watch</b> (optional): station pressure from the KGW Pressure watch app, over Garmin Connect IQ on your phone.</li>
+<li><b>Android backup</b>: your profiles are included in your device's own Google backup, as set in Android settings.</li>
+</ul>
+
+<h2>How long data is kept</h2>
+<p>Cloud profiles are kept until you delete your account. Bullet suggestions are kept as a record of the community database; once your account is deleted, they no longer link to your name or e-mail.</p>
+
+<h2>Deleting your data</h2>
+<p>In the app: <b>Settings → Sync → Delete account</b>. This deletes your cloud profiles and your account. You can also write to <a href="mailto:kgwlabs@interia.com">kgwlabs@interia.com</a>; see <a href="delete-account.html">Delete your account</a>. Profiles on your device are removed by uninstalling the app or clearing its data.</p>
+
+<h2>Children</h2>
+<p>The app is meant for adults and is not directed at children.</p>
+
+<h2>Contact</h2>
+<p>KGW Labs – <a href="mailto:kgwlabs@interia.com">kgwlabs@interia.com</a><br>Bugs and ideas: <a href="https://github.com/krzysztofgw-pl/ballistics-calculator/issues">github.com/krzysztofgw-pl/ballistics-calculator/issues</a></p>
+</main>
+</body>
+</html>

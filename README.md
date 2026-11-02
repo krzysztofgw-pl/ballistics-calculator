@@ -189,7 +189,8 @@ Requires JDK 17.
 
 ```bash
 ./gradlew :core:allTests             # solver tests on the JVM and Node.js, no Android SDK needed
-./gradlew :app:assembleRelease       # APK, needs the Android SDK
+./gradlew :app:assembleGithubRelease # APK with the in-app updater, needs the Android SDK
+./gradlew :app:bundlePlayRelease     # Google Play bundle (no updater)
 ./gradlew :web:jsBrowserDistribution # web app in web/build/dist/js/productionExecutable
 ./gradlew :web:jsBrowserDevelopmentRun --continuous # web app at http://localhost:8080 with reload
 ```

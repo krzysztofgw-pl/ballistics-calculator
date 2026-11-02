@@ -1,6 +1,8 @@
 package pl.ballistics.app.ui
 
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -52,6 +54,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
+import pl.ballistics.app.BuildConfig
 import pl.ballistics.app.R
 import pl.ballistics.app.data.Correction
 import pl.ballistics.app.data.SyncState
@@ -71,6 +74,7 @@ fun SettingsScreen(
     sync: SyncState,
     onSignIn: suspend (Context) -> String?,
     onSignOut: () -> Unit,
+    onDeleteAccount: suspend (Context) -> String?,
     onExport: () -> String,
     onImport: (String) -> Boolean,
     onCheckUpdate: () -> Unit,
@@ -177,7 +181,15 @@ fun SettingsScreen(
                             onSignIn(context)?.let { Toast.makeText(context, it, Toast.LENGTH_LONG).show() }
                         }
                     }
-                    is SyncState.SignedIn -> SignedInRow(sync, onSignOut)
+                    is SyncState.SignedIn -> {
+                        SignedInRow(sync, onSignOut)
+                        DeleteAccountButton(sync) {
+                            scope.launch {
+                                val error = onDeleteAccount(context)
+                                Toast.makeText(context, error ?: context.getString(R.string.toast_account_deleted), Toast.LENGTH_LONG).show()
+                            }
+                        }
+                    }
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedButton(onClick = { exportLauncher.launch("ballistics-${LocalDate.now()}.json") }) {
@@ -197,10 +209,16 @@ fun SettingsScreen(
                 val version = remember { context.packageManager.getPackageInfo(context.packageName, 0).versionName.orEmpty() }
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     Text(stringResource(R.string.app_version, version), Modifier.weight(1f))
-                    OutlinedButton(onClick = onCheckUpdate) { Text(stringResource(R.string.action_check_update)) }
+                    // Store builds are updated by the store.
+                    if (BuildConfig.SELF_UPDATE) {
+                        OutlinedButton(onClick = onCheckUpdate) { Text(stringResource(R.string.action_check_update)) }
+                    }
                 }
-                SwitchRow(stringResource(R.string.label_check_update_on_start), ui.checkUpdateOnStart) { v ->
-                    onUi { it.copy(checkUpdateOnStart = v) }
+                TextButton(onClick = { context.openUrl(PRIVACY_POLICY_URL) }) { Text(stringResource(R.string.action_privacy_policy)) }
+                if (BuildConfig.SELF_UPDATE) {
+                    SwitchRow(stringResource(R.string.label_check_update_on_start), ui.checkUpdateOnStart) { v ->
+                        onUi { it.copy(checkUpdateOnStart = v) }
+                    }
                 }
             }
         }
@@ -208,6 +226,34 @@ fun SettingsScreen(
 }
 
 private val CHIP_WIDTH = 80.dp
+
+private const val PRIVACY_POLICY_URL = "https://krzysztofgw-pl.github.io/ballistics-calculator/privacy.html"
+
+private fun Context.openUrl(url: String) {
+    runCatching { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url))) }
+}
+
+/** Deleting the account removes the cloud copy and the sign-in; the profiles on this phone stay. */
+@Composable
+private fun DeleteAccountButton(sync: SyncState.SignedIn, onDelete: () -> Unit) {
+    var confirm by remember { mutableStateOf(false) }
+    TextButton(onClick = { confirm = true }) {
+        Text(stringResource(R.string.action_delete_account), color = MaterialTheme.colorScheme.error)
+    }
+    if (confirm) {
+        AlertDialog(
+            onDismissRequest = { confirm = false },
+            title = { Text(stringResource(R.string.action_delete_account)) },
+            text = { Text(stringResource(R.string.delete_account_prompt, sync.email ?: stringResource(R.string.sync_signed_in))) },
+            confirmButton = {
+                TextButton(onClick = { confirm = false; onDelete() }) {
+                    Text(stringResource(R.string.action_delete), color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = { TextButton(onClick = { confirm = false }) { Text(stringResource(R.string.action_cancel)) } },
+        )
+    }
+}
 
 /** The icon-only Google button: a white circle with the Google "G" in its own colours. */
 @Composable
