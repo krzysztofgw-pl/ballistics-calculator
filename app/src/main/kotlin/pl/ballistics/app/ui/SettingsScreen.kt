@@ -181,13 +181,10 @@ fun SettingsScreen(
                             onSignIn(context)?.let { Toast.makeText(context, it, Toast.LENGTH_LONG).show() }
                         }
                     }
-                    is SyncState.SignedIn -> {
-                        SignedInRow(sync, onSignOut)
-                        DeleteAccountButton(sync) {
-                            scope.launch {
-                                val error = onDeleteAccount(context)
-                                Toast.makeText(context, error ?: context.getString(R.string.toast_account_deleted), Toast.LENGTH_LONG).show()
-                            }
+                    is SyncState.SignedIn -> SignedInRow(sync, onSignOut) {
+                        scope.launch {
+                            val error = onDeleteAccount(context)
+                            Toast.makeText(context, error ?: context.getString(R.string.toast_account_deleted), Toast.LENGTH_LONG).show()
                         }
                     }
                 }
@@ -233,28 +230,6 @@ private fun Context.openUrl(url: String) {
     runCatching { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url))) }
 }
 
-/** Deleting the account removes the cloud copy and the sign-in; the profiles on this phone stay. */
-@Composable
-private fun DeleteAccountButton(sync: SyncState.SignedIn, onDelete: () -> Unit) {
-    var confirm by remember { mutableStateOf(false) }
-    TextButton(onClick = { confirm = true }) {
-        Text(stringResource(R.string.action_delete_account), color = MaterialTheme.colorScheme.error)
-    }
-    if (confirm) {
-        AlertDialog(
-            onDismissRequest = { confirm = false },
-            title = { Text(stringResource(R.string.action_delete_account)) },
-            text = { Text(stringResource(R.string.delete_account_prompt, sync.email ?: stringResource(R.string.sync_signed_in))) },
-            confirmButton = {
-                TextButton(onClick = { confirm = false; onDelete() }) {
-                    Text(stringResource(R.string.action_delete), color = MaterialTheme.colorScheme.error)
-                }
-            },
-            dismissButton = { TextButton(onClick = { confirm = false }) { Text(stringResource(R.string.action_cancel)) } },
-        )
-    }
-}
-
 /** The icon-only Google button: a white circle with the Google "G" in its own colours. */
 @Composable
 private fun GoogleButton(description: String, onClick: () -> Unit) {
@@ -272,11 +247,17 @@ private fun GoogleButton(description: String, onClick: () -> Unit) {
     }
 }
 
-/** Signed in: whether the cloud copy is in sync, and the Google button, which asks before signing out of the account. */
+/**
+ * Signed in: whether the cloud copy is in sync, and the Google button, which asks before
+ * signing out of the account and offers deleting it there too. Deleting the account removes
+ * the cloud copy and the sign-in; the profiles on this phone stay.
+ */
 @Composable
-private fun SignedInRow(sync: SyncState.SignedIn, onSignOut: () -> Unit) {
+private fun SignedInRow(sync: SyncState.SignedIn, onSignOut: () -> Unit, onDelete: () -> Unit) {
     val failed = sync.error != null
     var confirm by remember { mutableStateOf(false) }
+    var confirmDelete by remember { mutableStateOf(false) }
+    val account = sync.email ?: stringResource(R.string.sync_signed_in)
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Icon(
             ImageVector.vectorResource(R.drawable.ic_cloud_done),
@@ -293,9 +274,32 @@ private fun SignedInRow(sync: SyncState.SignedIn, onSignOut: () -> Unit) {
     if (confirm) {
         AlertDialog(
             onDismissRequest = { confirm = false },
-            text = { Text(stringResource(R.string.sign_out_prompt, sync.email ?: stringResource(R.string.sync_signed_in))) },
-            confirmButton = { TextButton(onClick = { confirm = false; onSignOut() }) { Text(stringResource(R.string.action_sign_out)) } },
-            dismissButton = { TextButton(onClick = { confirm = false }) { Text(stringResource(R.string.action_cancel)) } },
+            text = { Text(stringResource(R.string.sign_out_prompt, account)) },
+            // The dialog lays these out as Delete account · Cancel · Sign out, wrapping on narrow screens.
+            dismissButton = {
+                TextButton(onClick = { confirm = false; confirmDelete = true }) {
+                    Text(stringResource(R.string.action_delete_account), color = MaterialTheme.colorScheme.error)
+                }
+            },
+            confirmButton = {
+                Row {
+                    TextButton(onClick = { confirm = false }) { Text(stringResource(R.string.action_cancel)) }
+                    TextButton(onClick = { confirm = false; onSignOut() }) { Text(stringResource(R.string.action_sign_out)) }
+                }
+            },
+        )
+    }
+    if (confirmDelete) {
+        AlertDialog(
+            onDismissRequest = { confirmDelete = false },
+            title = { Text(stringResource(R.string.action_delete_account)) },
+            text = { Text(stringResource(R.string.delete_account_prompt, account)) },
+            confirmButton = {
+                TextButton(onClick = { confirmDelete = false; onDelete() }) {
+                    Text(stringResource(R.string.action_delete), color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = { TextButton(onClick = { confirmDelete = false }) { Text(stringResource(R.string.action_cancel)) } },
         )
     }
 }
