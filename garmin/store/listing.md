@@ -33,6 +33,11 @@ The watch also shows the pressure in the unit the phone app uses (hPa, mmHg or i
 
 Requires Ballistics Calculator for Android and Garmin Connect on the same phone. The app runs only while it is open: no background service, no data field, no effect on battery life.
 
+Permissions and privacy:
+- Communication & Data Transmission: used only to send the pressure reading to Ballistics Calculator on your own phone, through Garmin Connect. The app has no internet access of its own and talks to no server.
+- Fitness & Sensor Data: used only to read the barometer (current pressure and the latest pressure history sample). Heart rate, location, activities and other health data are not read.
+No data is collected or shared: a single pressure value goes from your watch to your phone, only when you ask for it. The only thing the app keeps on the watch is your pressure unit. Privacy policy: https://krzysztofgw-pl.github.io/ballistics-calculator/privacy.html
+
 Languages: English, Polish, German, French, Spanish, Italian.
 
 ## Description (Polish)
@@ -49,6 +54,11 @@ Jak używać:
 Zegarek pokazuje też ciśnienie w jednostce używanej w aplikacji na telefonie (hPa, mmHg lub inHg). Naciśnij START, żeby odczytać i wysłać je ponownie.
 
 Wymaga aplikacji Ballistics Calculator na Androida i Garmin Connect na tym samym telefonie. Aplikacja działa tylko wtedy, gdy jest otwarta: bez usługi w tle, bez pola danych, bez wpływu na baterię.
+
+Uprawnienia i prywatność:
+- Komunikacja i przesyłanie danych: tylko do wysłania odczytu ciśnienia do Ballistics Calculator na Twoim telefonie, przez Garmin Connect. Aplikacja nie ma własnego dostępu do internetu i nie łączy się z żadnym serwerem.
+- Dane fitness i z czujników: tylko do odczytu barometru (bieżące ciśnienie i ostatnia próbka z historii ciśnienia). Tętno, lokalizacja, aktywności ani inne dane zdrowotne nie są odczytywane.
+Żadne dane nie są zbierane ani udostępniane: jedna wartość ciśnienia trafia z zegarka na Twój telefon, tylko gdy o nią poprosisz. Jedyne, co aplikacja zapamiętuje na zegarku, to wybrana jednostka ciśnienia. Polityka prywatności: https://krzysztofgw-pl.github.io/ballistics-calculator/privacy.html
 
 ## What's new (first public version)
 
