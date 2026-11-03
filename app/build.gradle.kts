@@ -21,9 +21,11 @@ android {
         applicationId = "com.kgwlabs.ballistics"
         minSdk = 26
         targetSdk = 36
-        // CI numbers each build, so a newer APK always installs over an older one.
-        val build = System.getenv("BUILD_NUMBER")?.toIntOrNull()
-        versionCode = build?.plus(100) ?: 2
+        // CI numbers each build, so a newer APK always installs over an older one. The build
+        // number shown everywhere (version name, release tag, Google Play) is the versionCode:
+        // the workflow run number + 100, as the first Play upload was 253.
+        val build = System.getenv("BUILD_NUMBER")?.toIntOrNull()?.plus(100)
+        versionCode = build ?: 2
         versionName = "0.2.0" + (build?.let { "-build.$it" } ?: "")
     }
 

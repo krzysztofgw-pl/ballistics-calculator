@@ -18,14 +18,15 @@ import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
 
-/** Updates from the repository's releases: CI tags each build of main `build-N` and gives it versionCode N + 100. */
+/** Updates from the repository's releases: CI tags each build of main `build-N`, where N is its versionCode. */
 object AppUpdate {
     private const val LATEST = "https://api.github.com/repos/krzysztofgw-pl/ballistics-calculator/releases/latest"
     private const val ASSET = "ballistics.apk"
+    /** Local builds have versionCode 2; CI builds start above this. */
     private const val CODE_OFFSET = 100
 
     data class Release(val build: Int, val notes: String, val apkUrl: String) {
-        val versionCode get() = build.toLong() + CODE_OFFSET
+        val versionCode get() = build.toLong()
     }
 
     fun installedVersionCode(context: Context): Long =

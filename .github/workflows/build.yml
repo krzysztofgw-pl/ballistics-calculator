@@ -75,13 +75,15 @@ jobs:
       - name: Publish release
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: build-${{ github.run_number }}
+          # The build number is the app's versionCode (run number + 100), as in Google Play.
+          BUILD: ${{ github.run_number }}
           NOTES: ${{ github.event.head_commit.message }}
         run: |
+          N=$((BUILD + 100))
           mv apk/*.apk apk/ballistics.apk
           mv aab/*.aab aab/ballistics-play.aab
-          gh release create "$TAG" apk/ballistics.apk aab/ballistics-play.aab --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
-            --latest --title "Build ${{ github.run_number }}" --notes "$NOTES"
+          gh release create "build-$N" apk/ballistics.apk aab/ballistics-play.aab --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+            --latest --title "Build $N" --notes "$NOTES"
 
   # The web app (PWA) for phones without Android, e.g. an iPhone.
   web:
