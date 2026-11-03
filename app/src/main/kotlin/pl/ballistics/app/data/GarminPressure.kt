@@ -15,11 +15,18 @@ import kotlin.coroutines.resume
  * (source in `garmin/`) and Garmin Connect on the phone.
  */
 object GarminPressure {
-    /** The watch app's id from `garmin/manifest.xml`. */
-    private const val APP_ID = "d8c4bc4d63d94a6cb0071345dc138c56"
+    /** The public store app's id from `garmin/manifest.xml`. */
+    private const val APP_ID = "8479255366624599996860607684e2eb"
 
-    /** The same id as a dashed UUID, the form Garmin's samples use; messages are matched on either. */
-    private const val APP_UUID = "d8c4bc4d-63d9-4a6c-b007-1345dc138c56"
+    /**
+     * The id of the earlier beta upload. A beta can't become a public app, so the public one has a new
+     * id; watches that still carry the beta keep working. CI builds the beta package with this id.
+     */
+    private const val BETA_APP_ID = "d8c4bc4d63d94a6cb0071345dc138c56"
+
+    /** An id as a dashed UUID, the form Garmin's samples use; messages are matched on either form. */
+    private fun dashed(id: String) =
+        "${id.substring(0, 8)}-${id.substring(8, 12)}-${id.substring(12, 16)}-${id.substring(16, 20)}-${id.substring(20)}"
     private const val CONNECT_PACKAGE = "com.garmin.android.apps.connectmobile"
 
     sealed interface Result {
@@ -45,8 +52,9 @@ object GarminPressure {
         val app = context.applicationContext
         val ciq = ConnectIQ.getInstance(app, ConnectIQ.IQConnectType.WIRELESS)
         if (withTimeoutOrNull(10_000) { initialize(ciq, app) } != true) return Result.NoGarminConnect
-        val iqApp = IQApp(APP_ID)
-        val apps = listOf(iqApp, IQApp(APP_UUID))
+        val publicApp = IQApp(APP_ID)
+        val betaApp = IQApp(BETA_APP_ID)
+        val apps = listOf(APP_ID, BETA_APP_ID).flatMap { listOf(IQApp(it), IQApp(dashed(it))) }
         val devices = mutableListOf<IQDevice>()
         try {
             devices += runCatching { ciq.connectedDevices.orEmpty() }.getOrDefault(emptyList())
@@ -65,11 +73,21 @@ object GarminPressure {
                         if (pascals(message) == null) trace += "received $message"
                         pascals(message)?.let { answer.complete(Result.Pressure(it / 100.0, d.friendlyName.orEmpty())) }
                     }
-                    ciq.openApplication(device, iqApp) { _, _, status ->
+                    // The public app first; only when it is missing, the beta, so the watch asks once.
+                    ciq.openApplication(device, publicApp) { _, _, status ->
                         trace += "open $status"
                         when (status) {
                             ConnectIQ.IQOpenApplicationStatus.PROMPT_SHOWN_ON_DEVICE -> onPrompt()
-                            ConnectIQ.IQOpenApplicationStatus.APP_IS_NOT_INSTALLED -> notInstalled++
+                            ConnectIQ.IQOpenApplicationStatus.APP_IS_NOT_INSTALLED -> runCatching {
+                                ciq.openApplication(device, betaApp) { _, _, beta ->
+                                    trace += "open beta $beta"
+                                    when (beta) {
+                                        ConnectIQ.IQOpenApplicationStatus.PROMPT_SHOWN_ON_DEVICE -> onPrompt()
+                                        ConnectIQ.IQOpenApplicationStatus.APP_IS_NOT_INSTALLED -> notInstalled++
+                                        else -> Unit
+                                    }
+                                }
+                            }.onFailure { trace += it.javaClass.simpleName }
                             else -> Unit
                         }
                     }
@@ -83,7 +101,7 @@ object GarminPressure {
                         runCatching {
                             for (each in apps) {
                                 ciq.sendMessage(device, each, mapOf("get" to 1, "unit" to unit)) { _, a, status ->
-                                    trace += "request ${if (a?.applicationId == APP_UUID) "uuid " else ""}$status"
+                                    trace += "request ${label(a?.applicationId)}$status"
                                 }
                             }
                         }.onFailure { trace += it.javaClass.simpleName }
@@ -96,6 +114,14 @@ object GarminPressure {
             for (device in devices) apps.forEach { runCatching { ciq.unregisterForApplicationEvents(device, it) } }
             runCatching { ciq.shutdown(app) }
         }
+    }
+
+    /** Which of the ids a send went to, for the diagnostic trace; the public hex id gets no label. */
+    private fun label(id: String?): String = when (id) {
+        dashed(APP_ID) -> "uuid "
+        BETA_APP_ID -> "beta "
+        dashed(BETA_APP_ID) -> "beta uuid "
+        else -> ""
     }
 
     private suspend fun initialize(ciq: ConnectIQ, context: Context): Boolean =
