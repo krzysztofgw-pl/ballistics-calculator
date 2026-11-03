@@ -61,9 +61,20 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    /** A newer copy arrived from another device; an older one means ours should go up. */
-    private fun onRemoteData(remote: AppData) {
+    /**
+     * The first copy after signing in is merged with ours, so nothing on either side is lost.
+     * After that, a newer copy arrived from another device; an older one means ours should go up.
+     */
+    private fun onRemoteData(remote: AppData, first: Boolean) {
         val local = _data.value
+        if (first) {
+            val merged = local.mergedWithCloud(remote, System.currentTimeMillis())
+            _data.value = merged
+            repository.save(merged)
+            recalculate(debounce = false)
+            if (merged !== remote) cloud.push(merged)
+            return
+        }
         when {
             remote.modifiedAt > local.modifiedAt -> {
                 _data.value = remote

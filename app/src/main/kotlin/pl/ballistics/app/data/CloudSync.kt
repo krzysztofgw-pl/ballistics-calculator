@@ -15,6 +15,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
+import com.google.firebase.firestore.MetadataChanges
 import com.google.firebase.firestore.SetOptions
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -33,12 +34,18 @@ sealed interface SyncState {
  * the same JSON as the export file. Whole-document last-write-wins by
  * [AppData.modifiedAt] is enough for one person with a few phones; Firestore
  * queues writes while offline.
+ *
+ * [onRemote] gets each cloud copy; `first` is true for the first one after this phone
+ * signs in to an account, so the two sides are merged once and not on every start
+ * (which would bring back rifles deleted on another phone).
  */
-class CloudSync(private val context: Context, private val onRemote: (AppData) -> Unit) {
+class CloudSync(private val context: Context, private val onRemote: (remote: AppData, first: Boolean) -> Unit) {
     private val available = FirebaseApp.getApps(context).isNotEmpty()
     private val auth get() = FirebaseAuth.getInstance()
     private val db get() = FirebaseFirestore.getInstance()
     private var listener: ListenerRegistration? = null
+    /** The account this phone's data was last merged with. */
+    private val prefs = context.getSharedPreferences("sync", Context.MODE_PRIVATE)
 
     private val _state = MutableStateFlow<SyncState>(if (available) SyncState.SignedOut else SyncState.Unavailable)
     val state: StateFlow<SyncState> = _state.asStateFlow()
@@ -60,16 +67,25 @@ class CloudSync(private val context: Context, private val onRemote: (AppData) ->
     }
 
     private fun listen(uid: String) {
-        listener = db.collection(USERS).document(uid).addSnapshotListener { snapshot, error ->
+        var first = prefs.getString(KEY_MERGED_UID, null) != uid
+        // Metadata changes too, so the server's answer arrives even when it matches the cache.
+        listener = db.collection(USERS).document(uid).addSnapshotListener(MetadataChanges.INCLUDE) { snapshot, error ->
             if (error != null) {
                 _state.value = SyncState.SignedIn(auth.currentUser?.email, error.localizedMessage)
                 return@addSnapshotListener
             }
             val remote = snapshot?.getString(FIELD_DATA)?.let { Repository.decode(it) }
+            // A copy read from the local cache (e.g. offline) is no proof of what the cloud holds.
+            val fromServer = snapshot?.metadata?.isFromCache == false
             if (remote == null) {
-                pendingFirstPush?.invoke()
+                // Upload only when the server says there is no copy yet, never on a cache miss.
+                if (fromServer) pendingFirstPush?.invoke()
             } else {
-                onRemote(remote)
+                onRemote(remote, first && fromServer)
+            }
+            if (fromServer && first) {
+                first = false
+                prefs.edit().putString(KEY_MERGED_UID, uid).apply()
             }
         }
     }
@@ -129,6 +145,7 @@ class CloudSync(private val context: Context, private val onRemote: (AppData) ->
             listener = null
             db.collection(USERS).document(user.uid).delete().await()
             user.delete().await()
+            prefs.edit().remove(KEY_MERGED_UID).apply()
             runCatching { CredentialManager.create(context).clearCredentialState(ClearCredentialStateRequest()) }
             null
         } catch (e: Exception) {
@@ -192,6 +209,7 @@ class CloudSync(private val context: Context, private val onRemote: (AppData) ->
 
     suspend fun signOut() {
         if (!available) return
+        prefs.edit().remove(KEY_MERGED_UID).apply()
         auth.signOut()
         runCatching { CredentialManager.create(context).clearCredentialState(ClearCredentialStateRequest()) }
     }
@@ -203,5 +221,6 @@ class CloudSync(private val context: Context, private val onRemote: (AppData) ->
         const val SUBMISSIONS = "submissions"
         const val QUOTA = "quota"
         const val DAILY_LIMIT = 10
+        const val KEY_MERGED_UID = "mergedUid"
     }
 }

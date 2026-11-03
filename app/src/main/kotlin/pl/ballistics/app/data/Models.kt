@@ -278,6 +278,36 @@ data class AppData(
 
     fun ammoFor(weapon: WeaponProfile): AmmoProfile? = ammo.find { it.id == weapon.ammoId }
 
+    /**
+     * The first cloud copy after signing in on this phone. Last-write-wins would let
+     * whichever side was touched last replace the other, so a fresh install with the
+     * sample rifle could wipe the profiles in the cloud. Instead rifles, loads and saved
+     * targets from both sides are kept (the cloud copy wins for the same id), the
+     * untouched sample is dropped, and the cloud's settings are taken.
+     */
+    fun mergedWithCloud(cloud: AppData, now: Long): AppData {
+        fun <T> union(remote: List<T>, local: List<T>, id: (T) -> String, isSample: (T) -> Boolean): List<T> {
+            val ids = remote.map(id).toSet()
+            return remote + local.filter { id(it) !in ids && !isSample(it) }
+        }
+        val sample = sample()
+        val sampleWeapon = sample.weapons.single().copy(id = "", ammoId = null)
+        val sampleAmmo = sample.ammo.single().copy(id = "")
+        val weapons = union(cloud.weapons, this.weapons, { it.id }, { it.copy(id = "", ammoId = null) == sampleWeapon })
+        val ammo = union(cloud.ammo, this.ammo, { it.id }, { it.copy(id = "") == sampleAmmo })
+        val targets = union(cloud.targets, this.targets, { it.id }, { false })
+        if (weapons == cloud.weapons && ammo == cloud.ammo && targets == cloud.targets) return cloud
+        val ammoIds = ammo.map { it.id }.toSet()
+        return cloud.copy(
+            // A sample rifle that was kept would still point at the dropped sample load.
+            weapons = weapons.map { if (it.ammoId != null && it.ammoId !in ammoIds) it.copy(ammoId = null) else it },
+            ammo = ammo,
+            targets = targets,
+            activeWeaponId = cloud.activeWeaponId?.takeIf { id -> weapons.any { it.id == id } } ?: weapons.firstOrNull()?.id,
+            modifiedAt = now,
+        )
+    }
+
     companion object {
         fun sample(): AppData {
             val ammo = AmmoProfile(

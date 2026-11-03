@@ -22,6 +22,8 @@ jobs:
       - name: Test solver
         # On the JVM (Android app) and on Node.js (web app).
         run: ./gradlew :core:allTests
+      - name: Test app logic
+        run: ./gradlew :app:testGithubDebugUnitTest
       - name: Prepare signing key
         env:
           KEYSTORE_BASE64: ${{ secrets.SIGNING_KEYSTORE_BASE64 }}
