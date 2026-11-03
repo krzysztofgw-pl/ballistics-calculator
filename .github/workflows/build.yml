@@ -146,6 +146,11 @@ jobs:
           done
           # The package uploaded to the Connect IQ store, for every watch in the manifest.
           monkeyc -e -f monkey.jungle -o bin/kgw-pressure.iq -y developer_key.der -r -w
+          # The same app under the old beta id, for the private beta listing (see garmin/README.md).
+          sed 's/id="8479255366624599996860607684e2eb"/id="d8c4bc4d63d94a6cb0071345dc138c56"/' garmin/manifest.xml > garmin/manifest-beta.xml
+          grep -q d8c4bc4d63d94a6cb0071345dc138c56 garmin/manifest-beta.xml
+          printf 'project.manifest = manifest-beta.xml\n' > garmin/beta.jungle
+          monkeyc -e -f beta.jungle -o bin/kgw-pressure-beta.iq -y developer_key.der -r -w
           ls -la garmin/bin
       - uses: actions/upload-artifact@v6
         with:

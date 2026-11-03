@@ -25,6 +25,9 @@ The watch shows English, Polish, German, French, Spanish or Italian, following t
 GitHub Actions builds one `.prg` per watch model; download the `kgw-pressure-watch-app` artifact from the
 workflow run.
 
+Pick the `kgw-pressure-<device>.prg` for your watch; the device names are the product ids in
+`manifest.xml`. For example:
+
 | File | Watches |
 | --- | --- |
 | `kgw-pressure-fenix7x.prg` | tactix 7 (Standard, Pro), fēnix 7X, Enduro 2 |
@@ -37,21 +40,31 @@ workflow run.
 
 If the watch does not list the app, try the file for the other model.
 
-## Install from the Connect IQ store (beta)
+## Connect IQ store
 
 Garmin Connect can open only apps it installed itself, so with a sideloaded `.prg` the watch has to be
-opened by hand. A beta upload fixes that: a beta app is visible only to the account that uploaded it
-and is not reviewed by Garmin.
+opened by hand. Installing from the store fixes that.
+
+There are two listings, with two app ids. A beta can't be turned into a public app, so the public app
+got a new id; the phone app (`GarminPressure.kt`) talks to both and opens the public one first.
+
+| Listing | App id | Package from CI |
+| --- | --- | --- |
+| Public | `8479255366624599996860607684e2eb` (in `manifest.xml`) | `kgw-pressure.iq` |
+| Beta (visible only to the uploader, not reviewed) | `d8c4bc4d63d94a6cb0071345dc138c56` | `kgw-pressure-beta.iq` |
 
 1. Signing: the store accepts updates only with the same developer key. CI reads it from the
    `CIQ_DEVELOPER_KEY_BASE64` secret (base64 of the DER key); keep the key safe, it cannot be replaced.
-2. Download `kgw-pressure.iq` from the `kgw-pressure-watch-app` artifact of a build that used that secret.
+2. Download the `.iq` from the `kgw-pressure-watch-app` artifact of a build that used that secret.
 3. Sign in at the [Connect IQ developer dashboard](https://apps.garmin.com/developer/) with the Garmin
-   account used in Garmin Connect, upload the `.iq`, tick **Beta app**, and fill in the name, a short
-   description and the version. The store icons (128 × 128, 64-colour and 24-bit) the 500 × 500 cover image and the screen images are in `store/`.
-4. Delete the sideloaded `kgw-pressure-*.prg` from `GARMIN/APPS/` on the watch.
-5. Install the beta from the Connect IQ store in Garmin Connect (the app page link from the dashboard,
-   with `apps-developer.garmin.com` changed to `apps.garmin.com`, opens it on the phone).
+   account used in Garmin Connect. For the public app, upload `kgw-pressure.iq` as a new app (no
+   **Beta app** tick) with the texts and images in [`store/listing.md`](store/listing.md); Garmin
+   reviews it, usually within a few days. For a beta update, upload `kgw-pressure-beta.iq` as a new
+   version of the beta app.
+4. Delete any sideloaded `kgw-pressure-*.prg` from `GARMIN/APPS/` on the watch.
+5. Install from the Connect IQ store in Garmin Connect (the app page link from the dashboard,
+   with `apps-developer.garmin.com` changed to `apps.garmin.com`, opens it on the phone). Once the
+   public app is on the watch, the beta can be removed.
 
 ## Build locally
 
