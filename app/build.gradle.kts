@@ -56,7 +56,10 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            // R8 shrinks and obfuscates the code; Play flags release bundles that skip it.
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             // A stable key lets new APKs install over old ones and keeps Google sign-in working.
             signingConfig = signingConfigs.findByName("release") ?: signingConfigs.getByName("debug")
         }
