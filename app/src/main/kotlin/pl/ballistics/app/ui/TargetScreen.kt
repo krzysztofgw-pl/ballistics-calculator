@@ -69,6 +69,7 @@ import pl.ballistics.app.Lead
 import pl.ballistics.app.TargetAnalysis
 import pl.ballistics.app.TargetInputs
 import pl.ballistics.app.lead
+import pl.ballistics.app.data.AmmoProfile
 import pl.ballistics.app.data.AngularUnit
 import pl.ballistics.app.data.Conditions
 import pl.ballistics.app.data.FocalPlane
@@ -98,6 +99,7 @@ fun TargetScreen(
     conditions: Conditions,
     ui: UiSettings,
     update: ((Conditions) -> Conditions) -> Unit,
+    onSaveAmmo: (AmmoProfile) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     if (result !is CalcResult.Ok) {
@@ -386,7 +388,7 @@ fun TargetScreen(
         }
         if (sfp) Text(stringResource(R.string.sfp_note, calMag.magFmt()), style = MaterialTheme.typography.bodySmall)
 
-        TargetTools(result, conditions, update, analysis, inputs, reticle.unit) { setDistance(it) }
+        TargetTools(result, conditions, update, analysis, inputs, reticle.unit, { setDistance(it) }, onSaveAmmo)
         if (analysis != null) {
             Collapsible(stringResource(R.string.section_charts)) { TargetCharts(result, analysis, distance) }
         }

@@ -30,6 +30,7 @@ import pl.ballistics.app.CalcResult
 import pl.ballistics.app.R
 import pl.ballistics.app.TargetAnalysis
 import pl.ballistics.app.TargetInputs
+import pl.ballistics.app.data.AmmoProfile
 import pl.ballistics.app.data.AngularUnit
 import pl.ballistics.app.data.Conditions
 import pl.ballistics.app.rangeFromSize
@@ -60,7 +61,7 @@ fun Collapsible(title: String, content: @Composable ColumnScope.() -> Unit) {
 private fun Double.f(decimals: Int) = "%.${decimals}f".format(this)
 private fun cm(m: Double) = (m * 100).roundToInt().toString()
 
-/** Wind bracket, range error, temperature, hit probability and ranging with the reticle, at the chosen distance. */
+/** Wind bracket, range error, temperature, hit probability, ranging with the reticle and BC truing, at the chosen distance. */
 @Composable
 fun TargetTools(
     result: CalcResult.Ok,
@@ -70,6 +71,7 @@ fun TargetTools(
     inputs: TargetInputs,
     reticleUnit: AngularUnit,
     onUseDistance: (Double) -> Unit,
+    onSaveAmmo: (AmmoProfile) -> Unit,
 ) {
     val unit = result.angularUnit
     val digits = if (unit == AngularUnit.MOA) 1 else 2
@@ -197,4 +199,6 @@ fun TargetTools(
             }
         }
     }
+
+    BcTruingCard(result, analysis?.point?.rangeM, onSaveAmmo)
 }
