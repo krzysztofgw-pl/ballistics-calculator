@@ -152,6 +152,20 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         d.copy(ammo = if (exists) d.ammo.map { if (it.id == ammo.id) ammo else it } else d.ammo + ammo)
     }
 
+    /**
+     * Adds [copy] of the load [from] and puts it on the active rifle; muzzle velocities measured
+     * with [from] carry over, since the cartridge is the same.
+     */
+    fun addAmmoCopy(from: AmmoProfile, copy: AmmoProfile) = update { d ->
+        d.copy(
+            ammo = d.ammo + copy,
+            weapons = d.weapons.map { w ->
+                val carried = w.measuredVelocity(from)?.let { w.withMeasuredVelocity(copy, it) } ?: w
+                if (w.id == d.activeWeaponId) carried.copy(ammoId = copy.id) else carried
+            },
+        )
+    }
+
     fun deleteAmmo(id: String) = update { d ->
         d.copy(
             ammo = d.ammo.filterNot { it.id == id },

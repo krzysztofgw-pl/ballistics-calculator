@@ -72,6 +72,7 @@ fun TargetTools(
     reticleUnit: AngularUnit,
     onUseDistance: (Double) -> Unit,
     onSaveAmmo: (AmmoProfile) -> Unit,
+    onAddAmmoCopy: (from: AmmoProfile, copy: AmmoProfile) -> Unit,
 ) {
     val unit = result.angularUnit
     val digits = if (unit == AngularUnit.MOA) 1 else 2
@@ -200,5 +201,5 @@ fun TargetTools(
         }
     }
 
-    BcTruingCard(result, analysis?.point?.rangeM, onSaveAmmo)
+    BcTruingCard(result, analysis?.point?.rangeM, onSaveAmmo, onAddAmmoCopy)
 }

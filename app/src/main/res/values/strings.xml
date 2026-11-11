@@ -399,6 +399,11 @@
     <string name="bc_result_details">%1$s: %2$s–%3$s · load now: %4$s</string>
     <string name="action_apply_to_load">Apply to load</string>
     <string name="toast_bc_saved">BC %1$s saved to %2$s</string>
+    <string name="bc_save_title">Save BC</string>
+    <string name="action_replace_bc">Replace</string>
+    <string name="action_new_load_copy">Save as copy</string>
+    <string name="bc_copy_name">%1$s, BC %2$s</string>
+    <string name="toast_bc_copy_saved">Added %1$s</string>
     <string name="right_short">R</string>
     <string name="left_short">L</string>
     <string name="label_velocity_sd">Velocity SD</string>
