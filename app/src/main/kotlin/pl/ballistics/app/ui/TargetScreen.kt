@@ -100,6 +100,7 @@ fun TargetScreen(
     ui: UiSettings,
     update: ((Conditions) -> Conditions) -> Unit,
     onSaveAmmo: (AmmoProfile) -> Unit,
+    onAddAmmoCopy: (from: AmmoProfile, copy: AmmoProfile) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     if (result !is CalcResult.Ok) {
@@ -388,7 +389,7 @@ fun TargetScreen(
         }
         if (sfp) Text(stringResource(R.string.sfp_note, calMag.magFmt()), style = MaterialTheme.typography.bodySmall)
 
-        TargetTools(result, conditions, update, analysis, inputs, reticle.unit, { setDistance(it) }, onSaveAmmo)
+        TargetTools(result, conditions, update, analysis, inputs, reticle.unit, { setDistance(it) }, onSaveAmmo, onAddAmmoCopy)
         if (analysis != null) {
             Collapsible(stringResource(R.string.section_charts)) { TargetCharts(result, analysis, distance) }
         }

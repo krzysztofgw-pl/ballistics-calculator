@@ -234,7 +234,7 @@ fun App(vm: MainViewModel = viewModel()) {
             )
             1 -> ConditionsScreen(data.conditions, data.ui, vm::updateConditions, modifier)
             2 -> TableScreen(result, data.conditions, vm::updateConditions, modifier)
-            else -> TargetScreen(result, data.conditions, data.ui, vm::updateConditions, vm::saveAmmo, modifier)
+            else -> TargetScreen(result, data.conditions, data.ui, vm::updateConditions, vm::saveAmmo, vm::addAmmoCopy, modifier)
         }
         }
     }
