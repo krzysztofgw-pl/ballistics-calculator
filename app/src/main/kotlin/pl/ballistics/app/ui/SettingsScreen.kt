@@ -20,6 +20,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -209,6 +211,18 @@ fun SettingsScreen(
                     // Store builds are updated by the store.
                     if (BuildConfig.SELF_UPDATE) {
                         OutlinedButton(onClick = onCheckUpdate) { Text(stringResource(R.string.action_check_update)) }
+                    }
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedButton(onClick = { context.findActivity()?.rateApp() }) {
+                        Icon(Icons.Filled.Star, null, Modifier.size(ButtonDefaults.IconSize))
+                        Spacer(Modifier.width(ButtonDefaults.IconSpacing))
+                        Text(stringResource(R.string.action_rate_app))
+                    }
+                    OutlinedButton(onClick = { context.shareApp() }) {
+                        Icon(Icons.Filled.Share, null, Modifier.size(ButtonDefaults.IconSize))
+                        Spacer(Modifier.width(ButtonDefaults.IconSpacing))
+                        Text(stringResource(R.string.action_share_app))
                     }
                 }
                 TextButton(onClick = { context.openUrl(PRIVACY_POLICY_URL) }) { Text(stringResource(R.string.action_privacy_policy)) }

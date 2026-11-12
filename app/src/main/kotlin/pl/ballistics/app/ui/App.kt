@@ -92,6 +92,7 @@ fun App(vm: MainViewModel = viewModel()) {
     // Keyed on the setting, so it still runs when the saved settings load after the first frame.
     LaunchedEffect(data.ui.checkUpdateOnStart) { if (data.ui.checkUpdateOnStart) updater.checkOnStart() }
     AppUpdateDialogs(updater)
+    AutoReviewPrompt()
 
     when (val e = editor) {
         is Editor.Weapon -> {
