@@ -1,0 +1,46 @@
+Ballistics is a free long range ballistic calculator for precision rifle shooters and hunters. Enter your rifle, scope and load once, and it tells you what to dial on the turrets or where to hold on your reticle, at any distance. No ads, no tracking, and it works offline.
+
+WHAT TO DIAL OR HOLD
+• Elevation and windage in MRAD or MOA, rounded to whole turret clicks
+• The holds drawn on your scope's reticle (DLR-3, DLS-1, DLS-3, Mil-Dot, tree, hash and duplex in MRAD or MOA), first or second focal plane, at any magnification
+• Choose per reticle whether you dial or hold elevation and windage
+• Moving targets: set the speed and course, and the lead hold appears on the reticle
+• Preview the same holds on any other reticle
+
+DOPE CARD AND RANGE CARD
+• Full drop chart to your maximum range: drop, elevation, clicks, wind drift, velocity, energy, time of flight and Mach
+• Range card with saved targets: distance, shot angle, azimuth and target size
+• Charts of the wind correction by wind speed and by direction, and spin drift by distance
+
+WIND AND WEATHER
+• One 360° dial for the wind and the shot azimuth, as a clock or as a true bearing
+• Phone compass with declination and a calibration check
+• Wind forecast for your location (Open-Meteo): hourly mean, gusts and how steady it is
+• Temperature, humidity and pressure from the forecast, or station pressure from a Garmin watch with the free KGW Pressure app
+• Shot angle (incline) measured with the phone camera
+
+ACCURATE BALLISTICS SOLVER
+• 3-DOF point-mass trajectory with G1, G7, G2, G5, G6, G8, GI, GS and RA4 drag models
+• Custom drag curves Cd(Mach) from Doppler radar data and velocity-banded BCs
+• Humid-air atmosphere, density altitude, station pressure or QNH
+• Coriolis and Eötvös effects, spin drift, aerodynamic jump and Miller stability
+• Powder temperature sensitivity and separate zero conditions
+• Cross-checked against an independent open-source ballistics engine
+
+YOUR RIFLES AND LOADS
+• Profiles for rifles, scopes, mounts and loads, with a sight height helper
+• Muzzle velocity per rifle from your chronograph, and the barrel length of the factory test
+• Suppressor on or off, with its point of impact shift
+• Bullet library with over 600 bullets from Barnes, Berger, Hornady, Lapua, Sierra and Speer with G1 and G7 BCs, plus factory loads
+• BC truing from your range data: true the ballistic coefficient from a measured drop or a downrange velocity
+
+FIELD TOOLS
+• Hit probability for a first-round hit from your group size, velocity SD, wind and range uncertainty
+• Wind bracket, range error and temperature checks
+• Range finding with the reticle (mil-dot ranging)
+
+SYNC AND BACKUP
+• Optional sync between phones with your Google account
+• Export and import all profiles as a file
+
+Built for PRS, F-Class, ELR, long range hunting and target shooting with centerfire rifles. A calculator only predicts: always confirm your dope with live fire.
