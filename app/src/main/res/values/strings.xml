@@ -170,6 +170,10 @@
     <string name="section_about">About</string>
     <string name="app_version">Version %1$s</string>
     <string name="action_check_update">Check for update</string>
+    <string name="action_rate_app">Rate</string>
+    <string name="action_share_app">Share</string>
+    <string name="share_app_subject">Ballistics by KGW Labs</string>
+    <string name="share_app_text">Ballistics by KGW Labs, a ballistic calculator for Android: %1$s</string>
     <string name="label_check_update_on_start">Check for update on start</string>
     <string name="action_install">Install</string>
     <string name="action_later">Later</string>

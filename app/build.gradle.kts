@@ -36,10 +36,13 @@ android {
         create("github") {
             dimension = "store"
             buildConfigField("boolean", "SELF_UPDATE", "true")
+            // Sideloaded users get the APK page to pass on; the Play listing is not public yet.
+            buildConfigField("String", "SHARE_URL", "\"https://github.com/krzysztofgw-pl/ballistics-calculator/releases/latest\"")
         }
         create("play") {
             dimension = "store"
             buildConfigField("boolean", "SELF_UPDATE", "false")
+            buildConfigField("String", "SHARE_URL", "\"https://play.google.com/store/apps/details?id=com.kgwlabs.ballistics\"")
         }
     }
 
@@ -92,6 +95,8 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-tooling")
 
     implementation("androidx.core:core-ktx:1.15.0")
+    // Google Play In-App Review: only the store build asks Play for a rating.
+    "playImplementation"("com.google.android.play:review:2.0.2")
     implementation("androidx.camera:camera-camera2:1.4.1")
     implementation("androidx.camera:camera-lifecycle:1.4.1")
     implementation("androidx.camera:camera-view:1.4.1")
