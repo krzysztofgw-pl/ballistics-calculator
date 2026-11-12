@@ -13,11 +13,7 @@ import pl.ballistics.app.data.ThemeMode
 
 @Composable
 fun BallisticsTheme(mode: ThemeMode = ThemeMode.SYSTEM, content: @Composable () -> Unit) {
-    val dark = when (mode) {
-        ThemeMode.SYSTEM -> isSystemInDarkTheme()
-        ThemeMode.LIGHT -> false
-        ThemeMode.DARK -> true
-    }
+    val dark = isDarkTheme(mode)
     val context = LocalContext.current
     val colors = when {
         Build.VERSION.SDK_INT >= Build.VERSION_CODES.S ->
@@ -26,4 +22,11 @@ fun BallisticsTheme(mode: ThemeMode = ThemeMode.SYSTEM, content: @Composable () 
         else -> lightColorScheme()
     }
     MaterialTheme(colorScheme = colors, content = content)
+}
+
+@Composable
+fun isDarkTheme(mode: ThemeMode): Boolean = when (mode) {
+    ThemeMode.SYSTEM -> isSystemInDarkTheme()
+    ThemeMode.LIGHT -> false
+    ThemeMode.DARK -> true
 }

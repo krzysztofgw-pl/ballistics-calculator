@@ -1,5 +1,9 @@
 package pl.ballistics.app.ui
 
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.safeDrawing
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -102,8 +106,11 @@ fun SettingsScreen(
     }
 
     Scaffold(
+        // Keep content clear of system bars, display cutouts and the keyboard (edge-to-edge).
+        contentWindowInsets = WindowInsets.safeDrawing,
         topBar = {
             TopAppBar(
+                windowInsets = WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal),
                 title = { Text(stringResource(R.string.title_settings)) },
                 navigationIcon = {
                     IconButton(onClick = onClose) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.action_back)) }

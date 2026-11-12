@@ -1,13 +1,17 @@
 package pl.ballistics.app.ui
 
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.displayCutout
+import androidx.compose.foundation.layout.union
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsTopHeight
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.windowInsetsBottomHeight
 import androidx.compose.material.icons.Icons
@@ -178,10 +182,12 @@ fun App(vm: MainViewModel = viewModel()) {
     val suppressorOn = data.activeWeapon?.let { it.suppressor && it.suppressorMounted } == true
     Scaffold(
         modifier = Modifier.lockDialsOnOutsideTap(),
+        // Edge-to-edge: keep content clear of system bars and display cutouts (also in landscape).
+        contentWindowInsets = WindowInsets.systemBars.union(WindowInsets.displayCutout),
         topBar = {
             // No title bar: the tabs name the screen, and help and settings sit on the Rifle tab.
-            Column {
-                Spacer(Modifier.windowInsetsTopHeight(WindowInsets.statusBars))
+            Column(Modifier.windowInsetsPadding(WindowInsets.systemBars.union(WindowInsets.displayCutout).only(WindowInsetsSides.Horizontal))) {
+                Spacer(Modifier.windowInsetsTopHeight(WindowInsets.systemBars.union(WindowInsets.displayCutout)))
                 if (data.ui.tabsAtTop) {
                     TabRow(selectedTabIndex = tab) {
                         tabs.forEachIndexed { index, t ->
@@ -198,7 +204,7 @@ fun App(vm: MainViewModel = viewModel()) {
             }
         },
         bottomBar = {
-            Column {
+            Column(Modifier.windowInsetsPadding(WindowInsets.systemBars.union(WindowInsets.displayCutout).only(WindowInsetsSides.Horizontal))) {
                 // Sub-tabs sit right above the main tabs, within reach of the thumb.
                 if (tab == TARGET_TAB && !data.ui.subTabsAtTop) targetTabs()
                 if (!data.ui.tabsAtTop) {
@@ -213,7 +219,7 @@ fun App(vm: MainViewModel = viewModel()) {
                         }
                     }
                 } else {
-                    Spacer(Modifier.windowInsetsBottomHeight(WindowInsets.navigationBars))
+                    Spacer(Modifier.windowInsetsBottomHeight(WindowInsets.systemBars.union(WindowInsets.displayCutout)))
                 }
             }
         },
