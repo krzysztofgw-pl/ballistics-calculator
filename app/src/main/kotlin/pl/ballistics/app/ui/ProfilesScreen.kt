@@ -1,5 +1,9 @@
 package pl.ballistics.app.ui
 
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.clickable
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.Scaffold
@@ -107,8 +111,11 @@ fun ProfilesListScreen(
     onClose: () -> Unit,
 ) {
     Scaffold(
+        // Keep content clear of system bars, display cutouts and the keyboard (edge-to-edge).
+        contentWindowInsets = WindowInsets.safeDrawing,
         topBar = {
             TopAppBar(
+                windowInsets = WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal),
                 title = { Text(stringResource(R.string.tab_profiles)) },
                 navigationIcon = {
                     IconButton(onClick = onClose) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.action_back)) }
