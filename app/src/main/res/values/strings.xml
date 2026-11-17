@@ -194,6 +194,9 @@
     <string name="action_install_garmin_connect">Install Garmin Connect</string>
     <string name="action_get_watch_app">Get Station Pressure</string>
     <string name="watch_pressure_store_failed">Could not open the Connect IQ store. Search for Station Pressure in Garmin Connect.</string>
+    <string name="watch_rating_title">Enjoying Station Pressure?</string>
+    <string name="watch_rating_text">A rating in the Connect IQ store helps other Garmin users find the watch app.</string>
+    <string name="action_no_thanks">No thanks</string>
     <string name="watch_pressure_no_answer">The watch did not send a reading. Open Station Pressure on the watch and try again. (%1$s)</string>
     <string name="label_altitude">Altitude</string>
     <string name="unit_m_asl">m ASL</string>
