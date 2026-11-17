@@ -1,7 +1,9 @@
 package pl.ballistics.app.data
 
+import android.content.ActivityNotFoundException
 import android.content.Context
-import android.content.pm.PackageManager
+import android.content.Intent
+import android.net.Uri
 import com.garmin.android.connectiq.ConnectIQ
 import com.garmin.android.connectiq.IQApp
 import com.garmin.android.connectiq.IQDevice
@@ -41,6 +43,42 @@ object GarminPressure {
 
     fun garminConnectInstalled(context: Context): Boolean =
         runCatching { context.packageManager.getPackageInfo(CONNECT_PACKAGE, 0) }.isSuccess
+
+    /**
+     * Opens Garmin Connect's page in the Play Store, or on the web when there is no Play Store app (GitHub
+     * builds can be on such phones).
+     */
+    fun openGarminConnectInPlayStore(context: Context) {
+        val market = Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=$CONNECT_PACKAGE"))
+        val web = Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=$CONNECT_PACKAGE"))
+        for (intent in listOf(market, web)) {
+            try {
+                context.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                return
+            } catch (_: ActivityNotFoundException) {
+            }
+        }
+    }
+
+    /**
+     * Opens Station Pressure in the Connect IQ store through Garmin Connect, so it can be installed on the
+     * watch. Falls back to opening Garmin Connect itself. Returns false when neither could be opened.
+     */
+    suspend fun openWatchAppInStore(context: Context): Boolean {
+        val app = context.applicationContext
+        if (garminConnectInstalled(app)) {
+            val ciq = ConnectIQ.getInstance(app, ConnectIQ.IQConnectType.WIRELESS)
+            try {
+                if (withTimeoutOrNull(10_000) { initialize(ciq, app) } == true &&
+                    runCatching { ciq.openStore(APP_ID) }.getOrDefault(false)
+                ) return true
+            } finally {
+                runCatching { ciq.shutdown(app) }
+            }
+        }
+        val launch = app.packageManager.getLaunchIntentForPackage(CONNECT_PACKAGE) ?: return false
+        return runCatching { app.startActivity(launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }.isSuccess
+    }
 
     /**
      * Opens the watch app (the watch asks to confirm) and waits for its reading. [onPrompt] is called
