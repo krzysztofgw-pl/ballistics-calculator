@@ -16,7 +16,8 @@ WIND AND WEATHER
 • One 360° dial for the wind and the shot azimuth, as a clock or as a true bearing
 • Phone compass with declination and a calibration check
 • Wind forecast for your location (Open-Meteo): hourly mean, gusts and how steady it is
-• Temperature, humidity and pressure from the forecast, or station pressure from a Garmin watch with the free KGW Pressure app
+• Temperature, humidity and pressure from the forecast
+• Station pressure from a Garmin watch with the free Station Pressure app: https://apps.garmin.com/apps/2ec4993f-ced4-4fde-ad88-8541ef96c7b2
 • Shot angle (incline) measured with the phone camera
 
 ACCURATE BALLISTICS SOLVER
