@@ -1,5 +1,6 @@
 package pl.ballistics.app.ui
 
+import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -42,6 +43,34 @@ private enum class WatchFix { InstallGarminConnect, InstallWatchApp }
 
 private data class WatchError(val text: String, val fix: WatchFix? = null)
 
+private const val RATING_PREFS = "watch_rating"
+private const val KEY_READINGS = "readings"
+private const val KEY_NEXT_ASK = "next_ask"
+private const val KEY_DONE = "done"
+private const val FIRST_ASK = 3
+private const val ASK_AGAIN_AFTER = 5
+
+/**
+ * Counts a successful reading and tells whether to suggest rating Station Pressure: at the third
+ * reading, then [ASK_AGAIN_AFTER] readings after each "Later"; never again after "Rate" or "No thanks".
+ */
+private fun countReadingAndCheckRating(context: Context): Boolean {
+    val prefs = context.getSharedPreferences(RATING_PREFS, Context.MODE_PRIVATE)
+    if (prefs.getBoolean(KEY_DONE, false)) return false
+    val readings = prefs.getInt(KEY_READINGS, 0) + 1
+    prefs.edit().putInt(KEY_READINGS, readings).apply()
+    return readings >= prefs.getInt(KEY_NEXT_ASK, FIRST_ASK)
+}
+
+private fun answerRating(context: Context, later: Boolean) {
+    val prefs = context.getSharedPreferences(RATING_PREFS, Context.MODE_PRIVATE)
+    if (later) {
+        prefs.edit().putInt(KEY_NEXT_ASK, prefs.getInt(KEY_READINGS, 0) + ASK_AGAIN_AFTER).apply()
+    } else {
+        prefs.edit().putBoolean(KEY_DONE, true).apply()
+    }
+}
+
 /**
  * Fills in the station pressure from a Garmin watch's barometer, through Garmin Connect. Shown when
  * the watch is switched on in Settings; without Garmin Connect it reports that as its failure.
@@ -53,6 +82,7 @@ fun WatchPressureButton(update: ((Conditions) -> Conditions) -> Unit) {
     var error by remember { mutableStateOf<WatchError?>(null) }
     var showError by remember { mutableStateOf(false) }
     var job by remember { mutableStateOf<Job?>(null) }
+    var askRating by remember { mutableStateOf(false) }
 
     fun toast(text: String) = Toast.makeText(context, text, Toast.LENGTH_SHORT).show()
     // As wide as the pressure field above it. Progress and the reading show as toasts; a failure leaves a
@@ -72,6 +102,7 @@ fun WatchPressureButton(update: ((Conditions) -> Conditions) -> Unit) {
                             val hPa = String.format(Locale.US, "%.1f", result.hPa)
                             update { it.copy(pressureHpa = hPa, pressureIsQnh = false) }
                             toast(context.getString(R.string.watch_pressure_result, hPa))
+                            askRating = countReadingAndCheckRating(context)
                             null
                         }
                         GarminPressure.Result.NoGarminConnect -> WatchError(
@@ -131,5 +162,39 @@ fun WatchPressureButton(update: ((Conditions) -> Conditions) -> Unit) {
                 dismissButton = if (shown.fix != null) close else null,
             )
         }
+    }
+    if (askRating) {
+        AlertDialog(
+            // Dismissing without an answer counts as "Later".
+            onDismissRequest = {
+                askRating = false
+                answerRating(context, later = true)
+            },
+            title = { Text(stringResource(R.string.watch_rating_title)) },
+            text = { Text(stringResource(R.string.watch_rating_text)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    askRating = false
+                    answerRating(context, later = false)
+                    scope.launch {
+                        if (!GarminPressure.openWatchAppInStore(context)) {
+                            toast(context.getString(R.string.watch_pressure_store_failed))
+                        }
+                    }
+                }) { Text(stringResource(R.string.action_rate_app)) }
+            },
+            dismissButton = {
+                Row {
+                    TextButton(onClick = {
+                        askRating = false
+                        answerRating(context, later = false)
+                    }) { Text(stringResource(R.string.action_no_thanks)) }
+                    TextButton(onClick = {
+                        askRating = false
+                        answerRating(context, later = true)
+                    }) { Text(stringResource(R.string.action_later)) }
+                }
+            },
+        )
     }
 }
