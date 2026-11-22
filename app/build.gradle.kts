@@ -97,25 +97,25 @@ dependencies {
     implementation("androidx.core:core-ktx:1.15.0")
     // Google Play In-App Review: only the store build asks Play for a rating.
     "playImplementation"("com.google.android.play:review:2.0.2")
-    implementation("androidx.camera:camera-camera2:1.4.1")
-    implementation("androidx.camera:camera-lifecycle:1.4.1")
-    implementation("androidx.camera:camera-view:1.4.1")
+    implementation("androidx.camera:camera-camera2:1.7.0")
+    implementation("androidx.camera:camera-lifecycle:1.7.0")
+    implementation("androidx.camera:camera-view:1.7.0")
     // CameraX hands back Guava's ListenableFuture; the class must be on the compile classpath.
-    implementation("com.google.guava:guava:33.3.1-android")
+    implementation("com.google.guava:guava:33.8.0-android")
     implementation("androidx.activity:activity-compose:1.9.3")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.7")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.13.0")
     // Station pressure from a Garmin watch (see garmin/).
-    implementation("com.garmin.connectiq:ciq-companion-app-sdk:2.2.0@aar")
+    implementation("com.garmin.connectiq:ciq-companion-app-sdk:2.4.0@aar")
 
     implementation(platform("com.google.firebase:firebase-bom:33.7.0"))
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-firestore")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.9.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.11.0")
     implementation("androidx.credentials:credentials:1.3.0")
     implementation("androidx.credentials:credentials-play-services-auth:1.3.0")
-    implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
+    implementation("com.google.android.libraries.identity.googleid:googleid:1.2.1")
 
     testImplementation(kotlin("test"))
 }
