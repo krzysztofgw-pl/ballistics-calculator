@@ -155,7 +155,7 @@ object DialFocus {
 }
 
 /** Whether [p] lies on the round face of a dial drawn in a box of [size]. */
-private fun onFace(p: Offset, size: IntSize): Boolean {
+internal fun onFace(p: Offset, size: IntSize): Boolean {
     val r = minOf(size.width, size.height) / 2f
     return (p - Offset(size.width / 2f, size.height / 2f)).getDistance() <= r
 }
@@ -169,17 +169,19 @@ fun Modifier.lockDialsOnOutsideTap(): Modifier = pointerInput(Unit) {
     }
 }
 
-private fun unit(deg: Double): Offset {
+internal fun unit(deg: Double): Offset {
     val a = Math.toRadians(deg)
     return Offset(sin(a).toFloat(), -cos(a).toFloat())
 }
 
-private fun DrawScope.label(layout: TextLayoutResult, at: Offset) =
+internal fun DrawScope.label(layout: TextLayoutResult, at: Offset) =
     drawText(layout, topLeft = at - Offset(layout.size.width / 2f, layout.size.height / 2f))
 
-private fun DrawScope.drawArrow(from: Offset, to: Offset, color: Color, scale: Float = 1f) {
-    val width = 4.dp.toPx() * scale
-    val head = 16.dp.toPx() * scale
+private fun DrawScope.drawArrow(from: Offset, to: Offset, color: Color, scale: Float = 1f) =
+    drawArrowPx(from, to, color, 4.dp.toPx() * scale, 16.dp.toPx() * scale)
+
+/** An arrow from [from] to [to] with a shaft [width] and a head [head] long, both in pixels. */
+internal fun DrawScope.drawArrowPx(from: Offset, to: Offset, color: Color, width: Float, head: Float) {
     val dir = (to - from) / (to - from).getDistance()
     val normal = Offset(-dir.y, dir.x)
     val base = to - dir * head
