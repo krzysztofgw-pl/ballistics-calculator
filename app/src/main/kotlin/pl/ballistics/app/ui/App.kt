@@ -97,6 +97,15 @@ fun App(vm: MainViewModel = viewModel()) {
     LaunchedEffect(data.ui.checkUpdateOnStart) { if (data.ui.checkUpdateOnStart) updater.checkOnStart() }
     AppUpdateDialogs(updater)
     AutoReviewPrompt()
+    // A chronograph file can arrive from another app's Share while any screen is open.
+    val chronograph by vm.chronograph.collectAsStateWithLifecycle()
+    chronograph?.let { state ->
+        ChronographDialog(state, data, vm::applyChronograph, vm::closeChronograph)
+    }
+    var typing by remember { mutableStateOf(false) }
+    if (typing) {
+        ManualVelocityDialog(onDone = { typing = false; vm.openTypedSeries(it) }, onDismiss = { typing = false })
+    }
 
     when (val e = editor) {
         is Editor.Weapon -> {
@@ -237,6 +246,8 @@ fun App(vm: MainViewModel = viewModel()) {
                 onOpenProfiles = { fromProfiles = true; profilesReturn = null; editor = Editor.Profiles },
                 onOpenHelp = { editor = Editor.Help },
                 onOpenSettings = { editor = Editor.Settings },
+                onOpenChronograph = vm::openChronograph,
+                onTypeVelocities = { typing = true },
                 modifier = modifier,
             )
             1 -> ConditionsScreen(data.conditions, data.ui, vm::updateConditions, modifier)
