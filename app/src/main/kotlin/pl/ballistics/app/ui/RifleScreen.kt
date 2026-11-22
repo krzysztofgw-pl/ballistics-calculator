@@ -13,6 +13,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.ButtonDefaults
@@ -66,6 +67,8 @@ fun RifleScreen(
     onOpenProfiles: () -> Unit,
     onOpenHelp: () -> Unit,
     onOpenSettings: () -> Unit,
+    onOpenChronograph: (android.net.Uri) -> Unit,
+    onTypeVelocities: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val w = data.activeWeapon
@@ -144,7 +147,35 @@ fun RifleScreen(
             }
         }
 
-        IconLabelButton(Icons.Filled.Person, stringResource(R.string.action_profiles), onOpenProfiles)
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+            IconLabelButton(Icons.Filled.Person, stringResource(R.string.action_profiles), onOpenProfiles)
+            ChronographButton(onOpenChronograph, onTypeVelocities)
+        }
+    }
+}
+
+/** Muzzle velocities from a chronograph: a file it exported, or typed in shot by shot. */
+@Composable
+private fun ChronographButton(onOpen: (android.net.Uri) -> Unit, onType: () -> Unit) {
+    var menu by remember { mutableStateOf(false) }
+    // The types chronograph apps give their files vary (CSV is often text/plain or octet-stream), so any file can be picked.
+    val picker = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.OpenDocument(),
+    ) { uri -> if (uri != null) onOpen(uri) }
+    Box {
+        IconLabelButton(ImageVector.vectorResource(R.drawable.ic_chronograph), stringResource(R.string.action_chronograph)) { menu = true }
+        androidx.compose.material3.DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.action_open_chrono_file)) },
+                leadingIcon = { Icon(ImageVector.vectorResource(R.drawable.ic_import), null) },
+                onClick = { menu = false; picker.launch(arrayOf("*/*")) },
+            )
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.action_type_velocities)) },
+                leadingIcon = { Icon(Icons.Filled.Edit, null) },
+                onClick = { menu = false; onType() },
+            )
+        }
     }
 }
 

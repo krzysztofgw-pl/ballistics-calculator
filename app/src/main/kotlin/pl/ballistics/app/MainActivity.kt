@@ -1,8 +1,12 @@
 package pl.ballistics.app
 
+import android.content.Intent
 import android.graphics.Color
+import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.viewModels
+import androidx.core.content.IntentCompat
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -15,10 +19,14 @@ import pl.ballistics.app.ui.BallisticsTheme
 import pl.ballistics.app.ui.isDarkTheme
 
 class MainActivity : ComponentActivity() {
+    private val model: MainViewModel by viewModels()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         // Draw behind the system bars on every API level, as Android 15+ does by default.
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+        // Recreated (rotation), the file shared at launch has been read already.
+        if (savedInstanceState == null) openShared(intent)
         setContent {
             val vm: MainViewModel = viewModel()
             val data by vm.data.collectAsStateWithLifecycle()
@@ -33,6 +41,26 @@ class MainActivity : ComponentActivity() {
             }
             BallisticsTheme(data.ui.theme) {
                 App(vm)
+            }
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        openShared(intent)
+    }
+
+    /** A chronograph file shared from another app (ShotView, Athlon, a file manager) or opened with this one. */
+    private fun openShared(intent: Intent?) {
+        when (intent?.action) {
+            Intent.ACTION_VIEW -> intent.data?.let(model::openChronograph)
+            Intent.ACTION_SEND -> {
+                val stream = IntentCompat.getParcelableExtra(intent, Intent.EXTRA_STREAM, Uri::class.java)
+                val text = intent.getStringExtra(Intent.EXTRA_TEXT)
+                when {
+                    stream != null -> model.openChronograph(stream)
+                    !text.isNullOrBlank() -> model.openChronographText(text)
+                }
             }
         }
     }
