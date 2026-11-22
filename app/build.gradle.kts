@@ -1,6 +1,5 @@
 plugins {
     id("com.android.application")
-    kotlin("android")
     kotlin("plugin.compose")
     kotlin("plugin.serialization")
 }
@@ -60,6 +59,7 @@ android {
     buildTypes {
         release {
             // R8 shrinks and obfuscates the code; Play flags release bundles that skip it.
+            // AGP 9 shrinks resources together with the code (optimized resource shrinking).
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
@@ -77,10 +77,6 @@ android {
         compose = true
         buildConfig = true
     }
-}
-
-kotlin {
-    compilerOptions.jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
 }
 
 dependencies {
@@ -102,7 +98,7 @@ dependencies {
     implementation("androidx.camera:camera-view:1.4.1")
     // CameraX hands back Guava's ListenableFuture; the class must be on the compile classpath.
     implementation("com.google.guava:guava:33.3.1-android")
-    implementation("androidx.activity:activity-compose:1.9.3")
+    implementation("androidx.activity:activity-compose:1.13.0")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.7")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.1")
@@ -117,5 +113,6 @@ dependencies {
     implementation("androidx.credentials:credentials-play-services-auth:1.3.0")
     implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
 
-    testImplementation(kotlin("test"))
+    // With built-in Kotlin the JUnit flavour of kotlin-test is no longer picked automatically.
+    testImplementation(kotlin("test-junit"))
 }
