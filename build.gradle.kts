@@ -1,22 +1,22 @@
 // AGP is only put on the classpath when the app module is included (see
 // settings.gradle.kts), so the solver builds on machines without Google Maven.
+// The Kotlin plugins sit on the same classpath because AGP 9 depends on the Kotlin
+// Gradle plugin itself; one version for both avoids a clash.
 buildscript {
     repositories {
         google()
         mavenCentral()
     }
     dependencies {
+        val kotlinVersion = "2.4.21"
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
+        classpath("org.jetbrains.kotlin:compose-compiler-gradle-plugin:$kotlinVersion")
+        classpath("org.jetbrains.kotlin:kotlin-serialization:$kotlinVersion")
         if (findProject(":app") != null) {
             classpath("com.android.tools.build:gradle:9.5.0")
             classpath("com.google.gms:google-services:4.6.0")
         }
     }
-}
-
-plugins {
-    kotlin("multiplatform") version "2.4.21" apply false
-    kotlin("plugin.compose") version "2.4.21" apply false
-    kotlin("plugin.serialization") version "2.4.21" apply false
 }
 
 // Kotlin/JS would add the Node.js download site as a project repository, which
