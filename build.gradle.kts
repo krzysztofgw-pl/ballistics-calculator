@@ -7,7 +7,7 @@ buildscript {
     }
     dependencies {
         if (findProject(":app") != null) {
-            classpath("com.android.tools.build:gradle:9.5.1")
+            classpath("com.android.tools.build:gradle:9.5.0")
             classpath("com.google.gms:google-services:4.6.0")
         }
     }
