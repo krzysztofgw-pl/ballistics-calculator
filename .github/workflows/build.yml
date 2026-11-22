@@ -47,6 +47,11 @@ jobs:
           SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
           BUILD_NUMBER: ${{ github.run_number }}
         run: ./gradlew :app:assembleGithubRelease :app:bundlePlayRelease
+      - name: Check that Play can see the edge-to-edge opt-in
+        # See app/proguard-rules.pro: R8 must keep EdgeToEdge.enable under its own name.
+        run: |
+          grep -q '^androidx.activity.EdgeToEdge -> androidx.activity.EdgeToEdge:' app/build/outputs/mapping/playRelease/mapping.txt \
+            || { echo "::error::R8 renamed or removed androidx.activity.EdgeToEdge"; exit 1; }
       - uses: actions/upload-artifact@v6
         with:
           name: ballistics-apk

@@ -7,17 +7,16 @@ buildscript {
     }
     dependencies {
         if (findProject(":app") != null) {
-            classpath("com.android.tools.build:gradle:8.11.1")
-            classpath("com.google.gms:google-services:4.4.2")
+            classpath("com.android.tools.build:gradle:9.5.1")
+            classpath("com.google.gms:google-services:4.6.0")
         }
     }
 }
 
 plugins {
-    kotlin("multiplatform") version "2.2.0" apply false
-    kotlin("android") version "2.2.0" apply false
-    kotlin("plugin.compose") version "2.2.0" apply false
-    kotlin("plugin.serialization") version "2.2.0" apply false
+    kotlin("multiplatform") version "2.4.21" apply false
+    kotlin("plugin.compose") version "2.4.21" apply false
+    kotlin("plugin.serialization") version "2.4.21" apply false
 }
 
 // Kotlin/JS would add the Node.js download site as a project repository, which
