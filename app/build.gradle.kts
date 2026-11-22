@@ -113,5 +113,6 @@ dependencies {
     implementation("androidx.credentials:credentials-play-services-auth:1.3.0")
     implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
 
-    testImplementation(kotlin("test"))
+    // With built-in Kotlin the JUnit flavour of kotlin-test is no longer picked automatically.
+    testImplementation(kotlin("test-junit"))
 }
