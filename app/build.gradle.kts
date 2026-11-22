@@ -109,7 +109,7 @@ dependencies {
     // Station pressure from a Garmin watch (see garmin/).
     implementation("com.garmin.connectiq:ciq-companion-app-sdk:2.2.0@aar")
 
-    implementation(platform("com.google.firebase:firebase-bom:33.7.0"))
+    implementation(platform("com.google.firebase:firebase-bom:35.2.0"))
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-firestore")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.9.0")
