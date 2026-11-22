@@ -158,6 +158,11 @@ fun SettingsScreen(
                 SwitchRow(stringResource(R.string.label_location_altitude), ui.locationSetsAltitude) { v ->
                     onUi { it.copy(locationSetsAltitude = v) }
                 }
+                TwoOptions(
+                    stringResource(R.string.label_forecast_direction),
+                    stringResource(R.string.option_clock), stringResource(R.string.option_true),
+                    !ui.forecastTrueBearing,
+                ) { clock -> onUi { it.copy(forecastTrueBearing = !clock) } }
             }
 
             Section(stringResource(R.string.section_devices)) {

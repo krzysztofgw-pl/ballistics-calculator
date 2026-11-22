@@ -240,6 +240,8 @@ data class UiSettings(
     val locationSetsLatitude: Boolean = true,
     /** The forecast also sets the altitude, from the terrain height at the location. */
     val locationSetsAltitude: Boolean = false,
+    /** The forecast shows wind directions as true bearings, north up; otherwise relative to the line of fire, as a clock. */
+    val forecastTrueBearing: Boolean = false,
     /** Offer reading the station pressure from a Garmin watch on the conditions screen. */
     val garminWatch: Boolean = false,
     /** Look for a newer release each time the app starts. */
