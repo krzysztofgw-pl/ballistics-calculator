@@ -372,12 +372,10 @@
     <string name="section_wind_bracket">Wind bracket</string>
     <string name="label_wind_min">Lightest wind</string>
     <string name="label_wind_max">Strongest wind</string>
-    <string name="wind_bracket_result">%1$s–%2$s m/s: %3$s to %4$s %5$s, spread %6$s %5$s (%7$s cm)</string>
+    <string name="wind_bracket_spread">↔ %1$s %2$s · %3$s cm</string>
     <string name="section_range_error">Range error</string>
-    <string name="range_error_row">%1$s m off: %2$s cm %3$s</string>
-    <string name="high">high</string>
-    <string name="low">low</string>
-    <string name="range_error_window">Hits a %3$s cm tall target from %1$s to %2$s m off</string>
+    <string name="range_error_row">%1$s m</string>
+    <string name="range_error_window">Hits a %3$s cm tall target from %1$s to %2$s m</string>
     <string name="section_temperature">Temperature</string>
     <string name="temperature_row">%1$d °C: %2$d m/s, up %3$s %4$s</string>
     <string name="section_hit_probability">Hit probability</string>

@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
@@ -25,6 +26,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import pl.ballistics.app.CalcResult
 import pl.ballistics.app.R
@@ -34,6 +36,7 @@ import pl.ballistics.app.data.AmmoProfile
 import pl.ballistics.app.data.AngularUnit
 import pl.ballistics.app.data.Conditions
 import pl.ballistics.app.rangeFromSize
+import pl.ballistics.app.reticle.Reticle
 import pl.ballistics.app.toNumber
 import kotlin.math.abs
 import kotlin.math.roundToInt
@@ -69,7 +72,8 @@ fun TargetTools(
     update: ((Conditions) -> Conditions) -> Unit,
     analysis: TargetAnalysis?,
     inputs: TargetInputs,
-    reticleUnit: AngularUnit,
+    reticle: Reticle,
+    reticleScale: Double,
     onUseDistance: (Double) -> Unit,
     onSaveAmmo: (AmmoProfile) -> Unit,
     onAddAmmoCopy: (from: AmmoProfile, copy: AmmoProfile) -> Unit,
@@ -98,12 +102,15 @@ fun TargetTools(
         }
         analysis?.bracket?.let { b ->
             val spread = abs(b.maxRad - b.minRad)
-            Text(
-                stringResource(
-                    R.string.wind_bracket_result, b.minMps.f(1), b.maxMps.f(1), side(b.minRad), side(b.maxRad), unit.label,
-                    (spread / unit.radians).f(digits), cm(spread * analysis.point.rangeM),
-                ),
-                style = MaterialTheme.typography.bodyMedium,
+            // The reticle shows a hold on the side the bullet drifts to, opposite the correction.
+            fun x(rad: Double) = -rad / reticle.unit.radians * reticleScale
+            val holds = buildList {
+                add(BracketHold(x(b.minRad), side(b.minRad), "${b.minMps.f(1)} m/s", strong = false))
+                if (abs(b.maxRad - b.minRad) > 1e-9) add(BracketHold(x(b.maxRad), side(b.maxRad), "${b.maxMps.f(1)} m/s", strong = true))
+            }.filter { it.x.isFinite() }
+            if (holds.isNotEmpty()) WindBracketView(
+                reticle, holds,
+                if (holds.size == 2) stringResource(R.string.wind_bracket_spread, (spread / unit.radians).f(digits), unit.label, cm(spread * analysis.point.rangeM)) else null,
             )
         }
     }
@@ -111,13 +118,20 @@ fun TargetTools(
     Collapsible(stringResource(R.string.section_range_error)) {
         analysis?.tolerance?.let { t ->
             t.misses.forEach { m ->
-                Text(
-                    stringResource(
-                        R.string.range_error_row, (if (m.errorM > 0) "+" else "−") + abs(m.errorM).roundToInt(), cm(abs(m.missM)),
-                        stringResource(if (m.missM >= 0) R.string.high else R.string.low),
-                    ),
-                    style = MaterialTheme.typography.bodyMedium,
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        stringResource(R.string.range_error_row, (if (m.errorM > 0) "+" else "−") + abs(m.errorM).roundToInt()),
+                        Modifier.width(96.dp),
+                        style = MaterialTheme.typography.bodyLarge,
+                    )
+                    Text(
+                        if (m.missM >= 0) "↑" else "↓",
+                        Modifier.width(32.dp),
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    Text("${cm(abs(m.missM))} cm", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                }
             }
             Text(
                 stringResource(
@@ -191,9 +205,9 @@ fun TargetTools(
         val sizeCm = size.toNumber() ?: (inputs.heightM * 100)
         FieldRow { m ->
             NumberField(stringResource(R.string.label_ranging_size), size, "cm", m, placeholder = cm(inputs.heightM)) { size = it }
-            NumberField(stringResource(R.string.label_ranging_reading), reading, reticleUnit.label, m) { reading = it }
+            NumberField(stringResource(R.string.label_ranging_reading), reading, reticle.unit.label, m) { reading = it }
         }
-        rangeFromSize(sizeCm / 100, (reading.toNumber() ?: 0.0) * reticleUnit.radians)?.let { d ->
+        rangeFromSize(sizeCm / 100, (reading.toNumber() ?: 0.0) * reticle.unit.radians)?.let { d ->
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(stringResource(R.string.ranging_result, d.roundToInt()), Modifier.weight(1f), style = MaterialTheme.typography.titleMedium)
                 OutlinedButton(onClick = { onUseDistance(d) }) { Text(stringResource(R.string.action_use_distance)) }
