@@ -69,7 +69,7 @@ val chartColors = listOf(
  * @param readout the points to show for the x a finger reads (dragged to, or tapped); by default each series'
  *   value there, the first with a callout of [yLabel] over [xLabel]. The marked [points] stay, faint. The reading
  *   stays after the finger lifts; a tap clears it.
- * @param onLongPress called with the x being read when a finger then rests still anywhere on the chart; null when
+ * @param onLongPress called with the x being read when a finger then rests still on its callout or line; null when
  *   holding does nothing.
  */
 @OptIn(ExperimentalLayoutApi::class)
@@ -98,6 +98,8 @@ fun LineChart(
     var reading by remember { mutableStateOf<Double?>(null) }
     LaunchedEffect(markerX) { reading = null }
     val plot = remember { FloatArray(2) }
+    // The reading's callout (left, top, right, bottom) and line x in pixels from the last draw: holding there accepts it.
+    val target = remember { FloatArray(5) { Float.NaN } }
     val ink = MaterialTheme.colorScheme.onSurface
     val plate = MaterialTheme.colorScheme.surface
     val grid = MaterialTheme.colorScheme.outlineVariant
@@ -129,10 +131,14 @@ fun LineChart(
                     while (true) {
                         val event = if (!moved && !held) withTimeoutOrNull(hold) { awaitPointerEvent() } else awaitPointerEvent()
                         if (event == null) {
-                            // A finger resting still: picks the x being read, so the finger never hides it.
+                            // A finger resting on the reading's callout or line accepts it; elsewhere it moves the reading there.
                             held = true
                             val p = pick
-                            if (shown != null && p != null) {
+                            val grip = 24.dp.toPx()
+                            val at = down.position
+                            val onIt = (at.x >= target[0] - grip / 2 && at.x <= target[2] + grip / 2 && at.y >= target[1] - grip / 2 && at.y <= target[3] + grip / 2) ||
+                                abs(at.x - target[4]) <= grip
+                            if (shown != null && p != null && onIt) {
                                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                 reading = null
                                 p(shown)
@@ -220,6 +226,10 @@ fun LineChart(
                     }
                 }
             }
+            if (read == null) target.fill(Float.NaN) else {
+                target.fill(Float.NaN)
+                target[4] = x(fingerX!!)
+            }
             val fixed = points.filter { it.x in xMin..xMax && it.y.isFinite() }
             val shown = read ?: fixed
             if (read != null) fixed.forEach { p ->
@@ -242,6 +252,9 @@ fun LineChart(
                 // The callout sits beside the point, toward the roomier side, and above it when there is space.
                 val bx = (if (c.x + gap + bw <= left + w) c.x + gap else c.x - gap - bw).coerceIn(left, maxOf(left, left + w - bw))
                 val by = (if (c.y - gap - bh >= top) c.y - gap - bh else c.y + gap).coerceIn(top, maxOf(top, top + h - bh))
+                if (read != null) {
+                    target[0] = bx; target[1] = by; target[2] = bx + bw; target[3] = by + bh
+                }
                 val corner = CornerRadius(7.dp.toPx())
                 drawRoundRect(plate, Offset(bx, by), Size(bw, bh), corner)
                 drawRoundRect(p.color, Offset(bx, by), Size(bw, bh), corner, style = Stroke(1.dp.toPx()))
