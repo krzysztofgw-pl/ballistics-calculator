@@ -56,7 +56,6 @@ class BracketHold(val x: Double, val hold: String, val wind: String, val strong:
 @Composable
 fun WindBracketView(reticle: Reticle, holds: List<BracketHold>, spreadText: String?) {
     val text = rememberTextMeasurer()
-    val labelColor = MaterialTheme.colorScheme.onSurfaceVariant
     Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
         Canvas(Modifier.fillMaxWidth().height(164.dp)) {
             val top = 44.dp.toPx()
@@ -94,7 +93,7 @@ fun WindBracketView(reticle: Reticle, holds: List<BracketHold>, spreadText: Stri
                 val step = listOf(0.1, 0.2, 0.25, 0.5, 1.0, 2.0, 2.5, 5.0, 10.0, 20.0, 50.0).first { (b - a) / it <= 6 }
                 var v = kotlin.math.ceil(a / step) * step
                 while (v <= b + 1e-9) {
-                    if (abs(v) > 1e-9) centred(text, number(abs(v)), Offset(sx(v), size.height - 12.dp.toPx()), labelColor.copy(alpha = 0.8f), 11)
+                    if (abs(v) > 1e-9) centred(text, number(abs(v)), Offset(sx(v), size.height - 12.dp.toPx()), Ink.copy(alpha = 0.7f), 11)
                     v += step
                 }
                 holds.forEach { h ->
@@ -141,22 +140,13 @@ fun WindBracketView(reticle: Reticle, holds: List<BracketHold>, spreadText: Stri
 }
 
 /**
- * The stretch of the horizontal stem to show, in reticle units: both holds with some margin,
- * and the centre too while the holds are near it, so the zoom stays readable.
+ * The stretch of the horizontal stem to show, in reticle units: the centre of the cross, always there for
+ * reference, and both holds, with some margin.
  */
 private fun window(reticle: Reticle, xs: List<Double>): Pair<Double, Double> {
     val mrad = AngularUnit.MRAD.radians / reticle.unit.radians
-    val lo = xs.minOrNull() ?: 0.0
-    val hi = xs.maxOrNull() ?: 0.0
-    val span = hi - lo
-    val nearest = when {
-        lo > 0 -> lo
-        hi < 0 -> -hi
-        else -> 0.0
-    }
-    val withCentre = nearest <= max(2 * span, 1.5 * mrad)
-    var a = if (withCentre) min(lo, 0.0) else lo
-    var b = if (withCentre) max(hi, 0.0) else hi
+    var a = min(xs.minOrNull() ?: 0.0, 0.0)
+    var b = max(xs.maxOrNull() ?: 0.0, 0.0)
     val margin = max((b - a) * 0.2, 0.3 * mrad)
     a -= margin; b += margin
     val minWidth = 1.5 * mrad
