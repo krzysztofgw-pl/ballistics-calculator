@@ -23,6 +23,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -111,7 +112,7 @@ private fun Table(
         Row(Modifier.background(MaterialTheme.colorScheme.surfaceVariant)) {
             Cell(stringResource(rangeColumn.first), rangeColumn.second, bold = true)
             Row(Modifier.horizontalScroll(sideways)) {
-                rest.forEach { (title, w) -> Cell(stringResource(title), w, bold = true) }
+                rest.forEach { (title, w) -> Cell(stringResource(title), w, bold = true, highlight = title == R.string.col_clicks) }
             }
         }
         Column(Modifier.verticalScroll(rememberScrollState())) {
@@ -160,7 +161,10 @@ private fun PointRow(p: TrajectoryPoint, unitRad: Double, click: Double?) {
         "%.2f".format(p.mach),
     )
     Row {
-        cells.forEachIndexed { index, text -> Cell(text, columns[index + 1].second) }
+        cells.forEachIndexed { index, text ->
+            val (title, width) = columns[index + 1]
+            Cell(text, width, bold = title == R.string.col_clicks, highlight = title == R.string.col_clicks)
+        }
     }
 }
 
@@ -172,11 +176,17 @@ private fun side(right: Double) = when {
 
 private val ROW_HEIGHT = 28.dp
 
+/**
+ * [highlight]: the clicks columns, what is actually dialled. A light band in the accent colour,
+ * like the selected tab, with bold figures: it stands out without outshouting the range column.
+ */
 @Composable
-private fun Cell(text: String, width: Int, bold: Boolean = false) {
+private fun Cell(text: String, width: Int, bold: Boolean = false, highlight: Boolean = false) {
+    val band = if (highlight) Modifier.background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f)) else Modifier
     Text(
         text,
-        modifier = Modifier.width(width.dp).height(ROW_HEIGHT).padding(horizontal = 4.dp).wrapContentHeight(),
+        modifier = Modifier.width(width.dp).height(ROW_HEIGHT).then(band).padding(horizontal = 4.dp).wrapContentHeight(),
+        color = if (highlight) MaterialTheme.colorScheme.onPrimaryContainer else Color.Unspecified,
         maxLines = 1,
         textAlign = TextAlign.End,
         fontWeight = if (bold) FontWeight.SemiBold else null,
