@@ -146,17 +146,17 @@ private fun Warning(text: String) {
 
 @Composable
 private fun PointRow(p: TrajectoryPoint, unitRad: Double, click: Double?) {
-    // Drop is drop: positive below the line of sight, negative only where the bullet is above it
-    // (between the near and far zero). The other columns are corrections, by arrow or letter.
+    // The cm columns are where the bullet goes: drop below the line of sight (negative only above it,
+    // between the near and far zero) and drift R/L. The angle and clicks columns are the corrections.
     val up = -p.dropRad / unitRad
     val right = -p.windageRad / unitRad
     val dropCm = -p.dropM * 100
-    val rightCm = -p.windageM * 100
+    val driftCm = p.windageM * 100
     val cells = listOf(
         (if (dropCm < -0.05) "-" else "") + grouped("%.1f".format(abs(dropCm))),
         if (p.rangeM > 0) vertical(up, 0.005) + "%.2f".format(abs(up)) else "",
         if (p.rangeM > 0 && click != null) vertical(up / click, 0.5) + abs(up / click).roundToInt() else "",
-        side(rightCm, 0.05) + grouped("%.1f".format(abs(rightCm))),
+        side(driftCm, 0.05) + grouped("%.1f".format(abs(driftCm))),
         if (p.rangeM > 0) side(right, 0.005) + "%.2f".format(abs(right)) else "",
         if (p.rangeM > 0 && click != null) side(right / click, 0.5) + (abs(right) / click).roundToInt() else "",
         p.velocityMps.roundToInt().toString(),
