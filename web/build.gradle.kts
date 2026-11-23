@@ -19,7 +19,7 @@ kotlin {
     sourceSets {
         jsMain.dependencies {
             implementation(project(":core"))
-            implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.1")
+            implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.13.0")
         }
     }
 }
