@@ -38,7 +38,7 @@ import kotlin.math.roundToInt
 
 // Widths fit the widest entry plus the cell padding, so both clicks columns fit on a phone without scrolling.
 private val columns = listOf(
-    R.string.col_range to 42, R.string.col_drop to 64, R.string.col_elevation to 54, R.string.col_clicks to 48,
+    R.string.col_range to 42, R.string.col_drop to 66, R.string.col_elevation to 54, R.string.col_clicks to 48,
     R.string.col_windage to 64, R.string.col_wind_correction to 46, R.string.col_clicks to 48,
     R.string.col_velocity to 40, R.string.col_energy to 46, R.string.col_time to 46, R.string.col_mach to 46,
 )
@@ -153,10 +153,10 @@ private fun PointRow(p: TrajectoryPoint, unitRad: Double, click: Double?) {
     val upCm = -p.dropM * 100
     val rightCm = -p.windageM * 100
     val cells = listOf(
-        vertical(upCm, 0.05) + "%.1f".format(abs(upCm)),
+        vertical(upCm, 0.05) + grouped("%.1f".format(abs(upCm))),
         if (p.rangeM > 0) vertical(up, 0.005) + "%.2f".format(abs(up)) else "",
         if (p.rangeM > 0 && click != null) vertical(up / click, 0.5) + abs(up / click).roundToInt() else "",
-        side(rightCm, 0.05) + "%.1f".format(abs(rightCm)),
+        side(rightCm, 0.05) + grouped("%.1f".format(abs(rightCm))),
         if (p.rangeM > 0) side(right, 0.005) + "%.2f".format(abs(right)) else "",
         if (p.rangeM > 0 && click != null) side(right / click, 0.5) + (abs(right) / click).roundToInt() else "",
         p.velocityMps.roundToInt().toString(),
@@ -177,6 +177,12 @@ private fun side(right: Double, dead: Double) = when {
     right > dead -> "R"
     right < -dead -> "L"
     else -> ""
+}
+
+/** A narrow gap before the hundreds in figures of 1000 and over (1 320,8), so the thousands read at a glance. */
+private fun grouped(figure: String): String {
+    val digits = figure.indexOfFirst { !it.isDigit() }.let { if (it < 0) figure.length else it }
+    return if (digits > 3) figure.substring(0, digits - 3) + '\u202F' + figure.substring(digits - 3) else figure
 }
 
 /** ↑ or ↓ for a correction up or down; nothing within [dead] of zero. */

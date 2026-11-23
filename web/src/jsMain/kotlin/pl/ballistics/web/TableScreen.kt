@@ -66,10 +66,10 @@ object TableScreen {
         val shown = p.rangeM > 0
         return listOf(
             p.rangeM.roundToInt().toString(),
-            vertical(upCm, 0.05) + fmt(abs(upCm), 1),
+            vertical(upCm, 0.05) + grouped(fmt(abs(upCm), 1)),
             if (shown) vertical(up, 0.005) + fmt(abs(up), 2) else "",
             if (shown && click != null) vertical(up / click, 0.5) + abs(up / click).roundToInt() else "",
-            side(rightCm, 0.05) + fmt(abs(rightCm), 1),
+            side(rightCm, 0.05) + grouped(fmt(abs(rightCm), 1)),
             if (shown) side(right, 0.005) + fmt(abs(right), 2) else "",
             if (shown && click != null) side(right / click, 0.5) + (abs(right) / click).roundToInt() else "",
             p.velocityMps.roundToInt().toString(),
@@ -84,6 +84,12 @@ object TableScreen {
         right > dead -> "R"
         right < -dead -> "L"
         else -> ""
+    }
+
+    /** A narrow gap before the hundreds in figures of 1000 and over (1 320.8), so the thousands read at a glance. */
+    fun grouped(figure: String): String {
+        val digits = figure.indexOfFirst { !it.isDigit() }.let { if (it < 0) figure.length else it }
+        return if (digits > 3) figure.substring(0, digits - 3) + '\u202F' + figure.substring(digits - 3) else figure
     }
 
     /** ↑ or ↓ for a correction up or down; nothing within [dead] of zero. */
