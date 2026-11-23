@@ -36,10 +36,11 @@ import pl.ballistics.core.TrajectoryPoint
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
+// Widths fit the widest entry plus the cell padding, so both clicks columns fit on a phone without scrolling.
 private val columns = listOf(
-    R.string.col_range to 52, R.string.col_drop to 72, R.string.col_elevation to 68, R.string.col_clicks to 56,
-    R.string.col_windage to 72, R.string.col_wind_correction to 68, R.string.col_clicks to 56,
-    R.string.col_velocity to 56, R.string.col_energy to 64, R.string.col_time to 56, R.string.col_mach to 52,
+    R.string.col_range to 42, R.string.col_drop to 62, R.string.col_elevation to 54, R.string.col_clicks to 48,
+    R.string.col_windage to 62, R.string.col_wind_correction to 46, R.string.col_clicks to 48,
+    R.string.col_velocity to 40, R.string.col_energy to 46, R.string.col_time to 46, R.string.col_mach to 46,
 )
 
 @Composable
@@ -174,7 +175,7 @@ private fun side(right: Double) = when {
     else -> ""
 }
 
-private val ROW_HEIGHT = 28.dp
+private val ROW_HEIGHT = 30.dp
 
 /**
  * [highlight]: the clicks columns, what is actually dialled. A light band in the accent colour,
@@ -185,7 +186,7 @@ private fun Cell(text: String, width: Int, bold: Boolean = false, highlight: Boo
     val band = if (highlight) Modifier.background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f)) else Modifier
     Text(
         text,
-        modifier = Modifier.width(width.dp).height(ROW_HEIGHT).then(band).padding(horizontal = 4.dp).wrapContentHeight(),
+        modifier = Modifier.width(width.dp).height(ROW_HEIGHT).then(band).padding(horizontal = 6.dp).wrapContentHeight(),
         color = if (highlight) MaterialTheme.colorScheme.onPrimaryContainer else Color.Unspecified,
         maxLines = 1,
         textAlign = TextAlign.End,
