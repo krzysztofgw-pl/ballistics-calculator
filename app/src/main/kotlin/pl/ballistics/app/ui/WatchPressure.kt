@@ -75,7 +75,7 @@ private fun answerRating(context: Context, later: Boolean) {
  * the watch is switched on in Settings; without Garmin Connect it reports that as its failure.
  */
 @Composable
-fun WatchPressureButton(update: ((Conditions) -> Conditions) -> Unit) {
+fun WatchPressureButton(update: ((Conditions) -> Conditions) -> Unit, modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var error by remember { mutableStateOf<WatchError?>(null) }
@@ -87,7 +87,7 @@ fun WatchPressureButton(update: ((Conditions) -> Conditions) -> Unit) {
     // As wide as the pressure field above it. Progress and the reading show as toasts; a failure leaves a
     // warning icon whose dialog keeps Garmin Connect's status, the only diagnostic in the field. When the
     // failure is a missing piece (Garmin Connect, or Station Pressure on the watch), the dialog offers it.
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(modifier, horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
         FilledTonalButton(
             enabled = job == null,
             modifier = Modifier.weight(1f),
@@ -126,11 +126,9 @@ fun WatchPressureButton(update: ((Conditions) -> Conditions) -> Unit) {
             Spacer(Modifier.width(ButtonDefaults.IconSpacing))
             Text(stringResource(R.string.action_watch_pressure_short), maxLines = 1)
         }
-        Row(Modifier.weight(1f)) {
-            if (error != null) {
-                IconButton(onClick = { showError = true }) {
-                    Icon(Icons.Filled.Warning, stringResource(R.string.watch_pressure_problem), tint = MaterialTheme.colorScheme.error)
-                }
+        if (error != null) {
+            IconButton(onClick = { showError = true }) {
+                Icon(Icons.Filled.Warning, stringResource(R.string.watch_pressure_problem), tint = MaterialTheme.colorScheme.error)
             }
         }
     }
