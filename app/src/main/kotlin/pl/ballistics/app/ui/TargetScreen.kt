@@ -539,6 +539,7 @@ private fun TargetCharts(result: CalcResult.Ok, a: TargetAnalysis, distance: Dou
         else -> "L" + abs(v).fmt(digits)
     }
     val windSpeed = result.setup.conditions.winds.firstOrNull()?.speedMps ?: 0.0
+    val clockLabel = stringResource(R.string.wind_from_clock)
     val windFrom = result.setup.conditions.winds.firstOrNull()?.fromRad?.let { Math.toDegrees(it).mod(360.0) }
 
     LineChart(
@@ -555,6 +556,7 @@ private fun TargetCharts(result: CalcResult.Ok, a: TargetAnalysis, distance: Dou
         yLabel = ::correction,
         markerX = windSpeed.takeIf { it > 0 },
         markAllSeries = true,
+        xValue = { "${it.fmt(1)} m/s" },
     )
     LineChart(
         title = stringResource(R.string.chart_wind_direction, unit.label),
@@ -570,6 +572,7 @@ private fun TargetCharts(result: CalcResult.Ok, a: TargetAnalysis, distance: Dou
         yLabel = ::correction,
         markerX = windFrom,
         markAllSeries = true,
+        xValue = { clockLabel.format(clock(it)) },
     )
 
     val drift = result.solution.points.filter { it.rangeM > 0 }
@@ -592,6 +595,7 @@ private fun TargetCharts(result: CalcResult.Ok, a: TargetAnalysis, distance: Dou
             xLabel = { it.roundToInt().toString() },
             yLabel = ::held,
             markerX = distance,
+            xValue = { "${it.roundToInt()} m" },
             points = listOf(
                 ChartPoint(
                     p.rangeM, abs(corr(p)), chartColors[0],
@@ -641,6 +645,7 @@ private fun TargetCharts(result: CalcResult.Ok, a: TargetAnalysis, distance: Dou
             xLabel = ::compass,
             yLabel = ::correction,
             markerX = az,
+            xValue = { "${it.roundToInt().mod(360)}° ${compassPoint(it)}" },
             points = listOf(ChartPoint(az, windage, chartColors[0], AnnotatedString("${correction(windage)} ${unit.label}"), where)),
             readout = { x ->
                 val rows = a.byAzimuth.map { it.azimuthDeg to it.windageRad / unit.radians }
@@ -655,6 +660,7 @@ private fun TargetCharts(result: CalcResult.Ok, a: TargetAnalysis, distance: Dou
             xLabel = ::compass,
             yLabel = ::upDown,
             markerX = az,
+            xValue = { "${it.roundToInt().mod(360)}° ${compassPoint(it)}" },
             points = listOf(ChartPoint(az, change, chartColors[1], AnnotatedString("${upDown(change)} ${unit.label}"), where)),
             readout = { x ->
                 val rows = a.byAzimuth.map { it.azimuthDeg to it.elevationChangeRad / unit.radians }
