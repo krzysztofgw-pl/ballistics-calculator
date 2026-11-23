@@ -38,8 +38,8 @@ import kotlin.math.roundToInt
 
 // Widths fit the widest entry plus the cell padding, so both clicks columns fit on a phone without scrolling.
 private val columns = listOf(
-    R.string.col_range to 42, R.string.col_drop to 62, R.string.col_elevation to 54, R.string.col_clicks to 48,
-    R.string.col_windage to 62, R.string.col_wind_correction to 46, R.string.col_clicks to 48,
+    R.string.col_range to 42, R.string.col_drop to 64, R.string.col_elevation to 54, R.string.col_clicks to 48,
+    R.string.col_windage to 64, R.string.col_wind_correction to 46, R.string.col_clicks to 48,
     R.string.col_velocity to 40, R.string.col_energy to 46, R.string.col_time to 46, R.string.col_mach to 46,
 )
 
