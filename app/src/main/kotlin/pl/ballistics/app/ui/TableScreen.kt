@@ -179,10 +179,10 @@ private fun side(right: Double, dead: Double) = when {
     else -> ""
 }
 
-/** A narrow gap before the hundreds in figures of 1000 and over (1 320,8), so the thousands read at a glance. */
+/** A narrow gap between metres and centimetres in figures of 100 cm and over (13 20,8), so the metres read at a glance. */
 private fun grouped(figure: String): String {
     val digits = figure.indexOfFirst { !it.isDigit() }.let { if (it < 0) figure.length else it }
-    return if (digits > 3) figure.substring(0, digits - 3) + '\u202F' + figure.substring(digits - 3) else figure
+    return if (digits > 2) figure.substring(0, digits - 2) + '\u202F' + figure.substring(digits - 2) else figure
 }
 
 /** ↑ or ↓ for a correction up or down; nothing within [dead] of zero. */
