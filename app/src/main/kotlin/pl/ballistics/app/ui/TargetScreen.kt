@@ -141,6 +141,14 @@ fun TargetScreen(
     val targetSpeed = conditions.targetSpeedMps.toNumber()?.takeIf { it > 0 && conditions.targetMoving }
     val targetDirection = conditions.targetDirectionDeg.toNumber() ?: 90.0
 
+    // Only the charts of open cards are worked out; opening a card brings its charts in.
+    val cardOf = mapOf(
+        ChartKind.BRACKET_DIRECTION to stringResource(R.string.section_wind_bracket),
+        ChartKind.RANGE_ERROR to stringResource(R.string.section_range_error),
+        ChartKind.HIT_RANGE to stringResource(R.string.section_hit_probability),
+    )
+    val chartsCard = stringResource(R.string.section_charts)
+    val computedCharts = ui.charts.filter { OpenCards.isOpen(cardOf[it] ?: chartsCard) }.toSet()
     val inputs = TargetInputs(
         windMinMps = conditions.windMinMps.toNumber()?.takeIf { it >= 0 },
         windMaxMps = conditions.windMaxMps.toNumber()?.takeIf { it >= 0 },
@@ -150,7 +158,7 @@ fun TargetScreen(
         windSdMps = conditions.windUncertaintyMps.toNumber()?.takeIf { it >= 0 } ?: 1.0,
         rangeSdM = conditions.rangeUncertaintyM.toNumber()?.takeIf { it >= 0 } ?: 5.0,
         groupRad = (weapon.groupMoa.toNumber()?.takeIf { it > 0 } ?: TargetInputs.DEFAULT_GROUP_MOA) * Units.MOA,
-        charts = ui.charts,
+        charts = computedCharts,
         chartsToM = maxDistance,
     )
     // The distance is solved on its own first; the sweeps for the charts and tools follow once it settles,

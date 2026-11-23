@@ -18,7 +18,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -46,10 +48,18 @@ import pl.ballistics.app.toNumber
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
+/** Which [Collapsible] cards are open, by title, so work for a closed card's content can be skipped. */
+object OpenCards {
+    private val open = mutableStateMapOf<String, Boolean>()
+    fun isOpen(title: String): Boolean = open[title] == true
+    internal fun set(title: String, isOpen: Boolean) { open[title] = isOpen }
+}
+
 /** A card whose content opens and closes with its title; it remembers its state across screens. */
 @Composable
 fun Collapsible(title: String, content: @Composable ColumnScope.() -> Unit) {
     var open by rememberSaveable(title) { mutableStateOf(false) }
+    LaunchedEffect(title, open) { OpenCards.set(title, open) }
     Card(Modifier.fillMaxWidth()) {
         Row(
             Modifier.fillMaxWidth().clickable { open = !open }.padding(horizontal = 16.dp, vertical = 12.dp),

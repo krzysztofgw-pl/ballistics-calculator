@@ -9,6 +9,7 @@ import pl.ballistics.core.SolverOptions
 import pl.ballistics.core.TrajectoryPoint
 import pl.ballistics.core.Wind
 import kotlin.math.abs
+import kotlin.math.floor
 import kotlin.math.tan
 
 /** The parsed solver inputs, kept so a screen can solve the same shot again with other conditions. */
@@ -40,4 +41,35 @@ data class Setup(
         Solver(options.copy(maxRangeM = rangeM, stepM = rangeM))
             .solve(rifle, ammo, conditions.copy(winds = winds ?: conditions.winds), zeroAtmosphere, zeroElevationRad)
             .points.lastOrNull()?.takeIf { abs(it.rangeM - rangeM) < 1e-6 }?.let(::shifted)
+
+    /**
+     * One solve to [toM] with a point every [stepM]: cheaper than a [pointAt] per distance when many distances are
+     * needed. Ends early where the bullet gives out.
+     */
+    fun trajectory(
+        toM: Double,
+        stepM: Double,
+        zeroElevationRad: Double,
+        winds: List<Wind>? = null,
+        ammo: Ammunition = this.ammo,
+    ): Trajectory = Trajectory(
+        stepM,
+        Solver(options.copy(maxRangeM = toM, stepM = stepM))
+            .solve(rifle, ammo, conditions.copy(winds = winds ?: conditions.winds), zeroAtmosphere, zeroElevationRad)
+            .points.map(::shifted),
+    )
+}
+
+/** Points every [stepM] from the muzzle; values in between are interpolated. */
+class Trajectory(val stepM: Double, val points: List<TrajectoryPoint>) {
+    /** [value] at [rangeM], or null beyond the last point. */
+    fun at(rangeM: Double, value: (TrajectoryPoint) -> Double): Double? {
+        if (rangeM < 0 || points.isEmpty()) return null
+        val i = floor(rangeM / stepM).toInt()
+        val a = points.getOrNull(i) ?: return null
+        if (abs(a.rangeM - rangeM) < 1e-6) return value(a)
+        val b = points.getOrNull(i + 1) ?: return null
+        val k = (rangeM - a.rangeM) / (b.rangeM - a.rangeM)
+        return value(a) + k * (value(b) - value(a))
+    }
 }
