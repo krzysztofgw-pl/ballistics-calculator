@@ -233,14 +233,10 @@ fun StealthDialog(garminWatch: Boolean, onDismiss: () -> Unit) {
 
 @Composable
 private fun RadioRow(icon: ImageVector, name: Int, on: Boolean?, loud: Boolean, onOpen: () -> Unit) {
-    // The whole button opens that radio's settings; the state stands beside it in capitals, red while it gives the phone away.
+    // The state first, in capitals and red while that radio gives the phone away; then a button as wide as its text
+    // that opens the radio's settings.
     val color = if (loud) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        OutlinedButton(onClick = onOpen, modifier = Modifier.weight(1f), contentPadding = PaddingValues(horizontal = 12.dp)) {
-            Icon(icon, contentDescription = null, modifier = Modifier.size(ButtonDefaults.IconSize), tint = if (loud) color else LocalContentColor.current)
-            Spacer(Modifier.width(ButtonDefaults.IconSpacing))
-            Text(stringResource(name), Modifier.weight(1f), maxLines = 1)
-        }
         Text(
             when (on) {
                 null -> ""
@@ -252,6 +248,11 @@ private fun RadioRow(icon: ImageVector, name: Int, on: Boolean?, loud: Boolean, 
             fontWeight = FontWeight.Bold,
             style = MaterialTheme.typography.labelLarge,
         )
+        OutlinedButton(onClick = onOpen, contentPadding = PaddingValues(horizontal = 12.dp)) {
+            Icon(icon, contentDescription = null, modifier = Modifier.size(ButtonDefaults.IconSize), tint = if (loud) color else LocalContentColor.current)
+            Spacer(Modifier.width(ButtonDefaults.IconSpacing))
+            Text(stringResource(name), maxLines = 1)
+        }
     }
 }
 
