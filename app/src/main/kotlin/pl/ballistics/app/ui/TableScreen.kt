@@ -175,7 +175,7 @@ private fun side(right: Double) = when {
     else -> ""
 }
 
-private val ROW_HEIGHT = 30.dp
+private val ROW_HEIGHT = 28.dp
 
 /**
  * [highlight]: the clicks columns, what is actually dialled. A light band in the accent colour,
