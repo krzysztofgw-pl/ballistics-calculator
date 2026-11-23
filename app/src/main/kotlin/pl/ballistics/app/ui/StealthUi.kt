@@ -282,7 +282,6 @@ private fun RadioRow(icon: ImageVector, name: Int, on: Boolean?, loud: Boolean, 
 private fun StealthNoticeDialog(onDismiss: () -> Unit) {
     val context = LocalContext.current
     var hide by remember { mutableStateOf(false) }
-    var tileAdded by remember { mutableStateOf(Stealth.tileAdded(context)) }
     fun close() {
         if (hide) Stealth.hideNotice(context)
         onDismiss()
@@ -316,19 +315,7 @@ private fun StealthNoticeDialog(onDismiss: () -> Unit) {
                 }
                 // Set apart from the radio buttons above: the tile is a different kind of action.
                 Spacer(Modifier.height(12.dp))
-                if (tileAdded) {
-                    Text(stringResource(R.string.stealth_tile_added), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
-                } else {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                        FilledTonalButton(onClick = { requestStealthTile(context) { tileAdded = it } }, modifier = Modifier.fillMaxWidth()) {
-                            Icon(ImageVector.vectorResource(R.drawable.ic_stealth), null, Modifier.size(ButtonDefaults.IconSize))
-                            Spacer(Modifier.width(ButtonDefaults.IconSpacing))
-                            Text(stringResource(R.string.stealth_add_tile))
-                        }
-                    } else {
-                        Text(stringResource(R.string.stealth_notice_tile_manual), style = MaterialTheme.typography.bodySmall)
-                    }
-                }
+                StealthTile()
                 Row(Modifier.fillMaxWidth().clickable { hide = !hide }, verticalAlignment = Alignment.CenterVertically) {
                     Checkbox(checked = hide, onCheckedChange = { hide = it })
                     Text(stringResource(R.string.action_dont_show_again))
@@ -337,6 +324,24 @@ private fun StealthNoticeDialog(onDismiss: () -> Unit) {
         },
         confirmButton = { FilledTonalButton(onClick = ::close) { Text(stringResource(R.string.action_ok)) } },
     )
+}
+
+/** The Quick Settings tile: a button that asks the system to add it, or a note that it is there. */
+@Composable
+fun StealthTile() {
+    val context = LocalContext.current
+    var tileAdded by remember { mutableStateOf(Stealth.tileAdded(context)) }
+    if (tileAdded) {
+        Text(stringResource(R.string.stealth_tile_added), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
+    } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        FilledTonalButton(onClick = { requestStealthTile(context) { tileAdded = it } }, modifier = Modifier.fillMaxWidth()) {
+            Icon(ImageVector.vectorResource(R.drawable.ic_stealth), null, Modifier.size(ButtonDefaults.IconSize))
+            Spacer(Modifier.width(ButtonDefaults.IconSpacing))
+            Text(stringResource(R.string.stealth_add_tile))
+        }
+    } else {
+        Text(stringResource(R.string.stealth_notice_tile_manual), style = MaterialTheme.typography.bodySmall)
+    }
 }
 
 /** Asks the system to add the Stealth tile (Android 13+); [onResult] gets whether it is now there. */
@@ -378,4 +383,5 @@ fun StealthSettings(garminWatch: Boolean, onOpenStealth: () -> Unit) {
     SwitchRow(stringResource(R.string.stealth_allow_gps), s.allowGps) { v -> Stealth.set(context, s.copy(allowGps = v)) }
     if (garminWatch) SwitchRow(stringResource(R.string.stealth_allow_watch), s.allowWatch) { v -> Stealth.set(context, s.copy(allowWatch = v)) }
     SwitchRow(stringResource(R.string.stealth_show_bar), s.showBar) { v -> Stealth.set(context, s.copy(showBar = v)) }
+    StealthTile()
 }
