@@ -52,6 +52,15 @@ jobs:
         run: |
           grep -q '^androidx.activity.EdgeToEdge -> androidx.activity.EdgeToEdge:' app/build/outputs/mapping/playRelease/mapping.txt \
             || { echo "::error::R8 renamed or removed androidx.activity.EdgeToEdge"; exit 1; }
+      - name: Check that the Google sign-in client id survived resource shrinking
+        # See app/src/main/res/raw/keep.xml: CloudSync reads default_web_client_id by name.
+        run: |
+          ID=$(jq -r '[.client[].oauth_client[]? | select(.client_type == 3) | .client_id][0] // empty' app/google-services.json)
+          [ -n "$ID" ] || { echo "::error::app/google-services.json has no OAuth web client (client_type 3)"; exit 1; }
+          unzip -p app/build/outputs/apk/github/release/*.apk resources.arsc | grep -qaF "$ID" \
+            || { echo "::error::default_web_client_id is missing from the APK"; exit 1; }
+          unzip -p app/build/outputs/bundle/playRelease/*.aab base/resources.pb | grep -qaF "$ID" \
+            || { echo "::error::default_web_client_id is missing from the Play bundle"; exit 1; }
       - uses: actions/upload-artifact@v6
         with:
           name: ballistics-apk
