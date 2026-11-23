@@ -1,5 +1,9 @@
 package pl.ballistics.app.ui
 
+import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -79,10 +83,23 @@ fun NumberField(
         },
         singleLine = true,
         isError = !(optional && value.isBlank()) && value.toNumber() == null,
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Next),
+        keyboardActions = nextFieldActions(),
         modifier = modifier.fillMaxWidth(),
     )
 }
+
+/**
+ * Enter goes to the next field, so a form fills in without tapping each box; after the last
+ * one it closes the keyboard.
+ */
+@Composable
+fun nextFieldActions(): KeyboardActions {
+    val focus = LocalFocusManager.current
+    return KeyboardActions(onNext = { if (!focus.moveFocus(FocusDirection.Next)) focus.clearFocus() })
+}
+
+val NextFieldOptions = KeyboardOptions(imeAction = ImeAction.Next)
 
 /** Two fields side by side. */
 @Composable

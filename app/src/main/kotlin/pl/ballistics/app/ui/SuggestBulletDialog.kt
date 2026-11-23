@@ -119,6 +119,9 @@ fun SuggestBulletDialog(
                     onValueChange = { sourceRef = it.take(BulletSuggestion.MAX_REF) },
                     label = { Text(stringResource(R.string.suggest_source_ref)) },
                     placeholder = { Text(stringResource(R.string.suggest_source_hint)) },
+                    singleLine = true,
+                    keyboardOptions = NextFieldOptions,
+                    keyboardActions = nextFieldActions(),
                     modifier = Modifier.fillMaxWidth(),
                 )
                 OutlinedTextField(
