@@ -574,7 +574,10 @@
     <string name="stealth_radio_bluetooth">Bluetooth</string>
     <string name="stealth_radio_location">Location</string>
     <string name="stealth_radio_scanning">Wi-Fi/Bluetooth scanning</string>
-    <string name="stealth_notice_airplane">Airplane mode does not always turn off Wi-Fi and Bluetooth: Android remembers if you turned them back on in airplane mode. Check both, and turn off Wi-Fi and Bluetooth scanning in the location settings.</string>
+    <string name="stealth_radio_scanning_short">Scanning</string>
+    <string name="stealth_radio_nfc">NFC</string>
+    <string name="stealth_radio_uwb">UWB</string>
+    <string name="stealth_notice_airplane">Airplane mode does not always turn off Wi-Fi and Bluetooth: Android remembers if you turned them back on in airplane mode. Check both, turn off Wi-Fi and Bluetooth scanning in the location settings, and NFC and UWB (ultra-wideband, for item trackers and car keys) where the phone has them.</string>
     <string name="stealth_state_on">on</string>
     <string name="stealth_state_off">off</string>
     <string name="stealth_open_settings">Settings</string>

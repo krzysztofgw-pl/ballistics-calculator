@@ -2,6 +2,8 @@ package pl.ballistics.app.ui
 
 import android.app.StatusBarManager
 import android.content.ActivityNotFoundException
+import android.content.pm.PackageManager
+import android.nfc.NfcAdapter
 import android.content.ComponentName
 import android.graphics.drawable.Icon as GraphicsIcon
 import androidx.annotation.RequiresApi
@@ -65,13 +67,17 @@ data class Radios(
      * Wi-Fi or Bluetooth switched off, and a Wi-Fi scan sends probe requests. Airplane mode does not stop it.
      */
     val scanning: Boolean,
+    /** Null on a phone without NFC. */
+    val nfc: Boolean?,
+    /** Whether the phone has UWB at all; its state needs a permission the app does not ask for. */
+    val hasUwb: Boolean,
 ) {
     /**
      * Whether the phone still transmits. Cellular is covered by airplane mode; Wi-Fi and Bluetooth are
      * checked on their own, since airplane mode does not always turn them off (Android remembers if they
      * were turned back on in airplane mode). GPS only receives, so it is left out.
      */
-    val transmitting: Boolean get() = !airplane || wifi || bluetooth || (scanning && location)
+    val transmitting: Boolean get() = !airplane || wifi || bluetooth || (scanning && location) || nfc == true
 
     companion object {
         /** Global settings, readable without any permission. */
@@ -88,6 +94,9 @@ data class Radios(
                 wifi = global(Settings.Global.WIFI_ON),
                 bluetooth = global(Settings.Global.BLUETOOTH_ON),
                 scanning = global("wifi_scan_always_enabled") || global("ble_scan_always_enabled"),
+                nfc = runCatching { NfcAdapter.getDefaultAdapter(context)?.isEnabled }.getOrNull(),
+                hasUwb = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+                    context.packageManager.hasSystemFeature(PackageManager.FEATURE_UWB),
                 location = location,
             )
         }
@@ -114,6 +123,20 @@ private fun Context.openSettings(action: String) {
     }
 }
 
+/** UWB has no public settings screen; try the one most phones have, then the wireless settings. */
+private fun Context.openUwbSettings() {
+    val tries = listOf("android.settings.UWB_SETTINGS", Settings.ACTION_WIRELESS_SETTINGS)
+    for (action in tries) {
+        try {
+            startActivity(Intent(action).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+            return
+        } catch (e: ActivityNotFoundException) {
+            continue
+        }
+    }
+    openSettings(Settings.ACTION_SETTINGS)
+}
+
 /** The names of the radios still transmitting, for the bar; empty when all are quiet. */
 @Composable
 private fun loudRadios(r: Radios): String = buildList {
@@ -121,6 +144,7 @@ private fun loudRadios(r: Radios): String = buildList {
     if (r.wifi) add(stringResource(R.string.stealth_radio_wifi))
     if (r.bluetooth) add(stringResource(R.string.stealth_radio_bluetooth))
     if (r.scanning && r.location) add(stringResource(R.string.stealth_radio_scanning))
+    if (r.nfc == true) add(stringResource(R.string.stealth_radio_nfc))
 }.joinToString(", ")
 
 /** A thin bar over every tab while stealth mode is on, warning when the phone's radios still transmit. */
@@ -187,6 +211,8 @@ fun StealthDialog(garminWatch: Boolean, onDismiss: () -> Unit) {
                 if (radios.location) RadioRow(R.string.stealth_radio_scanning, radios.scanning, loud = radios.scanning) {
                     context.openSettings(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
                 }
+                radios.nfc?.let { nfc -> RadioRow(R.string.stealth_radio_nfc, nfc, loud = nfc) { context.openSettings(Settings.ACTION_NFC_SETTINGS) } }
+                if (radios.hasUwb) RadioRow(R.string.stealth_radio_uwb, null, loud = false) { context.openUwbSettings() }
                 Text(stringResource(R.string.stealth_note_gps), style = MaterialTheme.typography.bodySmall)
                 if (garminWatch) Text(stringResource(R.string.stealth_note_watch), style = MaterialTheme.typography.bodySmall)
             }
@@ -204,11 +230,15 @@ fun StealthDialog(garminWatch: Boolean, onDismiss: () -> Unit) {
 }
 
 @Composable
-private fun RadioRow(name: Int, on: Boolean, loud: Boolean, onOpen: () -> Unit) {
+private fun RadioRow(name: Int, on: Boolean?, loud: Boolean, onOpen: () -> Unit) {
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Text(stringResource(name), Modifier.weight(1f))
         Text(
-            stringResource(if (on) R.string.stealth_state_on else R.string.stealth_state_off),
+            when (on) {
+                null -> ""
+                true -> stringResource(R.string.stealth_state_on)
+                false -> stringResource(R.string.stealth_state_off)
+            },
             color = if (loud) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
             fontWeight = if (loud) FontWeight.SemiBold else null,
         )
@@ -247,6 +277,18 @@ private fun StealthNoticeDialog(onDismiss: () -> Unit) {
                     }
                     IconLabelButton(R.drawable.ic_bluetooth, R.string.stealth_radio_bluetooth, Modifier.weight(1f)) {
                         context.openSettings(Settings.ACTION_BLUETOOTH_SETTINGS)
+                    }
+                }
+                val radios = rememberRadios()
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    IconLabelButton(R.drawable.ic_scan, R.string.stealth_radio_scanning_short, Modifier.weight(1f)) {
+                        context.openSettings(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
+                    }
+                    if (radios.nfc != null) IconLabelButton(R.drawable.ic_nfc, R.string.stealth_radio_nfc, Modifier.weight(1f)) {
+                        context.openSettings(Settings.ACTION_NFC_SETTINGS)
+                    }
+                    if (radios.hasUwb) IconLabelButton(R.drawable.ic_uwb, R.string.stealth_radio_uwb, Modifier.weight(1f)) {
+                        context.openUwbSettings()
                     }
                 }
                 Text(stringResource(R.string.stealth_notice_airplane), style = MaterialTheme.typography.bodySmall)
