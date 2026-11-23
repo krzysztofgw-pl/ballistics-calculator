@@ -57,16 +57,16 @@ object TableScreen {
     }
 
     private fun cells(p: TrajectoryPoint, unitRad: Double, click: Double?): List<String> {
-        // Every column is the correction, opposite to the impact offset: the hold in cm, then the angle
-        // and clicks to dial. Direction by arrow or letter, never a minus sign.
+        // Drop is drop: positive below the line of sight, negative only where the bullet is above it
+        // (between the near and far zero). The other columns are corrections, by arrow or letter.
         val up = -p.dropRad / unitRad
         val right = -p.windageRad / unitRad
-        val upCm = -p.dropM * 100
+        val dropCm = -p.dropM * 100
         val rightCm = -p.windageM * 100
         val shown = p.rangeM > 0
         return listOf(
             p.rangeM.roundToInt().toString(),
-            vertical(upCm, 0.05) + grouped(fmt(abs(upCm), 1)),
+            (if (dropCm < -0.05) "-" else "") + grouped(fmt(abs(dropCm), 1)),
             if (shown) vertical(up, 0.005) + fmt(abs(up), 2) else "",
             if (shown && click != null) vertical(up / click, 0.5) + abs(up / click).roundToInt() else "",
             side(rightCm, 0.05) + grouped(fmt(abs(rightCm), 1)),

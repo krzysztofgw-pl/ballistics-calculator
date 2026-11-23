@@ -146,14 +146,14 @@ private fun Warning(text: String) {
 
 @Composable
 private fun PointRow(p: TrajectoryPoint, unitRad: Double, click: Double?) {
-    // Every column is the correction, opposite to the impact offset: the hold in cm, then the angle
-    // and clicks to dial. Direction by arrow or letter, never a minus sign.
+    // Drop is drop: positive below the line of sight, negative only where the bullet is above it
+    // (between the near and far zero). The other columns are corrections, by arrow or letter.
     val up = -p.dropRad / unitRad
     val right = -p.windageRad / unitRad
-    val upCm = -p.dropM * 100
+    val dropCm = -p.dropM * 100
     val rightCm = -p.windageM * 100
     val cells = listOf(
-        vertical(upCm, 0.05) + grouped("%.1f".format(abs(upCm))),
+        (if (dropCm < -0.05) "-" else "") + grouped("%.1f".format(abs(dropCm))),
         if (p.rangeM > 0) vertical(up, 0.005) + "%.2f".format(abs(up)) else "",
         if (p.rangeM > 0 && click != null) vertical(up / click, 0.5) + abs(up / click).roundToInt() else "",
         side(rightCm, 0.05) + grouped("%.1f".format(abs(rightCm))),

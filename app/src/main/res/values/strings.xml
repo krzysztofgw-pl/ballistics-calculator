@@ -264,7 +264,7 @@
     <string name="summary_stability">Sg %1$.2f</string>
     <string name="warning_unstable">Bullet is unstable (Sg &lt; 1). Results are unreliable.</string>
     <string name="warning_marginal">Marginal stability (Sg &lt; 1.4).</string>
-    <string name="table_legend">Corrections (cm to hold, %1$s to dial): ↑↓ up/down, R/L right/left. One click = %2$s %1$s.</string>
+    <string name="table_legend">Drop in cm below the line of sight. Corrections in %1$s: ↑↓ up/down, R/L right/left. One click = %2$s %1$s.</string>
 
     <!-- Reticle -->
     <string name="reticle_mrad_hash">Hash, 0.2 MRAD</string>
