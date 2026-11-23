@@ -204,6 +204,9 @@
     <string name="title_forecast">Forecast wind</string>
     <string name="forecast_loading">Getting your location and the forecast…</string>
     <string name="forecast_failed">Could not get the forecast (%1$s). Check the internet connection.</string>
+    <string name="forecast_refused">The weather service Open-Meteo refused the request (HTTP %1$d). The connection works; the service may be limiting this network or address. Try again later or on another network (Wi-Fi or mobile data, without a VPN).</string>
+    <string name="forecast_refused_reason">The weather service Open-Meteo refused the request (HTTP %1$d): %2$s</string>
+    <string name="forecast_error">Could not read the forecast (%1$s).</string>
     <string name="forecast_no_hours">No forecast hours in this window.</string>
     <string name="forecast_unsteady">The direction changes a lot in this window; read the wind on the range.</string>
     <string name="label_wind_height">Shooting height</string>

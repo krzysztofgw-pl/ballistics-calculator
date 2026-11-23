@@ -64,14 +64,30 @@ object WindForecast {
         val connection = URL(String.format(Locale.US, URL_FORMAT, latitude, longitude)).openConnection() as HttpURLConnection
         connection.connectTimeout = 10_000
         connection.readTimeout = 15_000
+        // Name the app, as public APIs ask, rather than the platform's generic Dalvik agent.
+        connection.setRequestProperty("User-Agent", USER_AGENT)
+        connection.setRequestProperty("Accept", "application/json")
         try {
-            if (connection.responseCode != 200) throw java.io.IOException("HTTP ${connection.responseCode}")
+            val code = connection.responseCode
+            if (code != 200) {
+                val body = runCatching { connection.errorStream?.bufferedReader()?.use { it.readText() } }.getOrNull()
+                throw RefusedException(code, body?.let(::reason))
+            }
             val text = connection.inputStream.bufferedReader().use { it.readText() }
             Result(parse(text), elevation(text))
         } finally {
             connection.disconnect()
         }
     }
+
+    private val USER_AGENT = "KGWLabs-Ballistics/${pl.ballistics.app.BuildConfig.VERSION_NAME} (Android; +https://github.com/krzysztofgw-pl/ballistics-calculator)"
+
+    /** The service answered, but not with a forecast: [code] is the HTTP status, [reason] what Open-Meteo says, if anything. */
+    class RefusedException(val code: Int, val reason: String?) : java.io.IOException("HTTP $code" + (reason?.let { ": $it" } ?: ""))
+
+    /** Open-Meteo explains errors as {"error": true, "reason": "..."}. */
+    fun reason(body: String): String? =
+        runCatching { Json.parseToJsonElement(body).jsonObject["reason"]?.jsonPrimitive?.content }.getOrNull()?.takeIf { it.isNotBlank() }
 
     fun elevation(text: String): Double? =
         runCatching { Json.parseToJsonElement(text).jsonObject["elevation"]?.jsonPrimitive?.doubleOrNull }.getOrNull()

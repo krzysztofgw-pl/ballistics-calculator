@@ -115,8 +115,16 @@ fun ForecastDialog(
             try {
                 val forecast = WindForecast.fetch(location.latitude, location.longitude)
                 ForecastState.Ready(forecast.hours, location.latitude, forecast.elevationM)
-            } catch (e: Exception) {
+            } catch (e: WindForecast.RefusedException) {
+                // The phone reached the service, so the connection is fine; say what the service said.
+                ForecastState.Failed(
+                    if (e.reason != null) context.getString(R.string.forecast_refused_reason, e.code, e.reason)
+                    else context.getString(R.string.forecast_refused, e.code),
+                )
+            } catch (e: java.io.IOException) {
                 ForecastState.Failed(context.getString(R.string.forecast_failed, e.message ?: e.javaClass.simpleName))
+            } catch (e: Exception) {
+                ForecastState.Failed(context.getString(R.string.forecast_error, e.message ?: e.javaClass.simpleName))
             }
         }
     }
