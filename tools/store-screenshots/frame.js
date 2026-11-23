@@ -4,14 +4,15 @@ const path = require('path');
 // Inputs are phone screenshots named 1.png, 2.png, ... with the status bar and gesture bar cropped off.
 const RAW = process.argv[2] || 'raw', OUT = process.argv[3] || 'out';
 const shots = [
-  [6, 'Dial or hold,<br>right on your reticle', 'DLR-3, Mil-Dot, tree and more · FFP and SFP'],
-  [2, 'Wind clock in a<br>compass ring', 'Crosswind and head or tailwind at a glance'],
-  [3, 'Pick your hours<br>from the forecast', '12-hour wind chart: mean, gusts and direction'],
-  [10, 'Chronograph files,<br>straight in', 'Labradar, Garmin Xero, Athlon, MagnetoSpeed · SD, ES'],
-  [5, 'Your dope card,<br>to the click', 'Drop, elevation, clicks, wind drift, velocity, energy'],
-  [7, 'Lead moving<br>targets', 'Set speed and course, see the lead hold in blue'],
-  [4, 'Real atmosphere,<br>full physics', 'Garmin barometer, Coriolis, spin drift, aero jump'],
-  [8, 'Field tools for<br>the first-round hit', 'Hit probability, wind bracket, range error, ranging'],
+  [1, 'Dial or hold,<br>right on your reticle', 'Lead holds for moving targets · FFP and SFP'],
+  [2, 'Your DOPE card,<br>to the click', 'Drop, elevation, clicks, wind drift, velocity'],
+  [3, 'Wind clock in a<br>compass ring', 'Crosswind and head or tailwind at a glance'],
+  [4, 'Pick your hours<br>from the forecast', '12-hour wind chart: mean, gusts and direction'],
+  [5, 'Bracket the wind<br>on your reticle', 'Lightest and strongest hold, by wind direction'],
+  [6, 'See every effect,<br>read it with a finger', 'Spin drift, Coriolis and Eötvös by azimuth'],
+  [7, 'Chronograph files,<br>straight in', 'Labradar, Garmin Xero, Athlon, MagnetoSpeed · SD, ES'],
+  [8, 'Stealth mode:<br>go dark', 'No network, GPS only, one tap or a tile'],
+  [9, 'Real atmosphere,<br>full physics', 'Garmin barometer, terrain or GPS altitude, Coriolis'],
 ];
 (async () => {
   const b = await chromium.launch();
