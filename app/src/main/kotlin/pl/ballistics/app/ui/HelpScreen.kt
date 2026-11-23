@@ -40,6 +40,7 @@ private val topics = listOf(
     Topic(R.string.help_moving_title, R.string.help_moving),
     Topic(R.string.help_table_title, R.string.help_table),
     Topic(R.string.help_sync_title, R.string.help_sync),
+    Topic(R.string.help_stealth_title, R.string.help_stealth),
     Topic(R.string.help_update_title, R.string.help_update),
     Topic(R.string.help_accuracy_title, R.string.help_accuracy),
 )

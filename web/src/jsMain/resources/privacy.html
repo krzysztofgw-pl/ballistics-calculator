@@ -19,14 +19,15 @@
 <tr><td>Cloud sync (optional Google sign-in)</td><td>Your Google account name, e-mail address and account ID; your profiles (rifles, loads, settings)</td><td>Google Firebase (Authentication and Cloud Firestore)</td></tr>
 <tr><td>Bullet suggestions to the community database</td><td>The bullet data you enter, your account ID, the app version and the time</td><td>Google Firebase (Cloud Firestore); accepted bullet data is published in the public <a href="https://github.com/krzysztofgw-pl/ballistics-bullets">ballistics-bullets</a> repository without your name or e-mail</td></tr>
 <tr><td>Wind forecast</td><td>The coordinates of the place you ask about</td><td><a href="https://open-meteo.com/">Open-Meteo</a></td></tr>
+<tr><td>Terrain height (Android, when the altitude comes from the terrain map)</td><td>The coordinates of the place you ask about</td><td><a href="https://open-meteo.com/">Open-Meteo</a> (Copernicus elevation model); inside Poland also <a href="https://www.geoportal.gov.pl/">GUGiK</a>, the Polish Head Office of Geodesy and Cartography</td></tr>
 <tr><td>Bullet library</td><td>Nothing personal; the app downloads the public list</td><td>GitHub Pages</td></tr>
 <tr><td>Update check (GitHub build only)</td><td>Nothing personal; the app asks for the latest release</td><td>GitHub</td></tr>
 </table>
-<p>All connections are encrypted (HTTPS). Google, Open-Meteo and GitHub process these requests under their own privacy policies.</p>
+<p>All connections are encrypted (HTTPS). Google, Open-Meteo, GUGiK and GitHub process these requests under their own privacy policies. In stealth mode (Android) the app sends none of these requests.</p>
 
 <h2>Used only on the device</h2>
 <ul>
-<li><b>Location</b> (optional): latitude for the Coriolis effect and magnetic declination for the compass. It is sent only when you ask for a wind forecast.</li>
+<li><b>Location</b> (optional): latitude for the Coriolis effect and magnetic declination for the compass. It is sent only when you ask for a wind forecast or for the terrain height. Altitude from GPS is worked out on the phone.</li>
 <li><b>Camera</b> (optional): to aim at the target and measure the shot angle. Images are not saved or sent.</li>
 <li><b>Garmin watch</b> (optional): station pressure from the KGW Pressure watch app, over Garmin Connect IQ on your phone.</li>
 <li><b>Android backup</b>: your profiles are included in your device's own Google backup, as set in Android settings.</li>

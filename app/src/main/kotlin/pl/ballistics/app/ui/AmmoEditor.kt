@@ -17,10 +17,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -89,8 +88,8 @@ fun AmmoEditor(
     ) {
         Section(stringResource(R.string.section_data_source)) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedButton(onClick = { picker = Picker.FACTORY }) { Text(stringResource(R.string.action_factory_load)) }
-                OutlinedButton(onClick = { picker = Picker.BULLET }) { Text(stringResource(R.string.action_bullet)) }
+                FilledTonalButton(onClick = { picker = Picker.FACTORY }) { Text(stringResource(R.string.action_factory_load)) }
+                FilledTonalButton(onClick = { picker = Picker.BULLET }) { Text(stringResource(R.string.action_bullet)) }
             }
         }
 
@@ -124,7 +123,7 @@ fun AmmoEditor(
             }
             NumberField(stringResource(R.string.label_bullet_length), a.lengthMm, "mm", optional = true) { a = a.copy(lengthMm = it) }
             if (a.dragType != DragType.CUSTOM) {
-                OutlinedButton(onClick = { suggesting = true }) {
+                FilledTonalButton(onClick = { suggesting = true }) {
                     Icon(ImageVector.vectorResource(R.drawable.ic_suggest_bullet), null, Modifier.size(ButtonDefaults.IconSize))
                     Spacer(Modifier.width(ButtonDefaults.IconSpacing))
                     Text(stringResource(R.string.action_suggest_bullet))
@@ -273,6 +272,6 @@ private fun <T> LibraryDialog(
                 }
             }
         },
-        confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_close)) } },
+        confirmButton = { FilledTonalButton(onClick = onDismiss) { Text(stringResource(R.string.action_close)) } },
     )
 }

@@ -177,6 +177,9 @@ data class Conditions(
     /** Lightest and strongest wind expected; the forecast fills them in. Blank means not given. */
     val windMinMps: String = "",
     val windMaxMps: String = "",
+    /** The forecast's swing of the wind direction, degrees from the line of fire like [windFromDeg]; blank when not given. */
+    val windFromMinDeg: String = "",
+    val windFromMaxDeg: String = "",
     /** How well the wind and the distance are known (1 σ), for the hit probability. */
     val windUncertaintyMps: String = "1",
     val rangeUncertaintyM: String = "5",
@@ -187,7 +190,7 @@ data class Conditions(
         return copy(
             targetRangeM = d.targetRangeM, targetMoving = d.targetMoving, targetSpeedMps = d.targetSpeedMps, targetDirectionDeg = d.targetDirectionDeg,
             targetWidthCm = d.targetWidthCm, targetHeightCm = d.targetHeightCm, windMinMps = d.windMinMps,
-            windMaxMps = d.windMaxMps, windUncertaintyMps = d.windUncertaintyMps, rangeUncertaintyM = d.rangeUncertaintyM,
+            windMaxMps = d.windMaxMps, windFromMinDeg = d.windFromMinDeg, windFromMaxDeg = d.windFromMaxDeg, windUncertaintyMps = d.windUncertaintyMps, rangeUncertaintyM = d.rangeUncertaintyM,
         )
     }
 
@@ -236,10 +239,16 @@ data class UiSettings(
     val tabsAtTop: Boolean = false,
     val subTabsAtTop: Boolean = false,
     val keepScreenOn: Boolean = false,
+    /** Charts in the target tools and the Charts card; off saves the work of drawing them. */
+    val showCharts: Boolean = true,
+    /** Single charts turned off under [showCharts]. */
+    val hiddenCharts: Set<ChartKind> = emptySet(),
     /** A location fix (forecast, compass) also sets the latitude for Coriolis. */
     val locationSetsLatitude: Boolean = true,
-    /** The forecast also sets the altitude, from the terrain height at the location. */
+    /** Older setting: the forecast set the altitude. Read only to choose [altitudeFrom] for settings saved before [altitudeSource]. */
     val locationSetsAltitude: Boolean = false,
+    /** Where the altitude comes from; null in settings saved before there was a choice. */
+    val altitudeSource: AltitudeSource? = null,
     /** The forecast shows wind directions as true bearings, north up; otherwise relative to the line of fire, as a clock. */
     val forecastTrueBearing: Boolean = false,
     /** Offer reading the station pressure from a Garmin watch on the conditions screen. */
@@ -249,7 +258,41 @@ data class UiSettings(
     /** Per reticle design (Reticles.designKey): which corrections the target screen advises dialing; the rest are held. */
     val corrections: Map<String, Correction> = emptyMap(),
 ) {
+    /** The charts to draw (and work out). */
+    val charts: Set<ChartKind> get() = if (showCharts) ChartKind.entries.toSet() - hiddenCharts else emptySet()
+
     fun correction(reticleId: String): Correction = corrections[reticleId] ?: Correction.defaultFor(reticleId)
+
+    val altitudeFrom: AltitudeSource
+        get() = altitudeSource ?: if (locationSetsAltitude) AltitudeSource.TERRAIN else AltitudeSource.MANUAL
+}
+
+/** The charts on the target screen, each of which can be turned off in Settings. */
+enum class ChartKind(@StringRes val label: Int) {
+    BRACKET_DIRECTION(R.string.chart_kind_bracket_direction),
+    RANGE_ERROR(R.string.chart_kind_range_error),
+    HIT_RANGE(R.string.chart_kind_hit_range),
+    WIND_SPEED(R.string.chart_kind_wind_speed),
+    WIND_DIRECTION(R.string.chart_kind_wind_direction),
+    SPIN_DRIFT(R.string.chart_kind_spin_drift),
+    AZIMUTH_WINDAGE(R.string.chart_kind_azimuth_windage),
+    AZIMUTH_ELEVATION(R.string.chart_kind_azimuth_elevation),
+    ;
+
+    companion object {
+        /** The charts on the Charts card; the others sit in their tools. */
+        val card = setOf(WIND_SPEED, WIND_DIRECTION, SPIN_DRIFT, AZIMUTH_WINDAGE, AZIMUTH_ELEVATION)
+    }
+}
+
+/** Where the altitude of the firing point comes from. */
+enum class AltitudeSource(@StringRes val label: Int) {
+    /** Typed in. */
+    MANUAL(R.string.altitude_manual),
+    /** Terrain height at the location from an elevation model: GUGiK's 1 m lidar model in Poland, Copernicus elsewhere. Needs the network. */
+    TERRAIN(R.string.altitude_terrain),
+    /** The phone's own GPS, converted to height above sea level; works offline. */
+    GPS(R.string.altitude_gps),
 }
 
 /** Whether to dial each axis on the turrets or hold it on the reticle. */

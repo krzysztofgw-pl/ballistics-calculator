@@ -31,15 +31,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.State
@@ -201,8 +199,8 @@ private fun ShotAngleCamera(onDismiss: () -> Unit, onAngle: (Double) -> Unit) {
                     IconButton(onClick = { showHelp = true }) {
                         Icon(Icons.Filled.Info, stringResource(R.string.camera_calibration_title), tint = Color.White)
                     }
-                    OutlinedButton(onClick = {
-                        val now = axis ?: return@OutlinedButton
+                    FilledTonalButton(onClick = {
+                        val now = axis ?: return@FilledTonalButton
                         val first = firstAim
                         if (first == null) {
                             // The first aim is kept at once; the first time, how to go on is explained.
@@ -236,7 +234,7 @@ private fun ShotAngleCamera(onDismiss: () -> Unit, onAngle: (Double) -> Unit) {
                         // Marks that the first of the two aims is kept.
                         Text(stringResource(R.string.camera_calibrate_first_kept), color = Color(0xFF81C784), style = MaterialTheme.typography.labelLarge)
                     }
-                    Button(enabled = angle != null, onClick = { angle?.let(onAngle) }) {
+                    FilledTonalButton(enabled = angle != null, onClick = { angle?.let(onAngle) }) {
                         Text(stringResource(R.string.action_use_angle, angle?.let { String.format(Locale.US, "%.1f", it) } ?: "—"))
                     }
                 }
@@ -274,7 +272,7 @@ private fun CalibrationHelp(hidden: Boolean, onClose: (hide: Boolean) -> Unit) {
                 }
             }
         },
-        confirmButton = { TextButton(onClick = { onClose(hide) }) { Text(stringResource(R.string.action_close)) } },
+        confirmButton = { FilledTonalButton(onClick = { onClose(hide) }) { Text(stringResource(R.string.action_close)) } },
     )
 }
 

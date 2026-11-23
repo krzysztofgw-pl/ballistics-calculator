@@ -15,9 +15,8 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -76,7 +75,7 @@ private fun answerRating(context: Context, later: Boolean) {
  * the watch is switched on in Settings; without Garmin Connect it reports that as its failure.
  */
 @Composable
-fun WatchPressureButton(update: ((Conditions) -> Conditions) -> Unit) {
+fun WatchPressureButton(update: ((Conditions) -> Conditions) -> Unit, modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var error by remember { mutableStateOf<WatchError?>(null) }
@@ -88,8 +87,8 @@ fun WatchPressureButton(update: ((Conditions) -> Conditions) -> Unit) {
     // As wide as the pressure field above it. Progress and the reading show as toasts; a failure leaves a
     // warning icon whose dialog keeps Garmin Connect's status, the only diagnostic in the field. When the
     // failure is a missing piece (Garmin Connect, or Station Pressure on the watch), the dialog offers it.
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-        OutlinedButton(
+    Row(modifier, horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
+        FilledTonalButton(
             enabled = job == null,
             modifier = Modifier.weight(1f),
             onClick = {
@@ -110,6 +109,7 @@ fun WatchPressureButton(update: ((Conditions) -> Conditions) -> Unit) {
                             WatchFix.InstallGarminConnect.takeUnless { GarminPressure.garminConnectInstalled(context) },
                         )
                         GarminPressure.Result.NoWatch -> WatchError(context.getString(R.string.watch_pressure_no_watch))
+                        GarminPressure.Result.Blocked -> WatchError(context.getString(R.string.stealth_watch_blocked))
                         GarminPressure.Result.AppNotInstalled ->
                             WatchError(context.getString(R.string.watch_pressure_not_installed), WatchFix.InstallWatchApp)
                         is GarminPressure.Result.NoAnswer -> WatchError(context.getString(R.string.watch_pressure_no_answer, result.details))
@@ -126,17 +126,15 @@ fun WatchPressureButton(update: ((Conditions) -> Conditions) -> Unit) {
             Spacer(Modifier.width(ButtonDefaults.IconSpacing))
             Text(stringResource(R.string.action_watch_pressure_short), maxLines = 1)
         }
-        Row(Modifier.weight(1f)) {
-            if (error != null) {
-                IconButton(onClick = { showError = true }) {
-                    Icon(Icons.Filled.Warning, stringResource(R.string.watch_pressure_problem), tint = MaterialTheme.colorScheme.error)
-                }
+        if (error != null) {
+            IconButton(onClick = { showError = true }) {
+                Icon(Icons.Filled.Warning, stringResource(R.string.watch_pressure_problem), tint = MaterialTheme.colorScheme.error)
             }
         }
     }
     if (showError) {
         error?.let { shown ->
-            val close = @Composable { TextButton(onClick = { showError = false }) { Text(stringResource(R.string.action_close)) } }
+            val close = @Composable { FilledTonalButton(onClick = { showError = false }) { Text(stringResource(R.string.action_close)) } }
             AlertDialog(
                 onDismissRequest = { showError = false },
                 icon = { Icon(Icons.Filled.Warning, contentDescription = null) },
@@ -145,11 +143,11 @@ fun WatchPressureButton(update: ((Conditions) -> Conditions) -> Unit) {
                 confirmButton = {
                     when (shown.fix) {
                         null -> close()
-                        WatchFix.InstallGarminConnect -> TextButton(onClick = {
+                        WatchFix.InstallGarminConnect -> FilledTonalButton(onClick = {
                             showError = false
                             GarminPressure.openGarminConnectInPlayStore(context)
                         }) { Text(stringResource(R.string.action_install_garmin_connect)) }
-                        WatchFix.InstallWatchApp -> TextButton(onClick = {
+                        WatchFix.InstallWatchApp -> FilledTonalButton(onClick = {
                             showError = false
                             scope.launch {
                                 if (!GarminPressure.openWatchAppInStore(context)) {
@@ -173,7 +171,7 @@ fun WatchPressureButton(update: ((Conditions) -> Conditions) -> Unit) {
             title = { Text(stringResource(R.string.watch_rating_title)) },
             text = { Text(stringResource(R.string.watch_rating_text)) },
             confirmButton = {
-                TextButton(onClick = {
+                FilledTonalButton(onClick = {
                     askRating = false
                     answerRating(context, later = false)
                     scope.launch {
@@ -185,11 +183,11 @@ fun WatchPressureButton(update: ((Conditions) -> Conditions) -> Unit) {
             },
             dismissButton = {
                 Row {
-                    TextButton(onClick = {
+                    FilledTonalButton(onClick = {
                         askRating = false
                         answerRating(context, later = false)
                     }) { Text(stringResource(R.string.action_no_thanks)) }
-                    TextButton(onClick = {
+                    FilledTonalButton(onClick = {
                         askRating = false
                         answerRating(context, later = true)
                     }) { Text(stringResource(R.string.action_later)) }

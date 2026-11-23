@@ -19,7 +19,7 @@
     <string name="action_edit_load">Edit load</string>
     <string name="zero_short">zero %1$s m</string>
     <string name="tab_conditions">Conditions</string>
-    <string name="tab_table">Table</string>
+    <string name="tab_table">DOPE</string>
     <string name="tab_target">Target</string>
 
     <!-- Actions -->
@@ -28,6 +28,8 @@
     <string name="action_delete">Delete</string>
     <string name="action_cancel">Cancel</string>
     <string name="action_close">Close</string>
+    <string name="action_expand">Show details</string>
+    <string name="action_collapse">Hide details</string>
     <string name="action_edit">Edit</string>
     <string name="action_use">Use</string>
     <string name="action_add_rifle">Add rifle</string>
@@ -204,6 +206,9 @@
     <string name="title_forecast">Forecast wind</string>
     <string name="forecast_loading">Getting your location and the forecast…</string>
     <string name="forecast_failed">Could not get the forecast (%1$s). Check the internet connection.</string>
+    <string name="forecast_refused">The weather service Open-Meteo refused the request (HTTP %1$d). The connection works; the service may be limiting this network or address. Try again later or on another network (Wi-Fi or mobile data, without a VPN).</string>
+    <string name="forecast_refused_reason">The weather service Open-Meteo refused the request (HTTP %1$d): %2$s</string>
+    <string name="forecast_error">Could not read the forecast (%1$s).</string>
     <string name="forecast_no_hours">No forecast hours in this window.</string>
     <string name="forecast_unsteady">The direction changes a lot in this window; read the wind on the range.</string>
     <string name="label_wind_height">Shooting height</string>
@@ -227,7 +232,7 @@
     <string name="action_use_angle">Use %1$s°</string>
     <string name="camera_zoom">%1$s×</string>
     <string name="label_cant">Cant</string>
-    <string name="label_table_range">Table range</string>
+    <string name="label_table_range">DOPE range</string>
     <string name="label_table_step">Step</string>
     <string name="label_spin_drift">Spin drift</string>
     <string name="label_aero_jump">Aerodynamic jump from crosswind</string>
@@ -259,7 +264,7 @@
     <string name="summary_stability">Sg %1$.2f</string>
     <string name="warning_unstable">Bullet is unstable (Sg &lt; 1). Results are unreliable.</string>
     <string name="warning_marginal">Marginal stability (Sg &lt; 1.4).</string>
-    <string name="table_legend">Corrections in %1$s: ↑ up, R/L right/left. One click = %2$s %1$s.</string>
+    <string name="table_legend">Drop and drift in cm: where the bullet goes. Corrections in %1$s: up unless marked ↓, R/L right/left. One click = %2$s %1$s.</string>
 
     <!-- Reticle -->
     <string name="reticle_mrad_hash">Hash, 0.2 MRAD</string>
@@ -299,7 +304,7 @@
     <string name="error_cannot_solve">Cannot compute the trajectory</string>
     <string name="error_invalid_value">Invalid value: %1$s</string>
     <string name="error_must_be_positive">%1$s must be greater than zero</string>
-    <string name="error_step_too_small">Table step is too small</string>
+    <string name="error_step_too_small">DOPE step is too small</string>
     <string name="error_bad_curve_row">Invalid drag curve row: %1$s</string>
     <string name="error_curve_too_short">The Cd curve needs at least two points (Mach Cd)</string>
     <string name="field_bullet_mass">bullet weight</string>
@@ -339,7 +344,23 @@
     <string name="chart_spin_drift">Spin drift correction (%1$s) by distance (m)</string>
     <string name="wind_from_clock">%1$s o\'clock</string>
     <string name="wind_speed_series">%1$d m/s</string>
-    <string name="spin_drift_at">Spin drift at %1$d m: %2$s cm, correct %3$s %4$s</string>
+    <string name="chart_bracket_direction">Correction (%1$s) by wind direction at %2$d m</string>
+    <string name="chart_forecast_direction">Forecast direction %1$s–%2$s</string>
+    <string name="chart_range_error">Impact (cm) by distance error (m)</string>
+    <string name="chart_hit_range">Hit probability by distance (m)</string>
+    <string name="chart_azimuth_windage">Windage correction without wind (%1$s) by azimuth at %2$d m</string>
+    <string name="chart_azimuth_elevation">Elevation change (%1$s) by azimuth at %2$d m, against shooting north</string>
+    <string name="azimuth_charts_need_coriolis">Charts by azimuth need Coriolis and Eötvös effects on in Conditions.</string>
+    <string name="label_show_charts">Charts</string>
+    <string name="chart_kind_bracket_direction">Wind bracket by direction</string>
+    <string name="chart_kind_range_error">Range error</string>
+    <string name="chart_kind_hit_range">Hit probability by distance</string>
+    <string name="chart_kind_wind_speed">Wind correction by speed</string>
+    <string name="chart_kind_wind_direction">Wind correction by direction</string>
+    <string name="chart_kind_spin_drift">Spin drift</string>
+    <string name="chart_kind_azimuth_windage">Windage by azimuth</string>
+    <string name="chart_kind_azimuth_elevation">Elevation by azimuth</string>
+    <string name="spin_drift_point">%1$s cm · %2$d m</string>
     <string name="spin_drift_needs_data">Spin drift needs the bullet length and the barrel twist.</string>
     <string name="spin_drift_off">Spin drift is off in Conditions.</string>
     <string name="label_target_width">Target width</string>
@@ -363,12 +384,10 @@
     <string name="section_wind_bracket">Wind bracket</string>
     <string name="label_wind_min">Lightest wind</string>
     <string name="label_wind_max">Strongest wind</string>
-    <string name="wind_bracket_result">%1$s–%2$s m/s: %3$s to %4$s %5$s, spread %6$s %5$s (%7$s cm)</string>
+    <string name="wind_bracket_spread">↔ %1$s %2$s · %3$s cm</string>
     <string name="section_range_error">Range error</string>
-    <string name="range_error_row">%1$s m off: %2$s cm %3$s</string>
-    <string name="high">high</string>
-    <string name="low">low</string>
-    <string name="range_error_window">Hits a %3$s cm tall target from %1$s to %2$s m off</string>
+    <string name="range_error_row">%1$s m</string>
+    <string name="range_error_window">Hits a %3$s cm tall target from %1$s to %2$s m</string>
     <string name="section_temperature">Temperature</string>
     <string name="temperature_row">%1$d °C: %2$d m/s, up %3$s %4$s</string>
     <string name="section_hit_probability">Hit probability</string>
@@ -421,14 +440,26 @@
     <string name="correction_hold">Hold</string>
     <string name="section_measurements">Measurements and location</string>
     <string name="label_location_latitude">Location sets the latitude</string>
-    <string name="label_location_altitude">Forecast sets the altitude (terrain height)</string>
+    <string name="label_altitude_source">Altitude from</string>
+    <string name="altitude_manual">Typed in</string>
+    <string name="altitude_terrain">Terrain map</string>
+    <string name="altitude_gps">GPS</string>
+    <string name="action_altitude_terrain_short">Map</string>
+    <string name="action_altitude_gps_short">GPS</string>
+    <string name="altitude_source_nmt">NMT 1 m</string>
+    <string name="altitude_source_dem">DEM 90 m</string>
+    <string name="altitude_terrain_failed">No terrain height: %1$s</string>
+    <string name="altitude_gps_searching">Looking for satellites. Under open sky this takes from seconds to a few minutes.</string>
+    <string name="altitude_gps_unavailable">No GPS height: allow precise location, turn on location and stand under open sky.</string>
+    <string name="altitude_gps_ellipsoid">This phone gives only the height above the ellipsoid; in Poland it reads about 30 to 40 m high.</string>
+    <string name="altitude_stealth_gps">Stealth mode: no network, so the altitude comes from GPS.</string>
     <string name="action_forecast_short">Forecast</string>
     <string name="action_compass_short">Compass</string>
 
     <!-- Help: each answer's paragraphs are separated by a blank line (\n\n). -->
     <string name="title_help">Help</string>
     <string name="help_start_title">Where do I start?</string>
-    <string name="help_start">Settings, Profiles: add your rifle with its scope and zero, and your load (from the library or your own data). The Rifle tab picks the rifle and load in use and whether the suppressor is on.\n\nConditions: set the wind, temperature, pressure and altitude, and the shot angle if you shoot up or down.\n\nTable gives the dope for every range; Target gives the correction for one distance, drawn on your reticle.</string>
+    <string name="help_start">Settings, Profiles: add your rifle with its scope and zero, and your load (from the library or your own data). The Rifle tab picks the rifle and load in use and whether the suppressor is on.\n\nConditions: set the wind, temperature, pressure and altitude, and the shot angle if you shoot up or down.\n\nDOPE gives the scope settings for every range; Target gives the correction for one distance, drawn on your reticle.</string>
     <string name="help_suppressor_title">How does the suppressor work?</string>
     <string name="help_suppressor">Turn on Suppressor in the rifle section of the rifle profile. Then, in the zero section, say whether you zeroed with it on (Suppressed) or off (Bare), and enter where the impact goes in the other state, up and right from the zero in the turret unit (negative for down or left). Shoot a group in that state at your zero range to find it. Switching which state the zero was shot in flips the signs.\n\nOn the Rifle tab, switch the suppressor on or off. When it differs from the zero, every correction includes the shift and the rifle on the Rifle tab icon carries a suppressor while it is on.</string>
     <string name="help_zero_title">What goes into the zero?</string>
@@ -505,4 +536,78 @@
     <string name="label_forecast_direction">Forecast direction</string>
     <string name="option_clock">Clock</string>
     <string name="option_true">True</string>
+    <!-- Chronograph import and typed velocities -->
+    <string name="action_chronograph">Chrono</string>
+    <string name="action_open_chrono_file">Open file</string>
+    <string name="action_type_velocities">Type velocities</string>
+    <string name="title_chronograph">Chronograph</string>
+    <string name="chrono_not_recognised">This file was not recognised. Supported: Labradar and Labradar LX CSV, Garmin Xero (ShotView CSV or FIT), Athlon Rangecraft (Excel), MagnetoSpeed, or any table with a velocity column.</string>
+    <string name="chrono_no_shots">The file has no shots in it.</string>
+    <string name="chrono_labradar_track">This is the track of a single shot. Open the series report instead: SR0001 Report.csv in the same folder.</string>
+    <string name="label_series">Series</string>
+    <string name="chrono_series_number">Series %1$d</string>
+    <string name="label_file_unit">Unit in the file</string>
+    <string name="chrono_average">%1$s m/s</string>
+    <string name="chrono_stats">SD %1$s · ES %2$s m/s · %3$d of %4$d shots</string>
+    <string name="chrono_outlier">misread?</string>
+    <string name="chrono_no_loads">Add a load to save the velocity to.</string>
+    <string name="label_velocity_for">Velocity for</string>
+    <string name="option_this_rifle">This rifle</string>
+    <string name="option_all_rifles">All rifles</string>
+    <string name="label_powder_temperature">Powder temperature</string>
+    <string name="chrono_temperature_note">%1$s m/s measured, saved as the velocity at %2$s °C, the load\'s reference temperature.</string>
+    <string name="chrono_rifle_overrides">%1$s has its own measured velocity for this load, which it keeps using.</string>
+    <string name="toast_chrono_saved">%1$s m/s saved to %2$s</string>
+    <string name="chrono_copy_name">%1$s, %2$s m/s</string>
+    <string name="title_manual_velocities">Type velocities</string>
+    <string name="label_unit">Unit</string>
+    <string name="label_shot_n">Shot %1$d</string>
+    <string name="chrono_manual_stats">Avg %1$s · SD %2$s · ES %3$s %4$s</string>
+    <string name="action_remove_shot">Remove shot</string>
+    <string name="action_next">Next</string>
+    <string name="stealth_title">Stealth mode</string>
+    <string name="stealth_short">Stealth</string>
+    <string name="stealth_on">On</string>
+    <string name="stealth_off">Off</string>
+    <string name="stealth_turn_on">Turn on</string>
+    <string name="stealth_turn_off">Turn off</string>
+    <string name="stealth_blocked">Stealth mode is on: the app makes no network connections.</string>
+    <string name="stealth_watch_blocked">Stealth mode is on: the app does not talk to the watch. Allow the watch in the stealth settings to read it.</string>
+    <string name="stealth_what">All connection requests from this app are blocked: no forecast, terrain height, sync, bullet database, store or update checks.</string>
+    <string name="stealth_what_gps_on">Location comes from the satellites alone, without network help.</string>
+    <string name="stealth_what_gps_off">Location is off.</string>
+    <string name="stealth_show_bar">Stealth bar at the top</string>
+    <string name="stealth_allow_gps">GPS in stealth mode</string>
+    <string name="stealth_location_blocked">Stealth mode is on with GPS off. Allow GPS in Settings → Stealth mode, or type the value.</string>
+    <string name="stealth_notice_gps_on">GPS stays on, from the satellites alone: it only receives and gives nothing away.</string>
+    <string name="stealth_notice_gps_off">GPS is off too.</string>
+    <string name="stealth_notice_settings">To turn GPS off as well, or to allow the Garmin watch, go to Settings → Stealth mode.</string>
+    <string name="stealth_what_watch_off">The link to the Garmin watch is off too.</string>
+    <string name="stealth_allow_watch">Garmin watch in stealth mode</string>
+    <string name="stealth_radios">The phone\'s own radios keep transmitting until you turn them off:</string>
+    <string name="stealth_radio_airplane">Airplane mode</string>
+    <string name="stealth_radio_wifi">Wi-Fi</string>
+    <string name="stealth_radio_bluetooth">Bluetooth</string>
+    <string name="stealth_radio_location">Location</string>
+    <string name="stealth_radio_scanning">Wi-Fi/Bluetooth scanning</string>
+    <string name="stealth_radio_scanning_short">Scanning</string>
+    <string name="stealth_radio_nfc">NFC</string>
+    <string name="stealth_radio_uwb">UWB</string>
+    <string name="stealth_radio_nfc_uwb">NFC / UWB</string>
+    <string name="stealth_notice_airplane">Airplane mode does not always turn off Wi-Fi and Bluetooth: Android remembers if you turned them back on in airplane mode. Check both, turn off Wi-Fi and Bluetooth scanning in the location settings, and NFC and UWB (ultra-wideband, for item trackers and car keys) where the phone has them.</string>
+    <string name="stealth_state_on">on</string>
+    <string name="stealth_state_off">off</string>
+    <string name="stealth_open_settings">Settings</string>
+    <string name="stealth_note_gps">GPS only receives and gives nothing away. Without airplane mode the system may still download GPS assistance data; without it the first fix can take a few minutes.</string>
+    <string name="stealth_note_watch">The watch link belongs to Garmin Connect, not to this app. To silence it, turn off Bluetooth on the phone and the phone connection on the watch, or the watch keeps calling for the phone.</string>
+    <string name="stealth_radios_on">Radios on: %1$s</string>
+    <string name="sync_paused_stealth">Sync is paused in stealth mode. Changes go up when you turn it off.</string>
+    <string name="stealth_notice_title">Turn off the phone\'s radios</string>
+    <string name="stealth_notice_manual">Android doesn\'t let apps do it.</string>
+    <string name="stealth_notice_tile">Add the Stealth tile to the quick settings, next to airplane mode and Bluetooth, to switch all of them in one swipe.</string>
+    <string name="stealth_notice_tile_manual">Swipe down twice, tap the pencil and drag the Stealth tile into the panel.</string>
+    <string name="stealth_tile_added">✓ Stealth tile added</string>
+    <string name="stealth_add_tile">Add Stealth tile</string>
+    <string name="help_stealth_title">What does stealth mode do?</string>
+    <string name="help_stealth">The aircraft icon on the Rifle tab, Settings → Stealth mode or the Stealth quick settings tile turns it on. The app then makes no connections: no forecast, terrain height, sync, bullet database, store or update checks, and no Garmin watch unless you allow it in Settings. GPS stays on, from the satellites alone (it only receives); you can turn it off for stealth mode in Settings. Without network help and airplane mode the system may still download GPS assistance data, and the first fix can take a few minutes.\n\nAndroid lets no app turn off the phone\'s radios, so the stealth window lists them: red with waves means it still transmits; each button opens its settings. Airplane mode does not always turn off Wi-Fi and Bluetooth (Android remembers if you turned them back on), and Wi-Fi and Bluetooth scanning in the location settings keeps going without them. NFC and UWB (ultra-wideband, for item trackers and car keys) transmit at short range. The Garmin watch keeps calling for the phone until you also turn off its phone connection. The bar at the top can be hidden in Settings.</string>
 </resources>

@@ -8,7 +8,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -115,7 +115,7 @@ fun WeaponEditor(
                 NumberField(stringResource(R.string.label_max_mag), w.maxMagnification, "×", m) { w = w.copy(maxMagnification = it) }
             }
             NumberField(stringResource(R.string.label_sight_height), w.sightHeightCm, "cm") { w = w.copy(sightHeightCm = it) }
-            TextButton(onClick = { mountHelper = true }) { Text(stringResource(R.string.action_sight_height_helper)) }
+            FilledTonalButton(onClick = { mountHelper = true }) { Text(stringResource(R.string.action_sight_height_helper)) }
         }
 
         Section(stringResource(R.string.section_zero)) {
@@ -226,6 +226,8 @@ fun TextInput(label: String, value: String, onChange: (String) -> Unit) {
         onValueChange = onChange,
         label = { Text(label) },
         singleLine = true,
+        keyboardOptions = NextFieldOptions,
+        keyboardActions = nextFieldActions(),
         modifier = Modifier.fillMaxWidth(),
     )
 }
@@ -296,8 +298,8 @@ private fun MountHelperDialog(onDismiss: () -> Unit, onUse: (String) -> Unit) {
             }
         },
         confirmButton = {
-            TextButton(onClick = { resultM?.let { onUse(cm(it)) } }, enabled = resultM != null) { Text(stringResource(R.string.action_use)) }
+            FilledTonalButton(onClick = { resultM?.let { onUse(cm(it)) } }, enabled = resultM != null) { Text(stringResource(R.string.action_use)) }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
+        dismissButton = { FilledTonalButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
     )
 }

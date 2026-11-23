@@ -4,7 +4,7 @@ import android.content.Context
 import android.widget.Toast
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -36,6 +36,10 @@ class AppUpdater(private val context: Context, private val scope: CoroutineScope
     /** A check on start stays quiet unless there is an update; a check the user asked for always answers. */
     fun check(asked: Boolean) {
         if (busy) return
+        if (pl.ballistics.app.data.Stealth.blocksNetwork) {
+            if (asked) toast(context.getString(R.string.stealth_blocked))
+            return
+        }
         busy = true
         scope.launch {
             runCatching { AppUpdate.newer(context) }
@@ -53,6 +57,10 @@ class AppUpdater(private val context: Context, private val scope: CoroutineScope
             return
         }
         if (busy) return
+        if (pl.ballistics.app.data.Stealth.blocksNetwork) {
+            toast(context.getString(R.string.stealth_blocked))
+            return
+        }
         busy = true
         toast(context.getString(R.string.toast_downloading_update, release.build))
         scope.launch {
@@ -82,8 +90,8 @@ fun AppUpdateDialogs(updater: AppUpdater) {
             onDismissRequest = { updater.offer = null },
             title = { Text(stringResource(R.string.update_available, r.build)) },
             text = { if (r.notes.isNotBlank()) Text(r.notes) },
-            confirmButton = { TextButton(onClick = { updater.install(r) }) { Text(stringResource(R.string.action_install)) } },
-            dismissButton = { TextButton(onClick = { updater.offer = null }) { Text(stringResource(R.string.action_later)) } },
+            confirmButton = { FilledTonalButton(onClick = { updater.install(r) }) { Text(stringResource(R.string.action_install)) } },
+            dismissButton = { FilledTonalButton(onClick = { updater.offer = null }) { Text(stringResource(R.string.action_later)) } },
         )
     }
     updater.error?.let { e ->
@@ -91,7 +99,7 @@ fun AppUpdateDialogs(updater: AppUpdater) {
             onDismissRequest = { updater.error = null },
             title = { Text(stringResource(R.string.update_failed)) },
             text = { Text(e) },
-            confirmButton = { TextButton(onClick = { updater.error = null }) { Text(stringResource(R.string.action_close)) } },
+            confirmButton = { FilledTonalButton(onClick = { updater.error = null }) { Text(stringResource(R.string.action_close)) } },
         )
     }
 }

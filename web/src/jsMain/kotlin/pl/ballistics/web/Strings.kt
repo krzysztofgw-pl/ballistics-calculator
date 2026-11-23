@@ -7,7 +7,7 @@ package pl.ballistics.web
 object S {
     const val tabProfiles = "Profiles"
     const val tabConditions = "Conditions"
-    const val tabTable = "Table"
+    const val tabTable = "DOPE"
     const val tabTarget = "Target"
     const val titleSettings = "Settings"
     const val titleNewRifle = "New rifle"
@@ -99,7 +99,7 @@ object S {
     const val labelAzimuth = "Azimuth of fire"
     const val hintAngleCamera = "Put the crosshair on the target and hold the phone still."
 
-    const val labelTableRange = "Table range"
+    const val labelTableRange = "DOPE range"
     const val labelTableStep = "Step"
     val columns = listOf("m", "Drop cm", "Elev.", "Clicks", "Wind cm", "Wind.", "Clicks", "m/s", "J", "s", "Mach")
     fun summaryMuzzleVelocity(mps: Int) = "MV $mps m/s"
@@ -107,7 +107,7 @@ object S {
     fun summaryStability(sg: String) = "Sg $sg"
     const val warningUnstable = "Bullet is unstable (Sg < 1). Results are unreliable."
     const val warningMarginal = "Marginal stability (Sg < 1.4)."
-    fun tableLegend(unit: String, click: String) = "Corrections in $unit: ↑ up, R/L right/left. One click = $click $unit."
+    fun tableLegend(unit: String, click: String) = "Drop and drift in cm: where the bullet goes. Corrections in $unit: up unless marked ↓, R/L right/left. One click = $click $unit."
 
     const val labelTargetDistance = "Distance"
     const val labelMovingTarget = "Moving target"
@@ -140,7 +140,7 @@ object S {
     const val errorCannotSolve = "Cannot compute the trajectory"
     fun errorInvalid(field: String) = "Invalid value: $field"
     fun errorPositive(field: String) = "${field.replaceFirstChar { it.uppercase() }} must be greater than zero"
-    const val errorStepTooSmall = "Table step is too small"
+    const val errorStepTooSmall = "DOPE step is too small"
     fun errorBadCurveRow(row: String) = "Invalid drag curve row: $row"
     const val errorCurveTooShort = "The Cd curve needs at least two points (Mach Cd)"
     const val errorImport = "This file is not a Ballistics export"
@@ -169,6 +169,6 @@ object S {
     const val fieldCant = "cant"
     const val fieldLatitude = "latitude"
     const val fieldAzimuth = "azimuth"
-    const val fieldTableRange = "table range"
-    const val fieldTableStep = "table step"
+    const val fieldTableRange = "DOPE range"
+    const val fieldTableStep = "DOPE step"
 }

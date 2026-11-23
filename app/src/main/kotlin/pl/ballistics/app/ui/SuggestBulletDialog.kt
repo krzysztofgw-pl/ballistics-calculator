@@ -8,7 +8,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -45,7 +45,7 @@ fun SuggestBulletDialog(
             onDismissRequest = onDismiss,
             title = { Text(stringResource(R.string.suggest_title)) },
             text = { Text(stringResource(R.string.suggest_sign_in)) },
-            confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_ok)) } },
+            confirmButton = { FilledTonalButton(onClick = onDismiss) { Text(stringResource(R.string.action_ok)) } },
         )
         return
     }
@@ -85,7 +85,7 @@ fun SuggestBulletDialog(
             onDismissRequest = onDismiss,
             title = { Text(stringResource(R.string.suggest_title)) },
             text = { Text(stringResource(R.string.suggest_sent)) },
-            confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_ok)) } },
+            confirmButton = { FilledTonalButton(onClick = onDismiss) { Text(stringResource(R.string.action_ok)) } },
         )
         return
     }
@@ -119,6 +119,9 @@ fun SuggestBulletDialog(
                     onValueChange = { sourceRef = it.take(BulletSuggestion.MAX_REF) },
                     label = { Text(stringResource(R.string.suggest_source_ref)) },
                     placeholder = { Text(stringResource(R.string.suggest_source_hint)) },
+                    singleLine = true,
+                    keyboardOptions = NextFieldOptions,
+                    keyboardActions = nextFieldActions(),
                     modifier = Modifier.fillMaxWidth(),
                 )
                 OutlinedTextField(
@@ -134,7 +137,7 @@ fun SuggestBulletDialog(
             }
         },
         confirmButton = {
-            TextButton(
+            FilledTonalButton(
                 enabled = problems.isEmpty() && !sending,
                 onClick = {
                     sending = true
@@ -147,7 +150,7 @@ fun SuggestBulletDialog(
                 },
             ) { Text(stringResource(if (sending) R.string.suggest_sending else R.string.suggest_send)) }
         },
-        dismissButton = { TextButton(onClick = onDismiss, enabled = !sending) { Text(stringResource(R.string.action_cancel)) } },
+        dismissButton = { FilledTonalButton(onClick = onDismiss, enabled = !sending) { Text(stringResource(R.string.action_cancel)) } },
     )
 }
 

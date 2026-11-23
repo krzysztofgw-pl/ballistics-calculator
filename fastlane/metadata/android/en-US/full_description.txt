@@ -13,12 +13,22 @@ DOPE CARD AND RANGE CARD
 • Charts of the wind correction by wind speed and by direction, and spin drift by distance
 
 WIND AND WEATHER
-• One 360° dial for the wind and the shot azimuth, as a clock or as a true bearing
+• Wind dial: a wind clock inside a compass ring with N, E, S and W that turns with your shot azimuth
+• Shooter view (line of fire up) or north up with one tap on the compass button
+• Crosswind from left or right and head or tailwind shown under the dial
 • Phone compass with declination and a calibration check
-• Wind forecast for your location (Open-Meteo): hourly mean, gusts and how steady it is
+• Wind forecast for your location (Open-Meteo) as a 12-hour chart of mean wind, gusts and direction
+• Drag the time window over the hours you will shoot, see the mean wind and a warning when the direction is unsteady
+• Forecast direction as a wind clock or as true bearings, with a shooting height correction (10 m, open ground, woods)
 • Temperature, humidity and pressure from the forecast
 • Station pressure from a Garmin watch with the free Station Pressure app: https://apps.garmin.com/apps/2ec4993f-ced4-4fde-ad88-8541ef96c7b2
 • Shot angle (incline) measured with the phone camera
+
+CHRONOGRAPH IMPORT
+• Open or share a chronograph file straight into the app: Labradar, Labradar LX, Garmin Xero C1 (ShotView CSV or FIT), Athlon Rangecraft (Excel), MagnetoSpeed V3 and Sporter, or any table with a velocity column
+• Or type your velocities shot by shot, in m/s or fps
+• Average, SD and ES, with misread shots flagged automatically and every shot ticked in or out
+• Save the muzzle velocity for one rifle or for the load, corrected to the load's reference powder temperature
 
 ACCURATE BALLISTICS SOLVER
 • 3-DOF point-mass trajectory with G1, G7, G2, G5, G6, G8, GI, GS and RA4 drag models
@@ -30,7 +40,7 @@ ACCURATE BALLISTICS SOLVER
 
 YOUR RIFLES AND LOADS
 • Profiles for rifles, scopes, mounts and loads, with a sight height helper
-• Muzzle velocity per rifle from your chronograph, and the barrel length of the factory test
+• Muzzle velocity per rifle, and the barrel length of the factory test
 • Suppressor on or off, with its point of impact shift
 • Bullet library with over 600 bullets from Barnes, Berger, Hornady, Lapua, Sierra and Speer with G1 and G7 BCs, plus factory loads
 • BC truing from your range data: true the ballistic coefficient from a measured drop or a downrange velocity

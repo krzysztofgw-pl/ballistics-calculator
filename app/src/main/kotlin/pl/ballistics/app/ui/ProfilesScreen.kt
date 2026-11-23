@@ -24,7 +24,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -66,7 +66,7 @@ fun ProfilesScreen(
                     onEdit = { onEditWeapon(w) },
                 )
             }
-            TextButton(onClick = { onEditWeapon(WeaponProfile(ammoId = data.ammo.firstOrNull()?.id)) }) {
+            FilledTonalButton(onClick = { onEditWeapon(WeaponProfile(ammoId = data.ammo.firstOrNull()?.id)) }) {
                 Icon(Icons.Filled.Add, null)
                 Text(stringResource(R.string.action_add_rifle))
             }
@@ -92,7 +92,7 @@ fun ProfilesScreen(
                         )
                     }
                 }
-            TextButton(onClick = { onEditAmmo(newLoadFor(active)) }) {
+            FilledTonalButton(onClick = { onEditAmmo(newLoadFor(active)) }) {
                 Icon(Icons.Filled.Add, null)
                 Text(stringResource(R.string.action_add_load))
             }
