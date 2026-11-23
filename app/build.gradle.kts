@@ -15,8 +15,7 @@ val releasePassword = System.getenv("SIGNING_PASSWORD")
 android {
     namespace = "pl.ballistics.app"
     // Compose BOM 2026.11 (Compose 1.13, Material3 1.5, core 1.19) must compile against
-    // API 37.1+. compileSdk only affects which APIs we compile against; runtime behaviour
-    // stays governed by targetSdk.
+    // API 37.1+.
     compileSdk {
         version = release(37) { minorApiLevel = 2 }
     }
@@ -24,7 +23,7 @@ android {
     defaultConfig {
         applicationId = "com.kgwlabs.ballistics"
         minSdk = 26
-        targetSdk = 36
+        targetSdk = 37
         // CI numbers each build, so a newer APK always installs over an older one. The build
         // number shown everywhere (version name, release tag, Google Play) is the versionCode:
         // the workflow run number + 100, as the first Play upload was 253.
