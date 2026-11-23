@@ -39,9 +39,9 @@ import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
 
-private val Light = Color(0xFF1E88E5)
-private val Strong = Color(0xFFE53935)
-private val Spread = Color(0xFFF08A24)
+internal val BracketLight = Color(0xFF1E88E5)
+internal val BracketStrong = Color(0xFFE53935)
+internal val BracketSpread = Color(0xFFF08A24)
 private val Ink = Color(0xFF111111)
 private val Lens = Color(0xFFCFD8CC)
 
@@ -73,7 +73,7 @@ fun WindBracketView(reticle: Reticle, holds: List<BracketHold>, spreadText: Stri
                 if (holds.size == 2) {
                     val l = sx(min(holds[0].x, holds[1].x))
                     val r = sx(max(holds[0].x, holds[1].x))
-                    drawRect(Spread.copy(alpha = 0.3f), Offset(l, cy - 28.dp.toPx()), Size(r - l, 56.dp.toPx()))
+                    drawRect(BracketSpread.copy(alpha = 0.3f), Offset(l, cy - 28.dp.toPx()), Size(r - l, 56.dp.toPx()))
                 }
                 reticle.marks.forEach { m ->
                     when (m) {
@@ -98,7 +98,7 @@ fun WindBracketView(reticle: Reticle, holds: List<BracketHold>, spreadText: Stri
                     v += step
                 }
                 holds.forEach { h ->
-                    val c = if (h.strong) Strong else Light
+                    val c = if (h.strong) BracketStrong else BracketLight
                     val x = sx(h.x)
                     drawLine(c, Offset(x, cy - 28.dp.toPx()), Offset(x, cy + 28.dp.toPx()), 2.5.dp.toPx())
                     drawCircle(c, 5.dp.toPx(), Offset(x, cy))
@@ -113,7 +113,7 @@ fun WindBracketView(reticle: Reticle, holds: List<BracketHold>, spreadText: Stri
                         append("\n")
                         withStyle(SpanStyle(fontSize = 12.sp)) { append(h.wind) }
                     },
-                    TextStyle(color = if (h.strong) Strong else Light, textAlign = if (i == 0 && sorted.size > 1) TextAlign.End else TextAlign.Start),
+                    TextStyle(color = if (h.strong) BracketStrong else BracketLight, textAlign = if (i == 0 && sorted.size > 1) TextAlign.End else TextAlign.Start),
                 )
                 val x = sx(h.x)
                 val w = layout.size.width.toFloat()
@@ -127,7 +127,7 @@ fun WindBracketView(reticle: Reticle, holds: List<BracketHold>, spreadText: Stri
         }
         if (spreadText != null) {
             Box(Modifier.padding(top = 8.dp)) {
-                Surface(shape = RoundedCornerShape(50), color = Spread, contentColor = Color.White) {
+                Surface(shape = RoundedCornerShape(50), color = BracketSpread, contentColor = Color.White) {
                     Text(
                         spreadText,
                         Modifier.padding(horizontal = 14.dp, vertical = 4.dp),

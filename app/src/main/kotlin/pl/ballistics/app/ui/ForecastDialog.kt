@@ -225,6 +225,8 @@ fun ForecastDialog(
                             windMinMps = one(s.minSpeedMps * factor),
                             windMaxMps = one(s.maxSpeedMps * factor),
                             windFromDeg = (s.fromDeg - az).mod(360.0).roundToInt().mod(360).toString(),
+                            windFromMinDeg = (s.fromDeg + s.fromSpreadDeg.start - az).mod(360.0).roundToInt().mod(360).toString(),
+                            windFromMaxDeg = (s.fromDeg + s.fromSpreadDeg.endInclusive - az).mod(360.0).roundToInt().mod(360).toString(),
                         )
                         ready?.let { r ->
                             if (ui.locationSetsLatitude) next = next.copy(latitudeDeg = String.format(Locale.US, "%.2f", r.latitude))

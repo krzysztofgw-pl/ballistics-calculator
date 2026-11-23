@@ -344,6 +344,14 @@
     <string name="chart_spin_drift">Spin drift correction (%1$s) by distance (m)</string>
     <string name="wind_from_clock">%1$s o\'clock</string>
     <string name="wind_speed_series">%1$d m/s</string>
+    <string name="chart_bracket_direction">Correction (%1$s) by wind direction at %2$d m</string>
+    <string name="chart_forecast_direction">Forecast direction %1$s–%2$s</string>
+    <string name="chart_range_error">Impact (cm) by distance error (m)</string>
+    <string name="chart_hit_range">Hit probability by distance (m)</string>
+    <string name="chart_azimuth_windage">Windage correction without wind (%1$s) by azimuth at %2$d m</string>
+    <string name="chart_azimuth_elevation">Elevation change (%1$s) by azimuth at %2$d m, against shooting north</string>
+    <string name="azimuth_charts_need_coriolis">Charts by azimuth need Coriolis and Eötvös effects on in Conditions.</string>
+    <string name="label_show_charts">Charts</string>
     <string name="spin_drift_point">%1$s cm · %2$d m</string>
     <string name="spin_drift_needs_data">Spin drift needs the bullet length and the barrel twist.</string>
     <string name="spin_drift_off">Spin drift is off in Conditions.</string>

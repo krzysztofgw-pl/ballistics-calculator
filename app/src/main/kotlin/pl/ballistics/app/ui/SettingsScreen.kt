@@ -150,6 +150,7 @@ fun SettingsScreen(
             Section(stringResource(R.string.section_layout)) {
                 Placement(stringResource(R.string.label_tabs), ui.tabsAtTop) { v -> onUi { it.copy(tabsAtTop = v) } }
                 Placement(stringResource(R.string.label_sub_tabs), ui.subTabsAtTop) { v -> onUi { it.copy(subTabsAtTop = v) } }
+                SwitchRow(stringResource(R.string.label_show_charts), ui.showCharts) { v -> onUi { it.copy(showCharts = v) } }
             }
 
             Section(stringResource(R.string.section_measurements)) {
