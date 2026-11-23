@@ -1,5 +1,9 @@
 package pl.ballistics.app.ui
 
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
+import pl.ballistics.app.data.AltitudeSource
+import pl.ballistics.app.data.TerrainHeight
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
@@ -113,8 +117,15 @@ fun ForecastDialog(
             ForecastState.Failed(noLocation)
         } else {
             try {
-                val forecast = WindForecast.fetch(location.latitude, location.longitude)
-                ForecastState.Ready(forecast.hours, location.latitude, forecast.elevationM)
+                val terrain = ui.altitudeFrom == AltitudeSource.TERRAIN
+                // The forecast's own height is a coarse model; the terrain map is finer (1 m in Poland).
+                val (forecast, ground) = coroutineScope {
+                    val height = async {
+                        if (terrain) runCatching { TerrainHeight.lookup(location.latitude, location.longitude).heightM }.getOrNull() else null
+                    }
+                    WindForecast.fetch(location.latitude, location.longitude) to height.await()
+                }
+                ForecastState.Ready(forecast.hours, location.latitude, if (terrain) ground ?: forecast.elevationM else null)
             } catch (e: WindForecast.RefusedException) {
                 // The phone reached the service, so the connection is fine; say what the service said.
                 ForecastState.Failed(
@@ -217,7 +228,7 @@ fun ForecastDialog(
                         )
                         ready?.let { r ->
                             if (ui.locationSetsLatitude) next = next.copy(latitudeDeg = String.format(Locale.US, "%.2f", r.latitude))
-                            if (ui.locationSetsAltitude) r.elevationM?.let { next = next.copy(altitudeM = it.roundToInt().toString()) }
+                            if (ui.altitudeFrom == AltitudeSource.TERRAIN) r.elevationM?.let { next = next.copy(altitudeM = it.roundToInt().toString()) }
                         }
                         if (fillAtmosphere) {
                             s.temperatureC?.let { next = next.copy(temperatureC = one(it)) }

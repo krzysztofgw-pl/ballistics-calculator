@@ -44,6 +44,8 @@ private const val DAY_MS = 24 * 60 * 60_000L
 fun AutoReviewPrompt() {
     val context = LocalContext.current
     LaunchedEffect(Unit) {
+        // The review sheet talks to Google Play.
+        if (pl.ballistics.app.data.Stealth.blocksNetwork) return@LaunchedEffect
         val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
         val launches = prefs.getInt(KEY_LAUNCHES, 0) + 1
         prefs.edit().putInt(KEY_LAUNCHES, launches).apply()

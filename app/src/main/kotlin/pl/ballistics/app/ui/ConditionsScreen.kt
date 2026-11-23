@@ -18,6 +18,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Icon
@@ -42,7 +43,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import pl.ballistics.app.R
+import pl.ballistics.app.data.AltitudeSource
 import pl.ballistics.app.data.Conditions
+import pl.ballistics.app.data.Stealth
+import pl.ballistics.app.data.TerrainHeight
 import pl.ballistics.app.data.UiSettings
 import pl.ballistics.app.toNumber
 import java.util.Locale
@@ -82,6 +86,7 @@ fun ConditionsScreen(
                     update { it.copy(altitudeM = v) }
                 }
             }
+            if (ui.altitudeFrom != AltitudeSource.MANUAL) AltitudeButton(ui.altitudeFrom, update)
             if (ui.garminWatch) WatchPressureButton(update)
         }
 
@@ -192,7 +197,10 @@ private fun WindAndAzimuthDial(i: Conditions, ui: UiSettings, update: ((Conditio
     }
 
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        OutlinedButton(onClick = { withPermission { forecast = true } }, modifier = Modifier.weight(1f)) {
+        OutlinedButton(onClick = {
+            if (Stealth.blocksNetwork) Toast.makeText(context, context.getString(R.string.stealth_blocked), Toast.LENGTH_LONG).show()
+            else withPermission { forecast = true }
+        }, modifier = Modifier.weight(1f)) {
             Icon(ImageVector.vectorResource(R.drawable.ic_forecast), contentDescription = null, modifier = Modifier.size(ButtonDefaults.IconSize))
             Spacer(Modifier.width(ButtonDefaults.IconSpacing))
             Text(stringResource(R.string.action_forecast_short), maxLines = 1)
@@ -265,6 +273,82 @@ private fun rememberWithLocationPermission(): (() -> Unit) -> Unit {
     }
 }
 
+/**
+ * Fills the altitude from the terrain map (an elevation model at the phone's position) or from GPS.
+ * The map needs the network, so in stealth mode it falls back to GPS, which works offline.
+ * Beside the button: where the value came from, or the GPS vertical accuracy.
+ */
+@Composable
+private fun AltitudeButton(source: AltitudeSource, update: ((Conditions) -> Conditions) -> Unit) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val withPermission = rememberWithLocationPermission()
+    var reading by remember { mutableStateOf(false) }
+    var note by remember(source) { mutableStateOf<String?>(null) }
+    fun toast(id: Int) = Toast.makeText(context, context.getString(id), Toast.LENGTH_LONG).show()
+    fun store(metres: Double) = update { it.copy(altitudeM = metres.roundToInt().toString()) }
+
+    suspend fun fromGps() {
+        toast(R.string.altitude_gps_searching)
+        val gps = DeviceSensors.gpsAltitude(context)
+        if (gps == null) {
+            toast(R.string.altitude_gps_unavailable)
+            return
+        }
+        store(gps.metres)
+        note = gps.accuracyM?.let { context.getString(R.string.location_accuracy, it.roundToInt()) }
+        if (gps.ellipsoidal) toast(R.string.altitude_gps_ellipsoid)
+    }
+
+    suspend fun fromTerrain() {
+        val location = DeviceSensors.location(context)
+        if (location == null) {
+            toast(R.string.location_unavailable)
+            return
+        }
+        try {
+            val r = TerrainHeight.lookup(location.latitude, location.longitude)
+            store(r.heightM)
+            note = context.getString(if (r.source == TerrainHeight.Source.NMT_PL) R.string.altitude_source_nmt else R.string.altitude_source_dem)
+        } catch (e: java.io.IOException) {
+            Toast.makeText(context, context.getString(R.string.altitude_terrain_failed, e.message ?: e.javaClass.simpleName), Toast.LENGTH_LONG).show()
+        }
+    }
+
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End), verticalAlignment = Alignment.CenterVertically) {
+        note?.let { Text(it, style = MaterialTheme.typography.labelSmall) }
+        OutlinedButton(enabled = !reading, contentPadding = PaddingValues(horizontal = 12.dp), onClick = {
+            if (Stealth.blocksLocation && (source == AltitudeSource.GPS || Stealth.blocksNetwork)) {
+                toast(R.string.stealth_location_blocked)
+                return@OutlinedButton
+            }
+            withPermission {
+                scope.launch {
+                    reading = true
+                    note = null
+                    if (source == AltitudeSource.GPS) {
+                        fromGps()
+                    } else if (Stealth.blocksNetwork) {
+                        toast(R.string.altitude_stealth_gps)
+                        fromGps()
+                    } else {
+                        fromTerrain()
+                    }
+                    reading = false
+                }
+            }
+        }) {
+            if (reading) CircularProgressIndicator(Modifier.size(ButtonDefaults.IconSize), strokeWidth = 2.dp)
+            else Icon(if (source == AltitudeSource.GPS) Icons.Filled.LocationOn else Icons.Filled.Place, contentDescription = null, modifier = Modifier.size(ButtonDefaults.IconSize))
+            Spacer(Modifier.width(ButtonDefaults.IconSpacing))
+            Text(
+                stringResource(if (source == AltitudeSource.GPS) R.string.action_altitude_gps_short else R.string.action_altitude_terrain_short),
+                maxLines = 1,
+            )
+        }
+    }
+}
+
 @Composable
 private fun LatitudeInput(i: Conditions, update: ((Conditions) -> Conditions) -> Unit) {
     val context = LocalContext.current
@@ -293,6 +377,10 @@ private fun LatitudeInput(i: Conditions, update: ((Conditions) -> Conditions) ->
         }
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             OutlinedButton(enabled = !reading, contentPadding = PaddingValues(horizontal = 12.dp), onClick = {
+                if (Stealth.blocksLocation) {
+                    Toast.makeText(context, context.getString(R.string.stealth_location_blocked), Toast.LENGTH_LONG).show()
+                    return@OutlinedButton
+                }
                 withPermission {
                     scope.launch {
                         reading = true

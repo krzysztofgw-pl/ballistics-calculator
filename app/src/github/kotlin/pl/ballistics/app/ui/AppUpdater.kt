@@ -36,6 +36,10 @@ class AppUpdater(private val context: Context, private val scope: CoroutineScope
     /** A check on start stays quiet unless there is an update; a check the user asked for always answers. */
     fun check(asked: Boolean) {
         if (busy) return
+        if (pl.ballistics.app.data.Stealth.blocksNetwork) {
+            if (asked) toast(context.getString(R.string.stealth_blocked))
+            return
+        }
         busy = true
         scope.launch {
             runCatching { AppUpdate.newer(context) }
@@ -53,6 +57,10 @@ class AppUpdater(private val context: Context, private val scope: CoroutineScope
             return
         }
         if (busy) return
+        if (pl.ballistics.app.data.Stealth.blocksNetwork) {
+            toast(context.getString(R.string.stealth_blocked))
+            return
+        }
         busy = true
         toast(context.getString(R.string.toast_downloading_update, release.build))
         scope.launch {

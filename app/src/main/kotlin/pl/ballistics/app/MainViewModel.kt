@@ -20,6 +20,7 @@ import pl.ballistics.app.data.SyncState
 import pl.ballistics.app.data.Conditions
 import pl.ballistics.app.data.Repository
 import pl.ballistics.app.data.SavedTarget
+import pl.ballistics.app.data.Stealth
 import pl.ballistics.app.data.UiSettings
 import pl.ballistics.app.data.WeaponProfile
 import pl.ballistics.app.data.ChronographFiles
@@ -35,6 +36,11 @@ sealed interface ChronographImportState {
 }
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
+    // Before anything that might use the network.
+    init {
+        Stealth.load(application)
+    }
+
     private val repository = Repository(application)
 
     private val _data = MutableStateFlow(repository.load())
@@ -56,7 +62,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     init {
         recalculate(debounce = false)
-        viewModelScope.launch { BulletLibrary.refresh(application) }
+        viewModelScope.launch {
+            // Each change of stealth mode pauses or resumes sync; the bullet database is fetched when allowed.
+            Stealth.state.collect { s ->
+                cloud.setPaused(s.on)
+                if (!s.on) BulletLibrary.refresh(application)
+            }
+        }
     }
 
     private fun update(transform: (AppData) -> AppData) {
