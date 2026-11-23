@@ -389,7 +389,7 @@ fun TargetScreen(
         }
         if (sfp) Text(stringResource(R.string.sfp_note, calMag.magFmt()), style = MaterialTheme.typography.bodySmall)
 
-        TargetTools(result, conditions, update, analysis, inputs, reticle.unit, { setDistance(it) }, onSaveAmmo, onAddAmmoCopy)
+        TargetTools(result, conditions, update, analysis, inputs, reticle, scale, { setDistance(it) }, onSaveAmmo, onAddAmmoCopy)
         if (analysis != null) {
             Collapsible(stringResource(R.string.section_charts)) { TargetCharts(result, analysis, distance) }
         }
