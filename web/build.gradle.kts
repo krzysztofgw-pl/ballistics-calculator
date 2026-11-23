@@ -9,6 +9,9 @@ kotlin {
     js {
         browser {
             commonWebpackConfig { outputFileName = "app.js" }
+            // No browser tests: the solver is tested on Node.js in :core. Without a
+            // test task Karma and its plugins stay out of the npm dependencies.
+            testTask { enabled = false }
         }
         binaries.executable()
     }
@@ -16,7 +19,7 @@ kotlin {
     sourceSets {
         jsMain.dependencies {
             implementation(project(":core"))
-            implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.1")
+            implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.13.0")
         }
     }
 }

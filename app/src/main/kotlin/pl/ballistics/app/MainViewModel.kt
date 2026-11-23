@@ -20,10 +20,27 @@ import pl.ballistics.app.data.SyncState
 import pl.ballistics.app.data.Conditions
 import pl.ballistics.app.data.Repository
 import pl.ballistics.app.data.SavedTarget
+import pl.ballistics.app.data.Stealth
 import pl.ballistics.app.data.UiSettings
 import pl.ballistics.app.data.WeaponProfile
+import pl.ballistics.app.data.ChronographFiles
+import pl.ballistics.app.data.newId
+import pl.ballistics.core.ChronographFormatException
+import pl.ballistics.core.ShotSeries
+
+/** A chronograph file being imported: its series, or why it could not be read. */
+sealed interface ChronographImportState {
+    data object Reading : ChronographImportState
+    data class Loaded(val series: List<ShotSeries>) : ChronographImportState
+    data class Failed(val reason: ChronographFormatException.Reason) : ChronographImportState
+}
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
+    // Before anything that might use the network.
+    init {
+        Stealth.load(application)
+    }
+
     private val repository = Repository(application)
 
     private val _data = MutableStateFlow(repository.load())
@@ -31,6 +48,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _result = MutableStateFlow<CalcResult?>(null)
     val result: StateFlow<CalcResult?> = _result.asStateFlow()
+
+    private val _chronograph = MutableStateFlow<ChronographImportState?>(null)
+    val chronograph: StateFlow<ChronographImportState?> = _chronograph.asStateFlow()
+
+    /** The stealth window, also opened by a long press on the Quick Settings tile. */
+    val stealthDialog = MutableStateFlow(false)
 
     private var job: Job? = null
     private var pushJob: Job? = null
@@ -42,7 +65,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     init {
         recalculate(debounce = false)
-        viewModelScope.launch { BulletLibrary.refresh(application) }
+        viewModelScope.launch {
+            // Each change of stealth mode pauses or resumes sync; the bullet database is fetched when allowed.
+            Stealth.state.collect { s ->
+                cloud.setPaused(s.on)
+                if (!s.on) BulletLibrary.refresh(application)
+            }
+        }
     }
 
     private fun update(transform: (AppData) -> AppData) {
@@ -171,6 +200,59 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             ammo = d.ammo.filterNot { it.id == id },
             weapons = d.weapons.map {
                 it.copy(ammoId = it.ammoId.takeIf { a -> a != id }, muzzleVelocities = it.muzzleVelocities - id)
+            },
+        )
+    }
+
+    /** Reads a chronograph file picked or shared by another app; the import dialog shows the result. */
+    fun openChronograph(uri: android.net.Uri) = readChronograph { ChronographFiles.load(getApplication<Application>(), uri) }
+
+    /** A chronograph export shared as text rather than as a file. */
+    fun openChronographText(text: String) = readChronograph { ChronographFiles.parse(text.encodeToByteArray()) }
+
+    private fun readChronograph(read: () -> List<ShotSeries>) {
+        _chronograph.value = ChronographImportState.Reading
+        viewModelScope.launch {
+            _chronograph.value = withContext(Dispatchers.IO) {
+                try {
+                    ChronographImportState.Loaded(read())
+                } catch (e: ChronographFormatException) {
+                    ChronographImportState.Failed(e.reason)
+                } catch (e: Exception) {
+                    ChronographImportState.Failed(ChronographFormatException.Reason.NOT_RECOGNISED)
+                }
+            }
+        }
+    }
+
+    /** Velocities typed in by hand, reviewed like an imported file. */
+    fun openTypedSeries(series: ShotSeries) {
+        _chronograph.value = ChronographImportState.Loaded(listOf(series))
+    }
+
+    fun closeChronograph() {
+        _chronograph.value = null
+    }
+
+    /**
+     * Saves a chronograph series to the load [ammoId]: the average as the velocity measured with the
+     * rifle [weaponId] ([forRifle]) or as the load's reference velocity, and the SD to the load.
+     * [copyName] puts it in a new copy of the load instead, which the rifle then uses.
+     */
+    fun applyChronograph(weaponId: String?, ammoId: String, velocity: String, sd: String, forRifle: Boolean, copyName: String?) = update { d ->
+        val ammo = d.ammo.find { it.id == ammoId } ?: return@update d
+        val base = if (copyName != null) ammo.copy(id = newId(), name = copyName) else ammo
+        val saved = base.copy(velocitySd = sd, muzzleVelocity = if (forRifle) base.muzzleVelocity else velocity)
+        d.copy(
+            ammo = if (copyName != null) d.ammo + saved else d.ammo.map { if (it.id == ammoId) saved else it },
+            weapons = d.weapons.map { w ->
+                // A copy keeps the velocities measured with the original, as addAmmoCopy does.
+                var r = if (copyName != null) w.measuredVelocity(ammo)?.let { w.withMeasuredVelocity(saved, it) } ?: w else w
+                if (w.id == weaponId) {
+                    if (forRifle) r = r.withMeasuredVelocity(saved, velocity)
+                    if (copyName != null) r = r.copy(ammoId = saved.id)
+                }
+                r
             },
         )
     }

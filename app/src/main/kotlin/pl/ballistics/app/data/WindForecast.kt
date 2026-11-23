@@ -36,6 +36,8 @@ data class WindSummary(
     val fromDeg: Double,
     val minSpeedMps: Double,
     val maxSpeedMps: Double,
+    /** How far the hourly directions swing each side of [fromDeg]: the most counter-clockwise (negative) and clockwise, in degrees. */
+    val fromSpreadDeg: ClosedFloatingPointRange<Double> = 0.0..0.0,
     val gustMps: Double?,
     /** Length of the mean vector over the mean speed: 1 = steady direction, near 0 = swirling. */
     val steadiness: Double,
@@ -61,17 +63,34 @@ object WindForecast {
     data class Result(val hours: List<ForecastHour>, val elevationM: Double?)
 
     suspend fun fetch(latitude: Double, longitude: Double): Result = withContext(Dispatchers.IO) {
+        Stealth.checkNetwork()
         val connection = URL(String.format(Locale.US, URL_FORMAT, latitude, longitude)).openConnection() as HttpURLConnection
         connection.connectTimeout = 10_000
         connection.readTimeout = 15_000
+        // Name the app, as public APIs ask, rather than the platform's generic Dalvik agent.
+        connection.setRequestProperty("User-Agent", USER_AGENT)
+        connection.setRequestProperty("Accept", "application/json")
         try {
-            if (connection.responseCode != 200) throw java.io.IOException("HTTP ${connection.responseCode}")
+            val code = connection.responseCode
+            if (code != 200) {
+                val body = runCatching { connection.errorStream?.bufferedReader()?.use { it.readText() } }.getOrNull()
+                throw RefusedException(code, body?.let(::reason))
+            }
             val text = connection.inputStream.bufferedReader().use { it.readText() }
             Result(parse(text), elevation(text))
         } finally {
             connection.disconnect()
         }
     }
+
+    val USER_AGENT = "KGWLabs-Ballistics/${pl.ballistics.app.BuildConfig.VERSION_NAME} (Android; +https://github.com/krzysztofgw-pl/ballistics-calculator)"
+
+    /** The service answered, but not with a forecast: [code] is the HTTP status, [reason] what Open-Meteo says, if anything. */
+    class RefusedException(val code: Int, val reason: String?) : java.io.IOException("HTTP $code" + (reason?.let { ": $it" } ?: ""))
+
+    /** Open-Meteo explains errors as {"error": true, "reason": "..."}. */
+    fun reason(body: String): String? =
+        runCatching { Json.parseToJsonElement(body).jsonObject["reason"]?.jsonPrimitive?.content }.getOrNull()?.takeIf { it.isNotBlank() }
 
     fun elevation(text: String): Double? =
         runCatching { Json.parseToJsonElement(text).jsonObject["elevation"]?.jsonPrimitive?.doubleOrNull }.getOrNull()
@@ -115,9 +134,12 @@ object WindForecast {
         north /= hours.size
         val mean = hours.sumOf { it.speedMps } / hours.size
         val vector = hypot(east, north)
+        val from = Math.toDegrees(atan2(-east, -north)).mod(360.0)
+        val swings = hours.filter { it.speedMps > 0 }.map { ((it.fromDeg - from + 540.0).mod(360.0)) - 180.0 }
         return WindSummary(
             speedMps = mean,
-            fromDeg = Math.toDegrees(atan2(-east, -north)).mod(360.0),
+            fromDeg = from,
+            fromSpreadDeg = (swings.minOrNull() ?: 0.0)..(swings.maxOrNull() ?: 0.0),
             minSpeedMps = hours.minOf { it.speedMps },
             maxSpeedMps = hours.maxOf { it.speedMps },
             gustMps = hours.mapNotNull { it.gustMps }.maxOrNull(),

@@ -32,6 +32,8 @@ fun CaliberField(label: String, value: String, diameterIn: Double?, onChange: (S
             onValueChange = onChange,
             label = { Text(label) },
             singleLine = true,
+            keyboardOptions = NextFieldOptions,
+            keyboardActions = nextFieldActions(),
             trailingIcon = {
                 IconButton(onClick = { open = true }) {
                     Icon(Icons.Filled.ArrowDropDown, stringResource(R.string.action_choose_cartridge))

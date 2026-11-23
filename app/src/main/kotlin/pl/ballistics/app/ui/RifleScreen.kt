@@ -13,6 +13,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.ButtonDefaults
@@ -21,12 +22,15 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.FilledIconToggleButton
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -40,6 +44,7 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.Image
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
@@ -66,6 +71,10 @@ fun RifleScreen(
     onOpenProfiles: () -> Unit,
     onOpenHelp: () -> Unit,
     onOpenSettings: () -> Unit,
+    stealthOn: Boolean,
+    onOpenStealth: () -> Unit,
+    onOpenChronograph: (android.net.Uri) -> Unit,
+    onTypeVelocities: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val w = data.activeWeapon
@@ -77,6 +86,17 @@ fun RifleScreen(
     ) {
         // Help and settings live here now that there is no title bar.
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+            // A bare icon like help and settings while off; filled while stealth mode is on. Either way it opens the stealth dialog.
+            FilledIconToggleButton(
+                checked = stealthOn,
+                onCheckedChange = { onOpenStealth() },
+                colors = IconButtonDefaults.filledIconToggleButtonColors(
+                    containerColor = Color.Transparent,
+                    contentColor = LocalContentColor.current,
+                ),
+            ) {
+                Icon(ImageVector.vectorResource(R.drawable.ic_stealth), stringResource(R.string.stealth_title))
+            }
             IconButton(onClick = onOpenHelp) {
                 Icon(ImageVector.vectorResource(R.drawable.ic_help), stringResource(R.string.title_help))
             }
@@ -144,7 +164,35 @@ fun RifleScreen(
             }
         }
 
-        IconLabelButton(Icons.Filled.Person, stringResource(R.string.action_profiles), onOpenProfiles)
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+            IconLabelButton(Icons.Filled.Person, stringResource(R.string.action_profiles), onOpenProfiles)
+            ChronographButton(onOpenChronograph, onTypeVelocities)
+        }
+    }
+}
+
+/** Muzzle velocities from a chronograph: a file it exported, or typed in shot by shot. */
+@Composable
+private fun ChronographButton(onOpen: (android.net.Uri) -> Unit, onType: () -> Unit) {
+    var menu by remember { mutableStateOf(false) }
+    // The types chronograph apps give their files vary (CSV is often text/plain or octet-stream), so any file can be picked.
+    val picker = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.OpenDocument(),
+    ) { uri -> if (uri != null) onOpen(uri) }
+    Box {
+        IconLabelButton(ImageVector.vectorResource(R.drawable.ic_chronograph), stringResource(R.string.action_chronograph)) { menu = true }
+        androidx.compose.material3.DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.action_open_chrono_file)) },
+                leadingIcon = { Icon(ImageVector.vectorResource(R.drawable.ic_import), null) },
+                onClick = { menu = false; picker.launch(arrayOf("*/*")) },
+            )
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.action_type_velocities)) },
+                leadingIcon = { Icon(Icons.Filled.Edit, null) },
+                onClick = { menu = false; onType() },
+            )
+        }
     }
 }
 
@@ -204,7 +252,7 @@ private fun <T> Picker(
 
 @Composable
 private fun IconLabelButton(icon: ImageVector, label: String, onClick: () -> Unit) {
-    OutlinedButton(onClick = onClick) {
+    FilledTonalButton(onClick = onClick) {
         Icon(icon, contentDescription = null, modifier = Modifier.size(ButtonDefaults.IconSize))
         Spacer(Modifier.width(ButtonDefaults.IconSpacing))
         Text(label, maxLines = 1)

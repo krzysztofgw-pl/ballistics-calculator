@@ -1,5 +1,9 @@
 package pl.ballistics.app.ui
 
+import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,7 +20,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -79,10 +83,23 @@ fun NumberField(
         },
         singleLine = true,
         isError = !(optional && value.isBlank()) && value.toNumber() == null,
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Next),
+        keyboardActions = nextFieldActions(),
         modifier = modifier.fillMaxWidth(),
     )
 }
+
+/**
+ * Enter goes to the next field, so a form fills in without tapping each box; after the last
+ * one it closes the keyboard.
+ */
+@Composable
+fun nextFieldActions(): KeyboardActions {
+    val focus = LocalFocusManager.current
+    return KeyboardActions(onNext = { if (!focus.moveFocus(FocusDirection.Next)) focus.clearFocus() })
+}
+
+val NextFieldOptions = KeyboardOptions(imeAction = ImeAction.Next)
 
 /** Two fields side by side. */
 @Composable
@@ -127,7 +144,7 @@ fun <T> Choice(
         Box(Modifier.weight(1f), contentAlignment = Alignment.CenterEnd) {
             // The menu shares a box with the button only, so it drops down from the button.
             Box {
-                OutlinedButton(onClick = { open = true }) { Text(name(selected), textAlign = TextAlign.Center) }
+                FilledTonalButton(onClick = { open = true }) { Text(name(selected), textAlign = TextAlign.Center) }
                 DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
                     options.forEach {
                         DropdownMenuItem(text = { Text(name(it)) }, onClick = { onSelect(it); open = false })

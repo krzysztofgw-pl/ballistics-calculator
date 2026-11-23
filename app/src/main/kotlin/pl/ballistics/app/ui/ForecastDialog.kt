@@ -1,5 +1,9 @@
 package pl.ballistics.app.ui
 
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
+import pl.ballistics.app.data.AltitudeSource
+import pl.ballistics.app.data.TerrainHeight
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
@@ -30,7 +34,7 @@ import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -113,10 +117,25 @@ fun ForecastDialog(
             ForecastState.Failed(noLocation)
         } else {
             try {
-                val forecast = WindForecast.fetch(location.latitude, location.longitude)
-                ForecastState.Ready(forecast.hours, location.latitude, forecast.elevationM)
-            } catch (e: Exception) {
+                val terrain = ui.altitudeFrom == AltitudeSource.TERRAIN
+                // The forecast's own height is a coarse model; the terrain map is finer (1 m in Poland).
+                val (forecast, ground) = coroutineScope {
+                    val height = async {
+                        if (terrain) runCatching { TerrainHeight.lookup(location.latitude, location.longitude).heightM }.getOrNull() else null
+                    }
+                    WindForecast.fetch(location.latitude, location.longitude) to height.await()
+                }
+                ForecastState.Ready(forecast.hours, location.latitude, if (terrain) ground ?: forecast.elevationM else null)
+            } catch (e: WindForecast.RefusedException) {
+                // The phone reached the service, so the connection is fine; say what the service said.
+                ForecastState.Failed(
+                    if (e.reason != null) context.getString(R.string.forecast_refused_reason, e.code, e.reason)
+                    else context.getString(R.string.forecast_refused, e.code),
+                )
+            } catch (e: java.io.IOException) {
                 ForecastState.Failed(context.getString(R.string.forecast_failed, e.message ?: e.javaClass.simpleName))
+            } catch (e: Exception) {
+                ForecastState.Failed(context.getString(R.string.forecast_error, e.message ?: e.javaClass.simpleName))
             }
         }
     }
@@ -195,10 +214,10 @@ fun ForecastDialog(
             }
         },
         confirmButton = {
-            TextButton(
+            FilledTonalButton(
                 enabled = summary != null,
                 onClick = {
-                    val s = summary ?: return@TextButton
+                    val s = summary ?: return@FilledTonalButton
                     onApply { c ->
                         val az = c.azimuthDeg.toNumber() ?: 0.0
                         var next = c.copy(
@@ -206,10 +225,12 @@ fun ForecastDialog(
                             windMinMps = one(s.minSpeedMps * factor),
                             windMaxMps = one(s.maxSpeedMps * factor),
                             windFromDeg = (s.fromDeg - az).mod(360.0).roundToInt().mod(360).toString(),
+                            windFromMinDeg = (s.fromDeg + s.fromSpreadDeg.start - az).mod(360.0).roundToInt().mod(360).toString(),
+                            windFromMaxDeg = (s.fromDeg + s.fromSpreadDeg.endInclusive - az).mod(360.0).roundToInt().mod(360).toString(),
                         )
                         ready?.let { r ->
                             if (ui.locationSetsLatitude) next = next.copy(latitudeDeg = String.format(Locale.US, "%.2f", r.latitude))
-                            if (ui.locationSetsAltitude) r.elevationM?.let { next = next.copy(altitudeM = it.roundToInt().toString()) }
+                            if (ui.altitudeFrom == AltitudeSource.TERRAIN) r.elevationM?.let { next = next.copy(altitudeM = it.roundToInt().toString()) }
                         }
                         if (fillAtmosphere) {
                             s.temperatureC?.let { next = next.copy(temperatureC = one(it)) }
@@ -222,7 +243,7 @@ fun ForecastDialog(
                 },
             ) { Text(stringResource(R.string.action_use)) }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
+        dismissButton = { FilledTonalButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
     )
 
     if (help) {
@@ -230,7 +251,7 @@ fun ForecastDialog(
             onDismissRequest = { help = false },
             title = { Text(stringResource(R.string.title_forecast)) },
             text = { Text(stringResource(R.string.forecast_help), Modifier.verticalScroll(rememberScrollState())) },
-            confirmButton = { TextButton(onClick = { help = false }) { Text(stringResource(R.string.action_ok)) } },
+            confirmButton = { FilledTonalButton(onClick = { help = false }) { Text(stringResource(R.string.action_ok)) } },
         )
     }
     if (unsteadyInfo) {
@@ -238,7 +259,7 @@ fun ForecastDialog(
             onDismissRequest = { unsteadyInfo = false },
             icon = { Icon(Icons.Filled.Warning, contentDescription = null) },
             text = { Text(stringResource(R.string.forecast_unsteady)) },
-            confirmButton = { TextButton(onClick = { unsteadyInfo = false }) { Text(stringResource(R.string.action_ok)) } },
+            confirmButton = { FilledTonalButton(onClick = { unsteadyInfo = false }) { Text(stringResource(R.string.action_ok)) } },
         )
     }
 }

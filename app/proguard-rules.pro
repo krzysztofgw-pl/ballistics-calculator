@@ -14,3 +14,11 @@
 # through parcelled classes, so keep it as-is.
 -keep class com.garmin.** { *; }
 -dontwarn com.garmin.**
+
+# Play Console looks for androidx.activity's EdgeToEdge.enable in the release code to tell
+# that the app opts in to edge-to-edge on Android 14 and older. R8 would inline the call into
+# MainActivity and rename the class, and Play would then report it as missing.
+-keep class androidx.activity.EdgeToEdge {
+    public static *** enable(...);
+    public static *** enable$default(...);
+}

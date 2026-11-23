@@ -43,6 +43,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import pl.ballistics.app.MainViewModel
 import pl.ballistics.app.R
+import pl.ballistics.app.data.Stealth
 import pl.ballistics.app.data.SyncState
 import pl.ballistics.app.data.AmmoProfile
 import pl.ballistics.app.data.WeaponProfile
@@ -65,6 +66,7 @@ private sealed interface Editor {
     data object Profiles : Editor
 }
 
+private const val DOPE_TAB = 2
 private const val TARGET_TAB = 3
 private const val RIFLE_TAB = 0
 
@@ -85,6 +87,8 @@ fun App(vm: MainViewModel = viewModel()) {
     val result by vm.result.collectAsStateWithLifecycle()
     val sync by vm.syncState.collectAsStateWithLifecycle()
     var tab by rememberSaveable { mutableIntStateOf(2) }
+    // The DOPE tab's header details; tapping the tab while it is open folds or unfolds them.
+    var dopeDetails by rememberSaveable { mutableStateOf(false) }
     var editor by remember { mutableStateOf<Editor?>(null) }
     // A rifle or load opened from the profile list goes back to the list when closed.
     var fromProfiles by remember { mutableStateOf(false) }
@@ -97,6 +101,18 @@ fun App(vm: MainViewModel = viewModel()) {
     LaunchedEffect(data.ui.checkUpdateOnStart) { if (data.ui.checkUpdateOnStart) updater.checkOnStart() }
     AppUpdateDialogs(updater)
     AutoReviewPrompt()
+    // A chronograph file can arrive from another app's Share while any screen is open.
+    val chronograph by vm.chronograph.collectAsStateWithLifecycle()
+    chronograph?.let { state ->
+        ChronographDialog(state, data, vm::applyChronograph, vm::closeChronograph)
+    }
+    var typing by remember { mutableStateOf(false) }
+    val stealth by Stealth.state.collectAsStateWithLifecycle()
+    val stealthDialog by vm.stealthDialog.collectAsStateWithLifecycle()
+    if (stealthDialog) StealthDialog { vm.stealthDialog.value = false }
+    if (typing) {
+        ManualVelocityDialog(onDone = { typing = false; vm.openTypedSeries(it) }, onDismiss = { typing = false })
+    }
 
     when (val e = editor) {
         is Editor.Weapon -> {
@@ -155,6 +171,8 @@ fun App(vm: MainViewModel = viewModel()) {
                 onExport = vm::exportData,
                 onImport = vm::importData,
                 onCheckUpdate = { updater.check(asked = true) },
+                stealthOn = stealth.on,
+                onOpenStealth = { vm.stealthDialog.value = true },
                 onOpenProfiles = { fromProfiles = true; profilesReturn = Editor.Settings; editor = Editor.Profiles },
                 onClose = { editor = null },
             )
@@ -188,12 +206,13 @@ fun App(vm: MainViewModel = viewModel()) {
             // No title bar: the tabs name the screen, and help and settings sit on the Rifle tab.
             Column(Modifier.windowInsetsPadding(WindowInsets.systemBars.union(WindowInsets.displayCutout).only(WindowInsetsSides.Horizontal))) {
                 Spacer(Modifier.windowInsetsTopHeight(WindowInsets.systemBars.union(WindowInsets.displayCutout)))
+                if (stealth.on && stealth.showBar) StealthBar { vm.stealthDialog.value = true }
                 if (data.ui.tabsAtTop) {
                     TabRow(selectedTabIndex = tab) {
                         tabs.forEachIndexed { index, t ->
                             Tab(
                                 selected = tab == index,
-                                onClick = { tab = index },
+                                onClick = { if (tab == index && index == DOPE_TAB) dopeDetails = !dopeDetails else tab = index },
                                 text = { Text(stringResource(t.title)) },
                                 icon = { TabIcon(t, index, suppressorOn) },
                             )
@@ -212,7 +231,7 @@ fun App(vm: MainViewModel = viewModel()) {
                         tabs.forEachIndexed { index, t ->
                             NavigationBarItem(
                                 selected = tab == index,
-                                onClick = { tab = index },
+                                onClick = { if (tab == index && index == DOPE_TAB) dopeDetails = !dopeDetails else tab = index },
                                 icon = { TabIcon(t, index, suppressorOn) },
                                 label = { Text(stringResource(t.title)) },
                             )
@@ -237,10 +256,14 @@ fun App(vm: MainViewModel = viewModel()) {
                 onOpenProfiles = { fromProfiles = true; profilesReturn = null; editor = Editor.Profiles },
                 onOpenHelp = { editor = Editor.Help },
                 onOpenSettings = { editor = Editor.Settings },
+                stealthOn = stealth.on,
+                onOpenStealth = { vm.stealthDialog.value = true },
+                onOpenChronograph = vm::openChronograph,
+                onTypeVelocities = { typing = true },
                 modifier = modifier,
             )
             1 -> ConditionsScreen(data.conditions, data.ui, vm::updateConditions, modifier)
-            2 -> TableScreen(result, data.conditions, vm::updateConditions, modifier)
+            DOPE_TAB -> TableScreen(result, data.conditions, vm::updateConditions, modifier, dopeDetails) { dopeDetails = !dopeDetails }
             else -> TargetScreen(result, data.conditions, data.ui, vm::updateConditions, vm::saveAmmo, vm::addAmmoCopy, modifier)
         }
         }

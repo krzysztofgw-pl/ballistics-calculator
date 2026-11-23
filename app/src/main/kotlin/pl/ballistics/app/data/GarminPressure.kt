@@ -35,6 +35,8 @@ object GarminPressure {
         data class Pressure(val hPa: Double, val watch: String) : Result
         data object NoGarminConnect : Result
         data object NoWatch : Result
+        /** Stealth mode keeps the app off the watch link. */
+        data object Blocked : Result
         data object AppNotInstalled : Result
 
         /** What Garmin Connect reported on the way, to tell where it stopped. */
@@ -86,6 +88,7 @@ object GarminPressure {
      * in [unit] ("hPa", "mmHg" or "inHg"), the app's pressure unit; the reading itself travels in Pa.
      */
     suspend fun read(context: Context, unit: String = "hPa", timeoutMs: Long = 45_000, onPrompt: () -> Unit = {}): Result {
+        if (Stealth.blocksWatch) return Result.Blocked
         if (!garminConnectInstalled(context)) return Result.NoGarminConnect
         val app = context.applicationContext
         val ciq = ConnectIQ.getInstance(app, ConnectIQ.IQConnectType.WIRELESS)
