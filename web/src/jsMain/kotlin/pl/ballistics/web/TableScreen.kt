@@ -58,7 +58,7 @@ object TableScreen {
 
     private fun cells(p: TrajectoryPoint, unitRad: Double, click: Double?): List<String> {
         // The cm columns are where the bullet goes: drop below the line of sight (negative only above it,
-        // between the near and far zero) and drift R/L. The angle and clicks columns are the corrections.
+        // between the near and far zero) and drift, unsigned: the wind tells which way. The angle and clicks columns are the corrections.
         val up = -p.dropRad / unitRad
         val right = -p.windageRad / unitRad
         val dropCm = -p.dropM * 100
@@ -69,7 +69,7 @@ object TableScreen {
             (if (dropCm < -0.05) "-" else "") + grouped(fmt(abs(dropCm), 1)),
             if (shown) vertical(up, 0.005) + fmt(abs(up), 2) else "",
             if (shown && click != null) vertical(up / click, 0.5) + abs(up / click).roundToInt() else "",
-            side(driftCm, 0.05) + grouped(fmt(abs(driftCm), 1)),
+            grouped(fmt(abs(driftCm), 1)),
             if (shown) side(right, 0.005) + fmt(abs(right), 2) else "",
             if (shown && click != null) side(right / click, 0.5) + (abs(right) / click).roundToInt() else "",
             p.velocityMps.roundToInt().toString(),
