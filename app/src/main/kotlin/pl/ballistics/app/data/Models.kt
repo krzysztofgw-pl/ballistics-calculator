@@ -241,6 +241,8 @@ data class UiSettings(
     val keepScreenOn: Boolean = false,
     /** Charts in the target tools and the Charts card; off saves the work of drawing them. */
     val showCharts: Boolean = true,
+    /** Single charts turned off under [showCharts]. */
+    val hiddenCharts: Set<ChartKind> = emptySet(),
     /** A location fix (forecast, compass) also sets the latitude for Coriolis. */
     val locationSetsLatitude: Boolean = true,
     /** Older setting: the forecast set the altitude. Read only to choose [altitudeFrom] for settings saved before [altitudeSource]. */
@@ -256,10 +258,31 @@ data class UiSettings(
     /** Per reticle design (Reticles.designKey): which corrections the target screen advises dialing; the rest are held. */
     val corrections: Map<String, Correction> = emptyMap(),
 ) {
+    /** The charts to draw (and work out). */
+    val charts: Set<ChartKind> get() = if (showCharts) ChartKind.entries.toSet() - hiddenCharts else emptySet()
+
     fun correction(reticleId: String): Correction = corrections[reticleId] ?: Correction.defaultFor(reticleId)
 
     val altitudeFrom: AltitudeSource
         get() = altitudeSource ?: if (locationSetsAltitude) AltitudeSource.TERRAIN else AltitudeSource.MANUAL
+}
+
+/** The charts on the target screen, each of which can be turned off in Settings. */
+enum class ChartKind(@StringRes val label: Int) {
+    BRACKET_DIRECTION(R.string.chart_kind_bracket_direction),
+    RANGE_ERROR(R.string.chart_kind_range_error),
+    HIT_RANGE(R.string.chart_kind_hit_range),
+    WIND_SPEED(R.string.chart_kind_wind_speed),
+    WIND_DIRECTION(R.string.chart_kind_wind_direction),
+    SPIN_DRIFT(R.string.chart_kind_spin_drift),
+    AZIMUTH_WINDAGE(R.string.chart_kind_azimuth_windage),
+    AZIMUTH_ELEVATION(R.string.chart_kind_azimuth_elevation),
+    ;
+
+    companion object {
+        /** The charts on the Charts card; the others sit in their tools. */
+        val card = setOf(WIND_SPEED, WIND_DIRECTION, SPIN_DRIFT, AZIMUTH_WINDAGE, AZIMUTH_ELEVATION)
+    }
 }
 
 /** Where the altitude of the firing point comes from. */

@@ -1,5 +1,6 @@
 package pl.ballistics.app
 
+import pl.ballistics.app.data.ChartKind
 import pl.ballistics.core.TrajectoryPoint
 import pl.ballistics.core.Wind
 import kotlin.math.abs
@@ -21,8 +22,8 @@ data class TargetInputs(
     val rangeSdM: Double = 5.0,
     /** Extreme spread of a 5-shot group, as an angle. */
     val groupRad: Double = DEFAULT_GROUP_MOA * pl.ballistics.core.Units.MOA,
-    /** Work out the sweeps the charts need; off when the charts are hidden. */
-    val charts: Boolean = true,
+    /** The charts to work out the sweeps for; the hidden ones are skipped. */
+    val charts: Set<ChartKind> = ChartKind.entries.toSet(),
     /** The farthest distance the hit probability chart goes to. */
     val chartsToM: Double = 1000.0,
 ) {
@@ -102,6 +103,12 @@ data class TargetAnalysis(
         val TEMPERATURE_STEPS = listOf(-10.0, 0.0, 10.0)
         val RANGE_CURVE = (-10..10).map { it * 5.0 }
         const val HIT_SAMPLES = 16
+        /** Point spacing of the trajectories the sweeps by distance read from. */
+        const val SWEEP_STEP_M = 1.0
+        /** Distance error, muzzle velocity change and crosswind the hit spread is worked out from, by finite differences. */
+        const val HIT_RANGE_STEP_M = 10.0
+        const val HIT_VELOCITY_STEP_MPS = 5.0
+        const val HIT_WIND_MPS = 2.0
 
         /** Null when the bullet does not reach [rangeM]. */
         fun of(setup: Setup, zeroElevationRad: Double, rangeM: Double, inputs: TargetInputs = TargetInputs()): TargetAnalysis? {
@@ -136,14 +143,14 @@ data class TargetAnalysis(
             val hit = hitChance(setup, zeroElevationRad, rangeM, inputs) ?: return null
             val charts = inputs.charts
 
-            val bracketSweep = if (charts && bracket != null) {
+            val bracketSweep = if (ChartKind.BRACKET_DIRECTION in charts && bracket != null) {
                 BracketSweep(
                     SWEEP.map { it to correction(bracket.minMps, it) }.filterNot { it.second.isNaN() },
                     SWEEP.map { it to correction(bracket.maxMps, it) }.filterNot { it.second.isNaN() },
                 )
             } else null
 
-            val byAzimuth = if (charts && setup.conditions.latitudeRad != null) {
+            val byAzimuth = if ((ChartKind.AZIMUTH_WINDAGE in charts || ChartKind.AZIMUTH_ELEVATION in charts) && setup.conditions.latitudeRad != null) {
                 fun at(azDeg: Double) = setup.pointAt(
                     rangeM, zeroElevationRad, emptyList(),
                     conditions = setup.conditions.copy(azimuthRad = Math.toRadians(azDeg)),
@@ -156,23 +163,37 @@ data class TargetAnalysis(
                 }
             } else emptyList()
 
-            val hitByRange = if (charts) {
+            // The sweeps by distance come from a few whole trajectories instead of a solve per distance.
+            val hitByRange = if (ChartKind.HIT_RANGE in charts) {
+                val to = inputs.chartsToM + HIT_RANGE_STEP_M
+                val base = setup.trajectory(to, SWEEP_STEP_M, zeroElevationRad)
+                val dv = HIT_VELOCITY_STEP_MPS
+                val fast = setup.trajectory(to, SWEEP_STEP_M, zeroElevationRad, ammo = setup.ammo.copy(muzzleVelocityMps = setup.ammo.muzzleVelocityMps + dv))
+                val slow = setup.trajectory(to, SWEEP_STEP_M, zeroElevationRad, ammo = setup.ammo.copy(muzzleVelocityMps = setup.ammo.muzzleVelocityMps - dv))
+                val right = setup.trajectory(to, SWEEP_STEP_M, zeroElevationRad, listOf(Wind.fromClock(HIT_WIND_MPS, 3.0)))
+                val left = setup.trajectory(to, SWEEP_STEP_M, zeroElevationRad, listOf(Wind.fromClock(HIT_WIND_MPS, 9.0)))
                 (1..HIT_SAMPLES).map { inputs.chartsToM * it / HIT_SAMPLES }.mapNotNull { r ->
-                    hitChance(setup, zeroElevationRad, r, inputs)?.let { r to it.probability }
+                    hitFrom(
+                        r, inputs, { base.at(it) { p -> p.dropRad } },
+                        fast.at(r) { it.dropRad }, slow.at(r) { it.dropRad },
+                        right.at(r) { -it.windageRad }, left.at(r) { -it.windageRad },
+                    )?.let { r to it.probability }
                 }
             } else emptyList()
 
-            val rangeCurve = if (charts) {
-                RANGE_CURVE.filter { rangeM + it > 0 }.mapNotNull { e ->
-                    if (e == 0.0) RangeMiss(0.0, 0.0)
-                    else setup.pointAt(rangeM + e, zeroElevationRad)?.let { RangeMiss(e, (it.dropRad - point.dropRad) * (rangeM + e)) }
+            val rangeCurve = if (ChartKind.RANGE_ERROR in charts) {
+                val near = setup.trajectory(rangeM + RANGE_CURVE.last(), SWEEP_STEP_M, zeroElevationRad)
+                val here = near.at(rangeM) { it.dropRad }
+                if (here == null) emptyList()
+                else RANGE_CURVE.filter { rangeM + it > 0 }.mapNotNull { e ->
+                    near.at(rangeM + e) { it.dropRad }?.let { RangeMiss(e, (it - here) * (rangeM + e)) }
                 }
             } else emptyList()
 
             return TargetAnalysis(
                 point = point,
-                bySpeed = if (charts) DIRECTIONS.associateWith { d -> SPEEDS.map { it to correction(it, d) }.filterNot { it.second.isNaN() } } else emptyMap(),
-                byDirection = if (charts) DIRECTION_SPEEDS.associateWith { s -> SWEEP.map { it to correction(s, it) }.filterNot { it.second.isNaN() } } else emptyMap(),
+                bySpeed = if (ChartKind.WIND_SPEED in charts) DIRECTIONS.associateWith { d -> SPEEDS.map { it to correction(it, d) }.filterNot { it.second.isNaN() } } else emptyMap(),
+                byDirection = if (ChartKind.WIND_DIRECTION in charts) DIRECTION_SPEEDS.associateWith { s -> SWEEP.map { it to correction(s, it) }.filterNot { it.second.isNaN() } } else emptyMap(),
                 tolerance = tolerance,
                 bracket = bracket,
                 temperatures = temperatures,
@@ -184,23 +205,42 @@ data class TargetAnalysis(
             )
         }
 
-        /** Hit chance at [rangeM], from the spread at the target from each source, by finite differences of the full solution. */
+        /** Hit chance at [rangeM], solving each variant of the shot to that distance. */
         private fun hitChance(setup: Setup, zeroElevationRad: Double, rangeM: Double, inputs: TargetInputs): HitChance? {
-            val point = setup.pointAt(rangeM, zeroElevationRad) ?: return null
-            fun windage(speed: Double, fromDeg: Double) =
-                setup.pointAt(rangeM, zeroElevationRad, listOf(Wind.fromClock(speed, fromDeg / 30)))?.let { -it.windageRad }
-            val dv = 5.0
-            val fast = setup.pointAt(rangeM, zeroElevationRad, ammo = setup.ammo.copy(muzzleVelocityMps = setup.ammo.muzzleVelocityMps + dv))
-            val slow = setup.pointAt(rangeM, zeroElevationRad, ammo = setup.ammo.copy(muzzleVelocityMps = setup.ammo.muzzleVelocityMps - dv))
-            val perMps = if (fast != null && slow != null) abs(fast.dropRad - slow.dropRad) / (2 * dv) * rangeM else 0.0
-            fun miss(e: Double) = if (rangeM + e <= 0) null
-                else setup.pointAt(rangeM + e, zeroElevationRad)?.let { (it.dropRad - point.dropRad) * (rangeM + e) }
-            val near = miss(-10.0)
-            val far = miss(10.0)
-            val perMetre = if (near != null && far != null) abs(far - near) / 20 else 0.0
-            val right = windage(2.0, 90.0)
-            val left = windage(2.0, 270.0)
-            val crossPerMps = if (right != null && left != null) abs(right - left) / 4 * rangeM else 0.0
+            fun windage(hour: Double) =
+                setup.pointAt(rangeM, zeroElevationRad, listOf(Wind.fromClock(HIT_WIND_MPS, hour)))?.let { -it.windageRad }
+            val dv = HIT_VELOCITY_STEP_MPS
+            return hitFrom(
+                rangeM, inputs, { r -> setup.pointAt(r, zeroElevationRad)?.dropRad },
+                setup.pointAt(rangeM, zeroElevationRad, ammo = setup.ammo.copy(muzzleVelocityMps = setup.ammo.muzzleVelocityMps + dv))?.dropRad,
+                setup.pointAt(rangeM, zeroElevationRad, ammo = setup.ammo.copy(muzzleVelocityMps = setup.ammo.muzzleVelocityMps - dv))?.dropRad,
+                windage(3.0), windage(9.0),
+            )
+        }
+
+        /**
+         * Hit chance at [rangeM] from the spread at the target from each source, by finite differences:
+         * [dropAt] gives the drop angle at a distance, [fastDrop]/[slowDrop] with the muzzle velocity
+         * ±[HIT_VELOCITY_STEP_MPS], [rightCorrection]/[leftCorrection] the windage correction with
+         * [HIT_WIND_MPS] from 3 and from 9 o'clock.
+         */
+        internal fun hitFrom(
+            rangeM: Double,
+            inputs: TargetInputs,
+            dropAt: (Double) -> Double?,
+            fastDrop: Double?,
+            slowDrop: Double?,
+            rightCorrection: Double?,
+            leftCorrection: Double?,
+        ): HitChance? {
+            val here = dropAt(rangeM) ?: return null
+            val dv = HIT_VELOCITY_STEP_MPS
+            val perMps = if (fastDrop != null && slowDrop != null) abs(fastDrop - slowDrop) / (2 * dv) * rangeM else 0.0
+            fun miss(e: Double) = if (rangeM + e <= 0) null else dropAt(rangeM + e)?.let { (it - here) * (rangeM + e) }
+            val near = miss(-HIT_RANGE_STEP_M)
+            val far = miss(HIT_RANGE_STEP_M)
+            val perMetre = if (near != null && far != null) abs(far - near) / (2 * HIT_RANGE_STEP_M) else 0.0
+            val crossPerMps = if (rightCorrection != null && leftCorrection != null) abs(rightCorrection - leftCorrection) / (2 * HIT_WIND_MPS) * rangeM else 0.0
             val fromVelocity = perMps * inputs.velocitySdMps
             val fromRange = perMetre * inputs.rangeSdM
             val fromWind = crossPerMps * inputs.windSdMps

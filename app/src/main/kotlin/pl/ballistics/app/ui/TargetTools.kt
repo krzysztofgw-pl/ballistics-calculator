@@ -18,7 +18,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -38,6 +40,7 @@ import pl.ballistics.app.TargetAnalysis
 import pl.ballistics.app.TargetInputs
 import pl.ballistics.app.data.AmmoProfile
 import pl.ballistics.app.data.AngularUnit
+import pl.ballistics.app.data.ChartKind
 import pl.ballistics.app.data.Conditions
 import pl.ballistics.app.rangeFromSize
 import pl.ballistics.app.reticle.Reticle
@@ -45,10 +48,18 @@ import pl.ballistics.app.toNumber
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
+/** Which [Collapsible] cards are open, by title, so work for a closed card's content can be skipped. */
+object OpenCards {
+    private val open = mutableStateMapOf<String, Boolean>()
+    fun isOpen(title: String): Boolean = open[title] == true
+    internal fun set(title: String, isOpen: Boolean) { open[title] = isOpen }
+}
+
 /** A card whose content opens and closes with its title; it remembers its state across screens. */
 @Composable
 fun Collapsible(title: String, content: @Composable ColumnScope.() -> Unit) {
     var open by rememberSaveable(title) { mutableStateOf(false) }
+    LaunchedEffect(title, open) { OpenCards.set(title, open) }
     Card(Modifier.fillMaxWidth()) {
         Row(
             Modifier.fillMaxWidth().clickable { open = !open }.padding(horizontal = 16.dp, vertical = 12.dp),
@@ -87,7 +98,7 @@ fun TargetTools(
     inputs: TargetInputs,
     reticle: Reticle,
     reticleScale: Double,
-    charts: Boolean,
+    charts: Set<ChartKind>,
     onUseDistance: (Double) -> Unit,
     onSaveAmmo: (AmmoProfile) -> Unit,
     onAddAmmoCopy: (from: AmmoProfile, copy: AmmoProfile) -> Unit,
@@ -124,7 +135,7 @@ fun TargetTools(
             }.filter { it.x.isFinite() }
             val spreadText = stringResource(R.string.wind_bracket_spread, (spread / unit.radians).f(digits), unit.label, cm(spread * analysis.point.rangeM))
             if (holds.isNotEmpty()) WindBracketView(reticle, holds, if (holds.size == 2) spreadText else null)
-            if (charts) analysis.bracketSweep?.let { sw ->
+            if (ChartKind.BRACKET_DIRECTION in charts) analysis.bracketSweep?.let { sw ->
                 val lo = conditions.windFromMinDeg.toNumber()?.mod(360.0)
                 val hi = conditions.windFromMaxDeg.toNumber()?.mod(360.0)
                 // The forecast's swing of direction, clockwise from [lo] to [hi]; dropped once the direction is set outside it by hand.
@@ -152,6 +163,23 @@ fun TargetTools(
                         ),
                     ),
                     fillBetween = BracketSpread,
+                    readout = { x ->
+                        val l = sw.light.valueAt(x)
+                        val st = sw.strong.valueAt(x)
+                        if (l == null || st == null) emptyList()
+                        else listOf(
+                            ChartPoint(x, l / unit.radians, BracketLight),
+                            ChartPoint(
+                                x, st / unit.radians, BracketStrong,
+                                buildAnnotatedString {
+                                    withStyle(SpanStyle(color = BracketLight)) { append(side(l)) }
+                                    append(" – ")
+                                    withStyle(SpanStyle(color = BracketStrong)) { append(side(st)) }
+                                },
+                                "${clockText(x)} · ↔ ${(abs(st - l) / unit.radians).f(digits)} ${unit.label}",
+                            ),
+                        )
+                    },
                     xBands = bands,
                     xBandLabel = if (lo != null && hi != null) stringResource(R.string.chart_forecast_direction, clockText(lo), clockText(hi)) else null,
                 )
@@ -177,7 +205,7 @@ fun TargetTools(
                     Text("${cm(abs(m.missM))} cm", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 }
             }
-            if (charts && analysis.rangeCurve.size > 1) {
+            if (ChartKind.RANGE_ERROR in charts && analysis.rangeCurve.size > 1) {
                 val half = inputs.heightM * 50
                 LineChart(
                     title = stringResource(R.string.chart_range_error),
@@ -191,6 +219,13 @@ fun TargetTools(
                         t.longM?.let { ChartPoint(it, -half, chartColors[1]) },
                     ),
                     yBand = -half..half,
+                    readout = { x ->
+                        val curve = analysis.rangeCurve.map { it.errorM to it.missM * 100 }
+                        listOfNotNull(curve.valueAt(x)?.let { v ->
+                            val signed = if (x > 0.5) "+" + x.roundToInt() else if (x < -0.5) "−" + abs(x).roundToInt() else "0"
+                            ChartPoint(x, v, chartColors[1], AnnotatedString((if (v >= 0) "↑" else "↓") + "${abs(v).roundToInt()} cm"), "$signed m")
+                        })
+                    },
                 )
             }
             Text(
@@ -256,7 +291,7 @@ fun TargetTools(
                 ),
                 style = MaterialTheme.typography.bodySmall,
             )
-            if (charts && analysis.hitByRange.size > 1) {
+            if (ChartKind.HIT_RANGE in charts && analysis.hitByRange.size > 1) {
                 val to = analysis.hitByRange.last().first
                 LineChart(
                     title = stringResource(R.string.chart_hit_range),
@@ -271,6 +306,13 @@ fun TargetTools(
                             AnnotatedString("${(h.probability * 100).roundToInt()} %"), "${analysis.point.rangeM.roundToInt()} m",
                         ),
                     ),
+                    readout = { x ->
+                        val curve = listOf(0.0 to 100.0) + analysis.hitByRange.map { (r, p) -> r to p * 100 }
+                        listOfNotNull(curve.valueAt(x)?.let { v ->
+                            ChartPoint(x, v, chartColors[2], AnnotatedString("${v.roundToInt()} %"), "${x.roundToInt()} m")
+                        })
+                    },
+                    onLongPress = onUseDistance,
                 )
             }
         }
