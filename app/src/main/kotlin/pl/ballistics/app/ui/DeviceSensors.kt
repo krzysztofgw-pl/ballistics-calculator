@@ -49,7 +49,7 @@ object DeviceSensors {
      */
     @SuppressLint("MissingPermission")
     suspend fun location(context: Context): Location? {
-        if (!hasLocationPermission(context)) return null
+        if (!hasLocationPermission(context) || Stealth.blocksLocation) return null
         val lm = context.getSystemService(LocationManager::class.java) ?: return null
         val satellitesOnly = Stealth.satellitesOnly
         val providers = buildList {
@@ -113,6 +113,7 @@ object DeviceSensors {
      */
     @SuppressLint("MissingPermission")
     suspend fun gpsAltitude(context: Context, timeoutMs: Long = 90_000, goodEnoughM: Float = 8f): GpsAltitude? {
+        if (Stealth.blocksLocation) return null
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) return null
         val lm = context.getSystemService(LocationManager::class.java) ?: return null
         if (!runCatching { lm.isProviderEnabled(LocationManager.GPS_PROVIDER) }.getOrDefault(false)) return null

@@ -5,7 +5,11 @@ import android.content.ActivityNotFoundException
 import android.content.ComponentName
 import android.graphics.drawable.Icon as GraphicsIcon
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.OutlinedButton
 import androidx.core.content.ContextCompat
 import pl.ballistics.app.tile.StealthTileService
 import android.content.Context
@@ -139,7 +143,6 @@ fun StealthBar(onClick: () -> Unit) {
 fun StealthDialog(garminWatch: Boolean, onDismiss: () -> Unit) {
     val context = LocalContext.current
     val current by Stealth.state.collectAsStateWithLifecycle()
-    var allowWatch by remember { mutableStateOf(current.allowWatch) }
     val radios = rememberRadios()
     var notice by remember { mutableStateOf(false) }
     if (notice) {
@@ -158,15 +161,7 @@ fun StealthDialog(garminWatch: Boolean, onDismiss: () -> Unit) {
         },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(
-                    stringResource(R.string.stealth_what) +
-                        if (!garminWatch || !allowWatch) " " + stringResource(R.string.stealth_what_watch_off) else "",
-                    style = MaterialTheme.typography.bodyMedium,
-                )
-                if (garminWatch) SwitchRow(stringResource(R.string.stealth_allow_watch), allowWatch) { v ->
-                    allowWatch = v
-                    if (current.on) Stealth.set(context, current.copy(allowWatch = v))
-                }
+                Text(stealthSummary(current, garminWatch), style = MaterialTheme.typography.bodyMedium)
                 Text(stringResource(R.string.stealth_radios), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
                 // Each row is red while that radio still gives the phone away.
                 RadioRow(R.string.stealth_radio_airplane, radios.airplane, loud = !radios.airplane) { context.openSettings(Settings.ACTION_AIRPLANE_MODE_SETTINGS) }
@@ -180,7 +175,7 @@ fun StealthDialog(garminWatch: Boolean, onDismiss: () -> Unit) {
         confirmButton = {
             TextButton(onClick = {
                 val turningOn = !current.on
-                Stealth.set(context, Stealth.Settings(on = turningOn, allowWatch = allowWatch))
+                Stealth.set(context, current.copy(on = turningOn))
                 // Once turned on, say that the phone's networks are the user's to switch, unless they asked not to.
                 if (turningOn && Stealth.showNotice(context)) notice = true else onDismiss()
             }) { Text(stringResource(if (current.on) R.string.stealth_turn_off else R.string.stealth_turn_on)) }
@@ -198,7 +193,8 @@ private fun RadioRow(name: Int, on: Boolean, loud: Boolean, onOpen: () -> Unit) 
             color = if (loud) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
             fontWeight = if (loud) FontWeight.SemiBold else null,
         )
-        TextButton(onClick = onOpen) { Text(stringResource(R.string.stealth_open_settings)) }
+        Spacer(Modifier.width(8.dp))
+        OutlinedButton(onClick = onOpen, contentPadding = PaddingValues(horizontal = 12.dp)) { Text(stringResource(R.string.stealth_open_settings)) }
     }
 }
 
@@ -223,26 +219,33 @@ private fun StealthNoticeDialog(onDismiss: () -> Unit) {
         text = {
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(stringResource(R.string.stealth_notice_manual), style = MaterialTheme.typography.bodyMedium)
-                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    TextButton(onClick = { context.openSettings(Settings.ACTION_AIRPLANE_MODE_SETTINGS) }) {
-                        Text(stringResource(R.string.stealth_radio_airplane))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    IconLabelButton(R.drawable.ic_airplane, R.string.stealth_radio_airplane, Modifier.weight(1f)) {
+                        context.openSettings(Settings.ACTION_AIRPLANE_MODE_SETTINGS)
                     }
-                    TextButton(onClick = { context.openSettings(Settings.ACTION_BLUETOOTH_SETTINGS) }) {
-                        Text(stringResource(R.string.stealth_radio_bluetooth))
+                    IconLabelButton(R.drawable.ic_bluetooth, R.string.stealth_radio_bluetooth, Modifier.weight(1f)) {
+                        context.openSettings(Settings.ACTION_BLUETOOTH_SETTINGS)
                     }
                 }
+                Text(
+                    stringResource(if (Stealth.state.value.allowGps) R.string.stealth_notice_gps_on else R.string.stealth_notice_gps_off),
+                    style = MaterialTheme.typography.bodyMedium,
+                )
                 if (tileAdded) {
-                    Text(stringResource(R.string.stealth_tile_added), style = MaterialTheme.typography.bodyMedium)
+                    Text(stringResource(R.string.stealth_tile_added), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
                 } else {
                     Text(stringResource(R.string.stealth_notice_tile), style = MaterialTheme.typography.bodyMedium)
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                        TextButton(onClick = { requestStealthTile(context) { tileAdded = it } }) {
+                        FilledTonalButton(onClick = { requestStealthTile(context) { tileAdded = it } }, modifier = Modifier.fillMaxWidth()) {
+                            Icon(ImageVector.vectorResource(R.drawable.ic_stealth), null, Modifier.size(ButtonDefaults.IconSize))
+                            Spacer(Modifier.width(ButtonDefaults.IconSpacing))
                             Text(stringResource(R.string.stealth_add_tile))
                         }
                     } else {
                         Text(stringResource(R.string.stealth_notice_tile_manual), style = MaterialTheme.typography.bodySmall)
                     }
                 }
+                Text(stringResource(R.string.stealth_notice_settings), style = MaterialTheme.typography.bodySmall)
                 Row(Modifier.fillMaxWidth().clickable { hide = !hide }, verticalAlignment = Alignment.CenterVertically) {
                     Checkbox(checked = hide, onCheckedChange = { hide = it })
                     Text(stringResource(R.string.action_dont_show_again))
@@ -270,4 +273,34 @@ private fun requestStealthTile(context: Context, onResult: (Boolean) -> Unit) {
             onResult(added)
         }
     }
+}
+
+/** What stealth mode blocks with the current options. */
+@Composable
+private fun stealthSummary(s: Stealth.Settings, garminWatch: Boolean): String = buildString {
+    append(stringResource(R.string.stealth_what))
+    append(' ')
+    append(stringResource(if (s.allowGps) R.string.stealth_what_gps_on else R.string.stealth_what_gps_off))
+    if (garminWatch && !s.allowWatch) append(' ').append(stringResource(R.string.stealth_what_watch_off))
+}
+
+/** An outlined button with an icon and a short label, for the shortcuts to the system settings. */
+@Composable
+private fun IconLabelButton(icon: Int, label: Int, modifier: Modifier = Modifier, onClick: () -> Unit) {
+    OutlinedButton(onClick = onClick, modifier = modifier, contentPadding = PaddingValues(horizontal = 12.dp)) {
+        Icon(ImageVector.vectorResource(icon), null, Modifier.size(ButtonDefaults.IconSize))
+        Spacer(Modifier.width(ButtonDefaults.IconSpacing))
+        Text(stringResource(label), maxLines = 1)
+    }
+}
+
+/** Stealth mode's options in Settings: on/off through the dialog, and what it still allows. */
+@Composable
+fun StealthSettings(garminWatch: Boolean, onOpenStealth: () -> Unit) {
+    val context = LocalContext.current
+    val s by Stealth.state.collectAsStateWithLifecycle()
+    // Both ways go through the dialog, which shows what is blocked and the phone's radios.
+    SwitchRow(stringResource(R.string.stealth_title), s.on) { onOpenStealth() }
+    SwitchRow(stringResource(R.string.stealth_allow_gps), s.allowGps) { v -> Stealth.set(context, s.copy(allowGps = v)) }
+    if (garminWatch) SwitchRow(stringResource(R.string.stealth_allow_watch), s.allowWatch) { v -> Stealth.set(context, s.copy(allowWatch = v)) }
 }

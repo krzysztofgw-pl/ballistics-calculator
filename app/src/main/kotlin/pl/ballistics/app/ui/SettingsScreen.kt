@@ -132,8 +132,7 @@ fun SettingsScreen(
             }
 
             Section(stringResource(R.string.stealth_title), ImageVector.vectorResource(R.drawable.ic_stealth)) {
-                // Both ways go through the dialog, which shows what is blocked and the phone's radios.
-                SwitchRow(stringResource(R.string.stealth_title), stealthOn) { onOpenStealth() }
+                StealthSettings(ui.garminWatch, onOpenStealth)
             }
 
             Section(stringResource(R.string.section_appearance)) {

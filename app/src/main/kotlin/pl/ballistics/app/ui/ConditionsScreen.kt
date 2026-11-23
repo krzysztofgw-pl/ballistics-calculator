@@ -318,6 +318,10 @@ private fun AltitudeButton(source: AltitudeSource, update: ((Conditions) -> Cond
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End), verticalAlignment = Alignment.CenterVertically) {
         note?.let { Text(it, style = MaterialTheme.typography.labelSmall) }
         OutlinedButton(enabled = !reading, contentPadding = PaddingValues(horizontal = 12.dp), onClick = {
+            if (Stealth.blocksLocation && (source == AltitudeSource.GPS || Stealth.blocksNetwork)) {
+                toast(R.string.stealth_location_blocked)
+                return@OutlinedButton
+            }
             withPermission {
                 scope.launch {
                     reading = true
@@ -373,6 +377,10 @@ private fun LatitudeInput(i: Conditions, update: ((Conditions) -> Conditions) ->
         }
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             OutlinedButton(enabled = !reading, contentPadding = PaddingValues(horizontal = 12.dp), onClick = {
+                if (Stealth.blocksLocation) {
+                    Toast.makeText(context, context.getString(R.string.stealth_location_blocked), Toast.LENGTH_LONG).show()
+                    return@OutlinedButton
+                }
                 withPermission {
                     scope.launch {
                         reading = true

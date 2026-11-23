@@ -557,9 +557,16 @@
     <string name="stealth_turn_off">Turn off</string>
     <string name="stealth_blocked">Stealth mode is on: the app makes no network connections.</string>
     <string name="stealth_watch_blocked">Stealth mode is on: the app does not talk to the watch. Allow the watch in the stealth settings to read it.</string>
-    <string name="stealth_what">All connection requests from this app are blocked: no forecast, terrain height, sync, bullet database, store or update checks. Location comes from the satellites alone, without network help.</string>
+    <string name="stealth_what">All connection requests from this app are blocked: no forecast, terrain height, sync, bullet database, store or update checks.</string>
+    <string name="stealth_what_gps_on">Location comes from the satellites alone, without network help.</string>
+    <string name="stealth_what_gps_off">Location is off.</string>
+    <string name="stealth_allow_gps">GPS in stealth mode</string>
+    <string name="stealth_location_blocked">Stealth mode is on with GPS off. Allow GPS in Settings → Stealth mode, or type the value.</string>
+    <string name="stealth_notice_gps_on">GPS stays on, from the satellites alone: it only receives and gives nothing away.</string>
+    <string name="stealth_notice_gps_off">GPS is off too.</string>
+    <string name="stealth_notice_settings">To turn GPS off as well, or to allow the Garmin watch, go to Settings → Stealth mode.</string>
     <string name="stealth_what_watch_off">The link to the Garmin watch is off too.</string>
-    <string name="stealth_allow_watch">Allow the Garmin watch (Bluetooth)</string>
+    <string name="stealth_allow_watch">Garmin watch in stealth mode</string>
     <string name="stealth_radios">The phone\'s own radios keep transmitting until you turn them off:</string>
     <string name="stealth_radio_airplane">Airplane mode</string>
     <string name="stealth_radio_wifi">Wi-Fi</string>
@@ -579,5 +586,5 @@
     <string name="stealth_tile_added">✓ The Stealth tile is in your quick settings.</string>
     <string name="stealth_add_tile">Add Stealth tile</string>
     <string name="help_stealth_title">What does stealth mode do?</string>
-    <string name="help_stealth">It stops every connection the app makes: forecast, terrain height, sync, the bullet database, store and update checks, and, unless you allow it, the Garmin watch. Location comes from GPS alone. An app cannot switch the phone\'s radios off, so the stealth dialog shows which are still on, with shortcuts to their settings. Turn it on from the aircraft icon on the Rifle tab, from Settings, or from the Stealth tile in the quick settings.</string>
+    <string name="help_stealth">It stops every connection the app makes: forecast, terrain height, sync, the bullet database, store and update checks, and, unless you allow it, the Garmin watch. Location comes from GPS alone, or is off if you turn GPS off for stealth mode in Settings. An app cannot switch the phone\'s radios off, so the stealth dialog shows which are still on, with shortcuts to their settings. Turn it on from the aircraft icon on the Rifle tab, from Settings, or from the Stealth tile in the quick settings.</string>
 </resources>
