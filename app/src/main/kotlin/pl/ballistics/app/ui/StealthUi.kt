@@ -20,6 +20,7 @@ import android.location.LocationManager
 import android.os.Build
 import android.provider.Settings
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -237,6 +238,13 @@ private fun RadioRow(icon: ImageVector, name: Int, on: Boolean?, loud: Boolean, 
     // that opens the radio's settings.
     val color = if (loud) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        // An antenna sending waves while this radio gives the phone away, a bare mast when it is quiet.
+        Box(Modifier.size(20.dp)) {
+            if (on != null) Icon(
+                ImageVector.vectorResource(if (loud) R.drawable.ic_antenna_on else R.drawable.ic_antenna_quiet),
+                contentDescription = null, tint = color, modifier = Modifier.size(20.dp),
+            )
+        }
         Text(
             when (on) {
                 null -> ""
