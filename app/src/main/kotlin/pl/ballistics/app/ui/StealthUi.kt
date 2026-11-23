@@ -235,14 +235,14 @@ fun StealthDialog(garminWatch: Boolean, onDismiss: () -> Unit) {
             }
         },
         confirmButton = {
-            TextButton(onClick = {
+            OutlinedButton(onClick = {
                 val turningOn = !current.on
                 Stealth.set(context, current.copy(on = turningOn))
                 // Once turned on, say that the phone's networks are the user's to switch, unless they asked not to.
                 if (turningOn && Stealth.showNotice(context)) notice = true else onDismiss()
             }) { Text(stringResource(if (current.on) R.string.stealth_turn_off else R.string.stealth_turn_on)) }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_close)) } },
+        dismissButton = { OutlinedButton(onClick = onDismiss) { Text(stringResource(R.string.action_close)) } },
     )
 }
 
@@ -345,7 +345,7 @@ private fun StealthNoticeDialog(onDismiss: () -> Unit) {
                 }
             }
         },
-        confirmButton = { TextButton(onClick = ::close) { Text(stringResource(R.string.action_ok)) } },
+        confirmButton = { OutlinedButton(onClick = ::close) { Text(stringResource(R.string.action_ok)) } },
     )
 }
 
