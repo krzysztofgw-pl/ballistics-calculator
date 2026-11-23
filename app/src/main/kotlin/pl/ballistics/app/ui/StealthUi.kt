@@ -31,6 +31,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
@@ -204,15 +205,15 @@ fun StealthDialog(garminWatch: Boolean, onDismiss: () -> Unit) {
                 Text(stealthSummary(current, garminWatch), style = MaterialTheme.typography.bodyMedium)
                 Text(stringResource(R.string.stealth_radios), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
                 // Each row is red while that radio still gives the phone away.
-                RadioRow(R.string.stealth_radio_airplane, radios.airplane, loud = !radios.airplane) { context.openSettings(Settings.ACTION_AIRPLANE_MODE_SETTINGS) }
-                RadioRow(R.string.stealth_radio_wifi, radios.wifi, loud = radios.wifi) { context.openSettings(Settings.ACTION_WIFI_SETTINGS) }
-                RadioRow(R.string.stealth_radio_bluetooth, radios.bluetooth, loud = radios.bluetooth) { context.openSettings(Settings.ACTION_BLUETOOTH_SETTINGS) }
-                RadioRow(R.string.stealth_radio_location, radios.location, loud = false) { context.openSettings(Settings.ACTION_LOCATION_SOURCE_SETTINGS) }
-                if (radios.location) RadioRow(R.string.stealth_radio_scanning, radios.scanning, loud = radios.scanning) {
+                RadioRow(ImageVector.vectorResource(R.drawable.ic_airplane), R.string.stealth_radio_airplane, radios.airplane, loud = !radios.airplane) { context.openSettings(Settings.ACTION_AIRPLANE_MODE_SETTINGS) }
+                RadioRow(ImageVector.vectorResource(R.drawable.ic_wifi), R.string.stealth_radio_wifi, radios.wifi, loud = radios.wifi) { context.openSettings(Settings.ACTION_WIFI_SETTINGS) }
+                RadioRow(ImageVector.vectorResource(R.drawable.ic_bluetooth), R.string.stealth_radio_bluetooth, radios.bluetooth, loud = radios.bluetooth) { context.openSettings(Settings.ACTION_BLUETOOTH_SETTINGS) }
+                RadioRow(Icons.Filled.LocationOn, R.string.stealth_radio_location, radios.location, loud = false) { context.openSettings(Settings.ACTION_LOCATION_SOURCE_SETTINGS) }
+                if (radios.location) RadioRow(ImageVector.vectorResource(R.drawable.ic_scan), R.string.stealth_radio_scanning, radios.scanning, loud = radios.scanning) {
                     context.openSettings(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
                 }
-                radios.nfc?.let { nfc -> RadioRow(R.string.stealth_radio_nfc, nfc, loud = nfc) { context.openSettings(Settings.ACTION_NFC_SETTINGS) } }
-                if (radios.hasUwb) RadioRow(R.string.stealth_radio_uwb, null, loud = false) { context.openUwbSettings() }
+                radios.nfc?.let { nfc -> RadioRow(ImageVector.vectorResource(R.drawable.ic_nfc), R.string.stealth_radio_nfc, nfc, loud = nfc) { context.openSettings(Settings.ACTION_NFC_SETTINGS) } }
+                if (radios.hasUwb) RadioRow(ImageVector.vectorResource(R.drawable.ic_uwb), R.string.stealth_radio_uwb, null, loud = false) { context.openUwbSettings() }
                 Text(stringResource(R.string.stealth_note_gps), style = MaterialTheme.typography.bodySmall)
                 if (garminWatch) Text(stringResource(R.string.stealth_note_watch), style = MaterialTheme.typography.bodySmall)
             }
@@ -230,8 +231,13 @@ fun StealthDialog(garminWatch: Boolean, onDismiss: () -> Unit) {
 }
 
 @Composable
-private fun RadioRow(name: Int, on: Boolean?, loud: Boolean, onOpen: () -> Unit) {
+private fun RadioRow(icon: ImageVector, name: Int, on: Boolean?, loud: Boolean, onOpen: () -> Unit) {
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        Icon(
+            icon, contentDescription = null, modifier = Modifier.size(20.dp),
+            tint = if (loud) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Spacer(Modifier.width(10.dp))
         Text(stringResource(name), Modifier.weight(1f))
         Text(
             when (on) {
