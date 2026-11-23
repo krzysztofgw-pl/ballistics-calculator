@@ -22,6 +22,8 @@ object Stealth {
     private const val PREFS = "stealth"
     private const val KEY_ON = "on"
     private const val KEY_WATCH = "allow_watch"
+    private const val KEY_HIDE_NOTICE = "hide_notice"
+    private const val KEY_TILE = "tile_added"
 
     private val _state = MutableStateFlow(Settings())
     val state: StateFlow<Settings> = _state.asStateFlow()
@@ -41,6 +43,18 @@ object Stealth {
         context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
             .putBoolean(KEY_ON, settings.on).putBoolean(KEY_WATCH, settings.allowWatch).apply()
     }
+
+    private fun prefs(context: Context) = context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+
+    /** Whether to explain, on turning stealth on, that the phone's networks must be switched by hand. */
+    fun showNotice(context: Context) = !prefs(context).getBoolean(KEY_HIDE_NOTICE, false)
+
+    fun hideNotice(context: Context) = prefs(context).edit().putBoolean(KEY_HIDE_NOTICE, true).apply()
+
+    /** Whether the Stealth quick settings tile is in the user's panel, as the tile itself last reported. */
+    fun tileAdded(context: Context) = prefs(context).getBoolean(KEY_TILE, false)
+
+    fun setTileAdded(context: Context, added: Boolean) = prefs(context).edit().putBoolean(KEY_TILE, added).apply()
 
     val blocksNetwork: Boolean get() = _state.value.on
     val blocksWatch: Boolean get() = _state.value.on && !_state.value.allowWatch

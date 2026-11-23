@@ -13,6 +13,16 @@ import pl.ballistics.app.data.Stealth
  * bar and dialog show which of the phone's radios are still on.
  */
 class StealthTileService : TileService() {
+    override fun onTileAdded() {
+        super.onTileAdded()
+        Stealth.setTileAdded(this, true)
+    }
+
+    override fun onTileRemoved() {
+        super.onTileRemoved()
+        Stealth.setTileAdded(this, false)
+    }
+
     override fun onStartListening() {
         super.onStartListening()
         Stealth.load(this)

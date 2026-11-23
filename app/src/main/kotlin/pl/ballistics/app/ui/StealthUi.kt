@@ -1,6 +1,13 @@
 package pl.ballistics.app.ui
 
+import android.app.StatusBarManager
 import android.content.ActivityNotFoundException
+import android.content.ComponentName
+import android.graphics.drawable.Icon as GraphicsIcon
+import androidx.annotation.RequiresApi
+import androidx.compose.material3.Checkbox
+import androidx.core.content.ContextCompat
+import pl.ballistics.app.tile.StealthTileService
 import android.content.Context
 import android.content.Intent
 import android.location.LocationManager
@@ -134,6 +141,11 @@ fun StealthDialog(garminWatch: Boolean, onDismiss: () -> Unit) {
     val current by Stealth.state.collectAsStateWithLifecycle()
     var allowWatch by remember { mutableStateOf(current.allowWatch) }
     val radios = rememberRadios()
+    var notice by remember { mutableStateOf(false) }
+    if (notice) {
+        StealthNoticeDialog(onDismiss)
+        return
+    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -167,8 +179,10 @@ fun StealthDialog(garminWatch: Boolean, onDismiss: () -> Unit) {
         },
         confirmButton = {
             TextButton(onClick = {
-                Stealth.set(context, Stealth.Settings(on = !current.on, allowWatch = allowWatch))
-                onDismiss()
+                val turningOn = !current.on
+                Stealth.set(context, Stealth.Settings(on = turningOn, allowWatch = allowWatch))
+                // Once turned on, say that the phone's networks are the user's to switch, unless they asked not to.
+                if (turningOn && Stealth.showNotice(context)) notice = true else onDismiss()
             }) { Text(stringResource(if (current.on) R.string.stealth_turn_off else R.string.stealth_turn_on)) }
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_close)) } },
@@ -185,5 +199,73 @@ private fun RadioRow(name: Int, on: Boolean, loud: Boolean, onOpen: () -> Unit) 
             fontWeight = if (loud) FontWeight.SemiBold else null,
         )
         TextButton(onClick = onOpen) { Text(stringResource(R.string.stealth_open_settings)) }
+    }
+}
+
+/**
+ * Shown when stealth mode is turned on: Android lets no app switch airplane mode, Wi-Fi or Bluetooth,
+ * so the user has to. Offers the Stealth quick settings tile, which on Android 13+ the app can ask the
+ * system to add; before that it says how to add it by hand. "Don't show again" hides it for good.
+ */
+@Composable
+private fun StealthNoticeDialog(onDismiss: () -> Unit) {
+    val context = LocalContext.current
+    var hide by remember { mutableStateOf(false) }
+    var tileAdded by remember { mutableStateOf(Stealth.tileAdded(context)) }
+    fun close() {
+        if (hide) Stealth.hideNotice(context)
+        onDismiss()
+    }
+    AlertDialog(
+        onDismissRequest = ::close,
+        icon = { Icon(ImageVector.vectorResource(R.drawable.ic_stealth), contentDescription = null) },
+        title = { Text(stringResource(R.string.stealth_notice_title)) },
+        text = {
+            Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(stringResource(R.string.stealth_notice_manual), style = MaterialTheme.typography.bodyMedium)
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    TextButton(onClick = { context.openSettings(Settings.ACTION_AIRPLANE_MODE_SETTINGS) }) {
+                        Text(stringResource(R.string.stealth_radio_airplane))
+                    }
+                    TextButton(onClick = { context.openSettings(Settings.ACTION_BLUETOOTH_SETTINGS) }) {
+                        Text(stringResource(R.string.stealth_radio_bluetooth))
+                    }
+                }
+                if (!tileAdded) {
+                    Text(stringResource(R.string.stealth_notice_tile), style = MaterialTheme.typography.bodyMedium)
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        TextButton(onClick = { requestStealthTile(context) { tileAdded = it } }) {
+                            Text(stringResource(R.string.stealth_add_tile))
+                        }
+                    } else {
+                        Text(stringResource(R.string.stealth_notice_tile_manual), style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+                Row(Modifier.fillMaxWidth().clickable { hide = !hide }, verticalAlignment = Alignment.CenterVertically) {
+                    Checkbox(checked = hide, onCheckedChange = { hide = it })
+                    Text(stringResource(R.string.action_dont_show_again))
+                }
+            }
+        },
+        confirmButton = { TextButton(onClick = ::close) { Text(stringResource(R.string.action_ok)) } },
+    )
+}
+
+/** Asks the system to add the Stealth tile (Android 13+); [onResult] gets whether it is now there. */
+@RequiresApi(Build.VERSION_CODES.TIRAMISU)
+private fun requestStealthTile(context: Context, onResult: (Boolean) -> Unit) {
+    val manager = context.getSystemService(StatusBarManager::class.java) ?: return
+    runCatching {
+        manager.requestAddTileService(
+            ComponentName(context, StealthTileService::class.java),
+            context.getString(R.string.stealth_short),
+            GraphicsIcon.createWithResource(context, R.drawable.ic_stealth),
+            ContextCompat.getMainExecutor(context),
+        ) { result ->
+            val added = result == StatusBarManager.TILE_ADD_REQUEST_RESULT_TILE_ADDED ||
+                result == StatusBarManager.TILE_ADD_REQUEST_RESULT_TILE_ALREADY_ADDED
+            if (added) Stealth.setTileAdded(context, true)
+            onResult(added)
+        }
     }
 }
