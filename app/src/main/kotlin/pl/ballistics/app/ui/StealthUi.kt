@@ -231,7 +231,9 @@ private fun StealthNoticeDialog(onDismiss: () -> Unit) {
                         Text(stringResource(R.string.stealth_radio_bluetooth))
                     }
                 }
-                if (!tileAdded) {
+                if (tileAdded) {
+                    Text(stringResource(R.string.stealth_tile_added), style = MaterialTheme.typography.bodyMedium)
+                } else {
                     Text(stringResource(R.string.stealth_notice_tile), style = MaterialTheme.typography.bodyMedium)
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                         TextButton(onClick = { requestStealthTile(context) { tileAdded = it } }) {

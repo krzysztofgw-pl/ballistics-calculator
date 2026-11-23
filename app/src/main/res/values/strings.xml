@@ -576,6 +576,7 @@
     <string name="stealth_notice_manual">Android lets no app turn on airplane mode or turn off Wi-Fi and Bluetooth. Stealth mode silences this app only; the phone keeps transmitting until you switch its radios off.</string>
     <string name="stealth_notice_tile">Add the Stealth tile to the quick settings, next to airplane mode and Bluetooth, to switch all of them in one swipe.</string>
     <string name="stealth_notice_tile_manual">Swipe down twice, tap the pencil and drag the Stealth tile into the panel.</string>
+    <string name="stealth_tile_added">✓ The Stealth tile is in your quick settings.</string>
     <string name="stealth_add_tile">Add Stealth tile</string>
     <string name="help_stealth_title">What does stealth mode do?</string>
     <string name="help_stealth">It stops every connection the app makes: forecast, terrain height, sync, the bullet database, store and update checks, and, unless you allow it, the Garmin watch. Location comes from GPS alone. An app cannot switch the phone\'s radios off, so the stealth dialog shows which are still on, with shortcuts to their settings. Turn it on from the aircraft icon on the Rifle tab, from Settings, or from the Stealth tile in the quick settings.</string>
