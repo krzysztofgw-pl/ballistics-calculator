@@ -38,7 +38,7 @@ import kotlin.math.roundToInt
 
 // Widths fit the widest entry plus the cell padding, so both clicks columns fit on a phone without scrolling.
 private val columns = listOf(
-    R.string.col_range to 42, R.string.col_drop to 64, R.string.col_elevation to 54, R.string.col_clicks to 48,
+    R.string.col_range to 42, R.string.col_drop to 66, R.string.col_elevation to 54, R.string.col_clicks to 48,
     R.string.col_windage to 64, R.string.col_wind_correction to 46, R.string.col_clicks to 48,
     R.string.col_velocity to 40, R.string.col_energy to 46, R.string.col_time to 46, R.string.col_mach to 46,
 )
@@ -146,16 +146,19 @@ private fun Warning(text: String) {
 
 @Composable
 private fun PointRow(p: TrajectoryPoint, unitRad: Double, click: Double?) {
-    // Correction is the angle to dial: opposite to the impact offset.
+    // The cm columns are where the bullet goes: drop below the line of sight (negative only above it,
+    // between the near and far zero) and drift, unsigned: the wind tells which way. The angle and clicks columns are the corrections.
     val up = -p.dropRad / unitRad
     val right = -p.windageRad / unitRad
+    val dropCm = -p.dropM * 100
+    val driftCm = p.windageM * 100
     val cells = listOf(
-        "%.1f".format(p.dropM * 100),
-        if (p.rangeM > 0) "↑%.2f".format(up) else "",
-        if (p.rangeM > 0 && click != null) (up / click).roundToInt().toString() else "",
-        "%.1f".format(p.windageM * 100),
-        if (p.rangeM > 0) side(right) + "%.2f".format(abs(right)) else "",
-        if (p.rangeM > 0 && click != null) side(right) + (abs(right) / click).roundToInt() else "",
+        (if (dropCm < -0.05) "-" else "") + grouped("%.1f".format(abs(dropCm))),
+        if (p.rangeM > 0) vertical(up, 0.005) + "%.2f".format(abs(up)) else "",
+        if (p.rangeM > 0 && click != null) vertical(up / click, 0.5) + abs(up / click).roundToInt() else "",
+        grouped("%.1f".format(abs(driftCm))),
+        if (p.rangeM > 0) side(right, 0.005) + "%.2f".format(abs(right)) else "",
+        if (p.rangeM > 0 && click != null) side(right / click, 0.5) + (abs(right) / click).roundToInt() else "",
         p.velocityMps.roundToInt().toString(),
         p.energyJ.roundToInt().toString(),
         "%.3f".format(p.timeS),
@@ -169,9 +172,22 @@ private fun PointRow(p: TrajectoryPoint, unitRad: Double, click: Double?) {
     }
 }
 
-private fun side(right: Double) = when {
-    right > 0.005 -> "R"
-    right < -0.005 -> "L"
+/** R or L for a correction to the right or left; nothing within [dead] of zero, where the figure rounds to 0. */
+private fun side(right: Double, dead: Double) = when {
+    right > dead -> "R"
+    right < -dead -> "L"
+    else -> ""
+}
+
+/** A narrow gap between metres and centimetres in figures of 100 cm and over (13 20,8), so the metres read at a glance. */
+private fun grouped(figure: String): String {
+    val digits = figure.indexOfFirst { !it.isDigit() }.let { if (it < 0) figure.length else it }
+    return if (digits > 2) figure.substring(0, digits - 2) + '\u202F' + figure.substring(digits - 2) else figure
+}
+
+/** Up is the usual case and goes unmarked; ↓ marks a correction down (between the near and far zero). */
+private fun vertical(up: Double, dead: Double) = when {
+    up < -dead -> "↓"
     else -> ""
 }
 

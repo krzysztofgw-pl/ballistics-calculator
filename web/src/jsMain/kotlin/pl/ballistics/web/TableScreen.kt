@@ -57,18 +57,21 @@ object TableScreen {
     }
 
     private fun cells(p: TrajectoryPoint, unitRad: Double, click: Double?): List<String> {
-        // Correction is the angle to dial: opposite to the impact offset.
+        // The cm columns are where the bullet goes: drop below the line of sight (negative only above it,
+        // between the near and far zero) and drift, unsigned: the wind tells which way. The angle and clicks columns are the corrections.
         val up = -p.dropRad / unitRad
         val right = -p.windageRad / unitRad
+        val dropCm = -p.dropM * 100
+        val driftCm = p.windageM * 100
         val shown = p.rangeM > 0
         return listOf(
             p.rangeM.roundToInt().toString(),
-            fmt(p.dropM * 100, 1),
-            if (shown) "↑" + fmt(up, 2) else "",
-            if (shown && click != null) (up / click).roundToInt().toString() else "",
-            fmt(p.windageM * 100, 1),
-            if (shown) side(right) + fmt(abs(right), 2) else "",
-            if (shown && click != null) side(right) + (abs(right) / click).roundToInt() else "",
+            (if (dropCm < -0.05) "-" else "") + grouped(fmt(abs(dropCm), 1)),
+            if (shown) vertical(up, 0.005) + fmt(abs(up), 2) else "",
+            if (shown && click != null) vertical(up / click, 0.5) + abs(up / click).roundToInt() else "",
+            grouped(fmt(abs(driftCm), 1)),
+            if (shown) side(right, 0.005) + fmt(abs(right), 2) else "",
+            if (shown && click != null) side(right / click, 0.5) + (abs(right) / click).roundToInt() else "",
             p.velocityMps.roundToInt().toString(),
             p.energyJ.roundToInt().toString(),
             fmt(p.timeS, 3),
@@ -76,9 +79,22 @@ object TableScreen {
         )
     }
 
-    fun side(right: Double) = when {
-        right > 0.005 -> "R"
-        right < -0.005 -> "L"
+    /** R or L for a correction to the right or left; nothing within [dead] of zero, where the figure rounds to 0. */
+    fun side(right: Double, dead: Double = 0.005) = when {
+        right > dead -> "R"
+        right < -dead -> "L"
+        else -> ""
+    }
+
+    /** A narrow gap between metres and centimetres in figures of 100 cm and over (13 20.8), so the metres read at a glance. */
+    fun grouped(figure: String): String {
+        val digits = figure.indexOfFirst { !it.isDigit() }.let { if (it < 0) figure.length else it }
+        return if (digits > 2) figure.substring(0, digits - 2) + '\u202F' + figure.substring(digits - 2) else figure
+    }
+
+    /** Up is the usual case and goes unmarked; ↓ marks a correction down (between the near and far zero). */
+    fun vertical(up: Double, dead: Double) = when {
+        up < -dead -> "↓"
         else -> ""
     }
 }
