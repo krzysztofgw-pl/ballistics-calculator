@@ -4,6 +4,7 @@ import android.content.Intent
 import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
+import android.service.quicksettings.TileService
 import androidx.activity.ComponentActivity
 import androidx.activity.viewModels
 import androidx.core.content.IntentCompat
@@ -54,6 +55,8 @@ class MainActivity : ComponentActivity() {
     private fun openShared(intent: Intent?) {
         when (intent?.action) {
             Intent.ACTION_VIEW -> intent.data?.let(model::openChronograph)
+            // A long press on the Stealth tile.
+            TileService.ACTION_QS_TILE_PREFERENCES -> model.stealthDialog.value = true
             Intent.ACTION_SEND -> {
                 val stream = IntentCompat.getParcelableExtra(intent, Intent.EXTRA_STREAM, Uri::class.java)
                 val text = intent.getStringExtra(Intent.EXTRA_TEXT)

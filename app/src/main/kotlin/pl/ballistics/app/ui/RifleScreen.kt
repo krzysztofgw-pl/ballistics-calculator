@@ -22,7 +22,9 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.FilledTonalIconToggleButton
+import androidx.compose.material3.FilledIconToggleButton
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedTextField
@@ -42,6 +44,7 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.Image
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
@@ -83,8 +86,15 @@ fun RifleScreen(
     ) {
         // Help and settings live here now that there is no title bar.
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-            // Lit while stealth mode is on; either way it opens the stealth dialog.
-            FilledTonalIconToggleButton(checked = stealthOn, onCheckedChange = { onOpenStealth() }) {
+            // A bare icon like help and settings while off; filled while stealth mode is on. Either way it opens the stealth dialog.
+            FilledIconToggleButton(
+                checked = stealthOn,
+                onCheckedChange = { onOpenStealth() },
+                colors = IconButtonDefaults.filledIconToggleButtonColors(
+                    containerColor = Color.Transparent,
+                    contentColor = LocalContentColor.current,
+                ),
+            ) {
                 Icon(ImageVector.vectorResource(R.drawable.ic_stealth), stringResource(R.string.stealth_title))
             }
             IconButton(onClick = onOpenHelp) {

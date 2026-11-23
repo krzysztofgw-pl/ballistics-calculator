@@ -52,6 +52,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _chronograph = MutableStateFlow<ChronographImportState?>(null)
     val chronograph: StateFlow<ChronographImportState?> = _chronograph.asStateFlow()
 
+    /** The stealth window, also opened by a long press on the Quick Settings tile. */
+    val stealthDialog = MutableStateFlow(false)
+
     private var job: Job? = null
     private var pushJob: Job? = null
 

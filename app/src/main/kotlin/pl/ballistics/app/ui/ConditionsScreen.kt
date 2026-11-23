@@ -86,8 +86,11 @@ fun ConditionsScreen(
                     update { it.copy(altitudeM = v) }
                 }
             }
-            if (ui.altitudeFrom != AltitudeSource.MANUAL) AltitudeButton(ui.altitudeFrom, update)
-            if (ui.garminWatch) WatchPressureButton(update)
+            // One row, each button under its field: the watch under pressure, the altitude source under altitude.
+            if (ui.garminWatch || ui.altitudeFrom != AltitudeSource.MANUAL) FieldRow { m ->
+                if (ui.garminWatch) WatchPressureButton(update, m) else Spacer(m)
+                if (ui.altitudeFrom != AltitudeSource.MANUAL) AltitudeButton(ui.altitudeFrom, update, m) else Spacer(m)
+            }
         }
 
         Section(stringResource(R.string.section_shot)) {
@@ -279,7 +282,7 @@ private fun rememberWithLocationPermission(): (() -> Unit) -> Unit {
  * Beside the button: where the value came from, or the GPS vertical accuracy.
  */
 @Composable
-private fun AltitudeButton(source: AltitudeSource, update: ((Conditions) -> Conditions) -> Unit) {
+private fun AltitudeButton(source: AltitudeSource, update: ((Conditions) -> Conditions) -> Unit, modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val withPermission = rememberWithLocationPermission()
@@ -315,9 +318,8 @@ private fun AltitudeButton(source: AltitudeSource, update: ((Conditions) -> Cond
         }
     }
 
-    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End), verticalAlignment = Alignment.CenterVertically) {
-        note?.let { Text(it, style = MaterialTheme.typography.labelSmall) }
-        FilledTonalButton(enabled = !reading, contentPadding = PaddingValues(horizontal = 12.dp), onClick = {
+    Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
+        FilledTonalButton(enabled = !reading, modifier = Modifier.fillMaxWidth(), onClick = {
             if (Stealth.blocksLocation && (source == AltitudeSource.GPS || Stealth.blocksNetwork)) {
                 toast(R.string.stealth_location_blocked)
                 return@FilledTonalButton
@@ -346,6 +348,7 @@ private fun AltitudeButton(source: AltitudeSource, update: ((Conditions) -> Cond
                 maxLines = 1,
             )
         }
+        note?.let { Text(it, style = MaterialTheme.typography.labelSmall) }
     }
 }
 

@@ -32,6 +32,10 @@
             </intent-filter>
             <!-- Chronograph series shared from ShotView, the Athlon app or a file manager.
                  One task (singleTask), so a share never starts a second copy of the app working on the same data. -->
+            <!-- A long press on the Stealth tile opens the stealth window. -->
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE_PREFERENCES" />
+            </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />
                 <category android:name="android.intent.category.DEFAULT" />

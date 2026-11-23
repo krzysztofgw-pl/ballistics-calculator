@@ -226,6 +226,8 @@ fun TextInput(label: String, value: String, onChange: (String) -> Unit) {
         onValueChange = onChange,
         label = { Text(label) },
         singleLine = true,
+        keyboardOptions = NextFieldOptions,
+        keyboardActions = nextFieldActions(),
         modifier = Modifier.fillMaxWidth(),
     )
 }
