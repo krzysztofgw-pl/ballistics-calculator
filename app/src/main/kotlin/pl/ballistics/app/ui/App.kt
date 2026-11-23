@@ -105,8 +105,8 @@ fun App(vm: MainViewModel = viewModel()) {
     }
     var typing by remember { mutableStateOf(false) }
     val stealth by Stealth.state.collectAsStateWithLifecycle()
-    var stealthDialog by remember { mutableStateOf(false) }
-    if (stealthDialog) StealthDialog { stealthDialog = false }
+    val stealthDialog by vm.stealthDialog.collectAsStateWithLifecycle()
+    if (stealthDialog) StealthDialog { vm.stealthDialog.value = false }
     if (typing) {
         ManualVelocityDialog(onDone = { typing = false; vm.openTypedSeries(it) }, onDismiss = { typing = false })
     }
@@ -169,7 +169,7 @@ fun App(vm: MainViewModel = viewModel()) {
                 onImport = vm::importData,
                 onCheckUpdate = { updater.check(asked = true) },
                 stealthOn = stealth.on,
-                onOpenStealth = { stealthDialog = true },
+                onOpenStealth = { vm.stealthDialog.value = true },
                 onOpenProfiles = { fromProfiles = true; profilesReturn = Editor.Settings; editor = Editor.Profiles },
                 onClose = { editor = null },
             )
@@ -203,7 +203,7 @@ fun App(vm: MainViewModel = viewModel()) {
             // No title bar: the tabs name the screen, and help and settings sit on the Rifle tab.
             Column(Modifier.windowInsetsPadding(WindowInsets.systemBars.union(WindowInsets.displayCutout).only(WindowInsetsSides.Horizontal))) {
                 Spacer(Modifier.windowInsetsTopHeight(WindowInsets.systemBars.union(WindowInsets.displayCutout)))
-                if (stealth.on && stealth.showBar) StealthBar { stealthDialog = true }
+                if (stealth.on && stealth.showBar) StealthBar { vm.stealthDialog.value = true }
                 if (data.ui.tabsAtTop) {
                     TabRow(selectedTabIndex = tab) {
                         tabs.forEachIndexed { index, t ->
@@ -254,7 +254,7 @@ fun App(vm: MainViewModel = viewModel()) {
                 onOpenHelp = { editor = Editor.Help },
                 onOpenSettings = { editor = Editor.Settings },
                 stealthOn = stealth.on,
-                onOpenStealth = { stealthDialog = true },
+                onOpenStealth = { vm.stealthDialog.value = true },
                 onOpenChronograph = vm::openChronograph,
                 onTypeVelocities = { typing = true },
                 modifier = modifier,
