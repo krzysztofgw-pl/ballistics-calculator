@@ -92,9 +92,8 @@ object TableScreen {
         return if (digits > 2) figure.substring(0, digits - 2) + '\u202F' + figure.substring(digits - 2) else figure
     }
 
-    /** ↑ or ↓ for a correction up or down; nothing within [dead] of zero. */
+    /** Up is the usual case and goes unmarked; ↓ marks a correction down (between the near and far zero). */
     fun vertical(up: Double, dead: Double) = when {
-        up > dead -> "↑"
         up < -dead -> "↓"
         else -> ""
     }
