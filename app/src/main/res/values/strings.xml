@@ -344,7 +344,7 @@
     <string name="chart_spin_drift">Spin drift correction (%1$s) by distance (m)</string>
     <string name="wind_from_clock">%1$s o\'clock</string>
     <string name="wind_speed_series">%1$d m/s</string>
-    <string name="spin_drift_at">Spin drift at %1$d m: %2$s cm, correct %3$s %4$s</string>
+    <string name="spin_drift_point">%1$s cm · %2$d m</string>
     <string name="spin_drift_needs_data">Spin drift needs the bullet length and the barrel twist.</string>
     <string name="spin_drift_off">Spin drift is off in Conditions.</string>
     <string name="label_target_width">Target width</string>

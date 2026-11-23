@@ -559,22 +559,24 @@ private fun TargetCharts(result: CalcResult.Ok, a: TargetAnalysis, distance: Dou
 
     val drift = result.solution.points.filter { it.rangeM > 0 }
     if (drift.any { it.spinDriftM != 0.0 }) {
-        // Spin drift pushes the bullet one way; the correction is the other way.
+        // Spin drift pushes the bullet one way and grows with distance; the correction is the other way.
+        // The chart shows how much, rising, with the direction in the axis labels.
+        fun corr(p: TrajectoryPoint) = -atan2(p.spinDriftM, p.rangeM) / unit.radians
+        val side = if (drift.sumOf { corr(it) } >= 0) "R" else "L"
+        fun held(v: Double) = if (abs(v) < 0.5 * 10.0.pow(-digits)) "0" else side + abs(v).fmt(digits)
+        val p = a.point
         LineChart(
             title = stringResource(R.string.chart_spin_drift, unit.label),
-            series = listOf(ChartSeries("", chartColors[0], drift.map { it.rangeM to -atan2(it.spinDriftM, it.rangeM) / unit.radians })),
+            series = listOf(ChartSeries("", chartColors[0], drift.map { it.rangeM to abs(corr(it)) })),
             xTicks = niceTicks(0.0, drift.last().rangeM).filter { it <= drift.last().rangeM },
             xLabel = { it.roundToInt().toString() },
-            yLabel = ::correction,
+            yLabel = ::held,
             markerX = distance,
-        )
-        val p = a.point
-        Text(
-            stringResource(
-                R.string.spin_drift_at, p.rangeM.roundToInt(), (p.spinDriftM * 100).fmt(1),
-                correction(-atan2(p.spinDriftM, p.rangeM) / unit.radians), unit.label,
+            point = ChartPoint(
+                p.rangeM, abs(corr(p)), chartColors[0],
+                "${held(corr(p))} ${unit.label}",
+                stringResource(R.string.spin_drift_point, (abs(p.spinDriftM) * 100).fmt(1), p.rangeM.roundToInt()),
             ),
-            style = MaterialTheme.typography.bodyMedium,
         )
     } else {
         Text(

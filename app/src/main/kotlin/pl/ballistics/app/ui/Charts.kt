@@ -14,13 +14,16 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -30,6 +33,9 @@ import kotlin.math.floor
 import kotlin.math.log10
 import kotlin.math.pow
 import kotlin.math.roundToInt
+
+/** A marked point on a chart with a callout: a bold [title] in [color] over a smaller [subtitle]. */
+data class ChartPoint(val x: Double, val y: Double, val color: Color, val title: String, val subtitle: String)
 
 data class ChartSeries(val label: String, val color: Color, val points: List<Pair<Double, Double>>)
 
@@ -49,9 +55,11 @@ fun LineChart(
     yLabel: (Double) -> String,
     modifier: Modifier = Modifier,
     markerX: Double? = null,
+    point: ChartPoint? = null,
 ) {
     val text = rememberTextMeasurer()
     val ink = MaterialTheme.colorScheme.onSurface
+    val plate = MaterialTheme.colorScheme.surface
     val grid = MaterialTheme.colorScheme.outlineVariant
     val labelStyle = TextStyle(fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
     val all = series.flatMap { it.points }
@@ -96,6 +104,25 @@ fun LineChart(
                     if (i == 0) path.moveTo(x(px), y(py)) else path.lineTo(x(px), y(py))
                 }
                 drawPath(path, s.color, style = Stroke(2.dp.toPx()))
+            }
+            point?.takeIf { it.x in xMin..xMax }?.let { p ->
+                val c = Offset(x(p.x), y(p.y))
+                drawCircle(plate, 7.dp.toPx(), c)
+                drawCircle(p.color, 5.dp.toPx(), c)
+                val t = text.measure(p.title, TextStyle(fontSize = 13.sp, fontWeight = FontWeight.Bold, color = p.color))
+                val st = text.measure(p.subtitle, TextStyle(fontSize = 11.sp, color = ink))
+                val pad = 6.dp.toPx()
+                val bw = maxOf(t.size.width, st.size.width) + 2 * pad
+                val bh = t.size.height + st.size.height + pad
+                val gap = 12.dp.toPx()
+                // The callout sits beside the point, toward the roomier side, and above it when there is space.
+                val bx = (if (c.x + gap + bw <= left + w) c.x + gap else c.x - gap - bw).coerceIn(left, maxOf(left, left + w - bw))
+                val by = (if (c.y - gap - bh >= top) c.y - gap - bh else c.y + gap).coerceIn(top, maxOf(top, top + h - bh))
+                val corner = CornerRadius(7.dp.toPx())
+                drawRoundRect(plate, Offset(bx, by), Size(bw, bh), corner)
+                drawRoundRect(p.color, Offset(bx, by), Size(bw, bh), corner, style = Stroke(1.dp.toPx()))
+                drawText(t, topLeft = Offset(bx + (bw - t.size.width) / 2, by + pad / 2))
+                drawText(st, topLeft = Offset(bx + (bw - st.size.width) / 2, by + pad / 2 + t.size.height))
             }
         }
         if (series.size > 1 || series.firstOrNull()?.label?.isNotEmpty() == true) {
