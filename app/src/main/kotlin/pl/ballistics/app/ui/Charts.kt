@@ -71,6 +71,8 @@ val chartColors = listOf(
  *   value there, the first with a callout of [yLabel] over [xLabel]. The marked [points] stay, faint. The reading
  *   stays after the finger lifts; a tap clears it.
  * @param markAllSeries marks every series at [markerX] and while reading, each with a callout of its value.
+ * @param xValue the x of the line being read (or of [markerX] when nothing is read), shown on a chip on the x axis
+ *   under the line; null shows none.
  * @param onLongPress called with the x being read when a finger then rests still on its callout or line; null when
  *   holding does nothing.
  */
@@ -92,6 +94,7 @@ fun LineChart(
     readout: ((Double) -> List<ChartPoint>)? = null,
     onLongPress: ((Double) -> Unit)? = null,
     markAllSeries: Boolean = false,
+    xValue: ((Double) -> String)? = null,
 ) {
     val text = rememberTextMeasurer()
     val haptic = LocalHapticFeedback.current
@@ -171,7 +174,9 @@ fun LineChart(
             },
         ) {
             val left = yTicks.maxOf { text.measure(yLabel(it), labelStyle).size.width } + 6.dp.toPx()
-            val bottom = text.measure("0", labelStyle).size.height + 4.dp.toPx()
+            val chipStyle = TextStyle(fontSize = 11.sp, fontWeight = FontWeight.Bold, color = plate)
+            val bottom = if (xValue != null) text.measure("0", chipStyle).size.height + 8.dp.toPx()
+            else text.measure("0", labelStyle).size.height + 4.dp.toPx()
             val top = 6.dp.toPx()
             val right = 12.dp.toPx()
             val w = size.width - left - right
@@ -214,6 +219,17 @@ fun LineChart(
                     ink.copy(alpha = if (fingerX != null && m != fingerX) 0.35f else 1f), Offset(x(m), top), Offset(x(m), top + h),
                     strokeWidth = 1.5.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(8f, 6f)),
                 )
+            }
+            // The x being read (or the marker's) on a chip over the axis labels, right under its line.
+            if (xValue != null) (fingerX ?: markerX)?.takeIf { it in xMin..xMax }?.let { m ->
+                val l = text.measure(xValue(m), chipStyle)
+                val padX = 6.dp.toPx()
+                val cw = l.size.width + 2 * padX
+                val ch = l.size.height + 4.dp.toPx()
+                val cl = (x(m) - cw / 2).coerceIn(0f, maxOf(0f, size.width - cw))
+                val ct = top + h + 2.dp.toPx()
+                drawRoundRect(ink, Offset(cl, ct), Size(cw, ch), CornerRadius(ch / 2))
+                drawText(l, topLeft = Offset(cl + padX, ct + 2.dp.toPx()))
             }
             series.forEach { s ->
                 val path = Path()

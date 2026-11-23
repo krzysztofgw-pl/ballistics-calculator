@@ -136,6 +136,7 @@ fun TargetTools(
             val spreadText = stringResource(R.string.wind_bracket_spread, (spread / unit.radians).f(digits), unit.label, cm(spread * analysis.point.rangeM))
             if (holds.isNotEmpty()) WindBracketView(reticle, holds, if (holds.size == 2) spreadText else null)
             if (ChartKind.BRACKET_DIRECTION in charts) analysis.bracketSweep?.let { sw ->
+                val clockLabel = stringResource(R.string.wind_from_clock)
                 val lo = conditions.windFromMinDeg.toNumber()?.mod(360.0)
                 val hi = conditions.windFromMaxDeg.toNumber()?.mod(360.0)
                 // The forecast's swing of direction, clockwise from [lo] to [hi]; dropped once the direction is set outside it by hand.
@@ -150,6 +151,7 @@ fun TargetTools(
                     xLabel = { clockText(it) },
                     yLabel = { v -> side(v * unit.radians) },
                     markerX = b.fromDeg,
+                    xValue = { clockLabel.format(clockText(it)) },
                     points = listOf(
                         ChartPoint(b.fromDeg, b.minRad / unit.radians, BracketLight),
                         ChartPoint(
