@@ -126,6 +126,18 @@ private fun Context.openSettings(action: String) {
     }
 }
 
+/** "NFC / UWB", or whichever of the two the phone has. */
+private fun nearFieldLabel(r: Radios): Int = when {
+    r.nfc != null && r.hasUwb -> R.string.stealth_radio_nfc_uwb
+    r.nfc != null -> R.string.stealth_radio_nfc
+    else -> R.string.stealth_radio_uwb
+}
+
+/** The NFC screen, where phones also keep the UWB switch (or one level up); UWB's own screen on a phone without NFC. */
+private fun Context.openNearFieldSettings(r: Radios) {
+    if (r.nfc != null) openSettings(Settings.ACTION_NFC_SETTINGS) else openUwbSettings()
+}
+
 /** UWB has no public settings screen; try the one most phones have, then the wireless settings. */
 private fun Context.openUwbSettings() {
     val tries = listOf("android.settings.UWB_SETTINGS", Settings.ACTION_WIRELESS_SETTINGS)
@@ -214,8 +226,10 @@ fun StealthDialog(garminWatch: Boolean, onDismiss: () -> Unit) {
                 if (radios.location) RadioRow(ImageVector.vectorResource(R.drawable.ic_scan), R.string.stealth_radio_scanning, radios.scanning, loud = radios.scanning) {
                     context.openSettings(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
                 }
-                radios.nfc?.let { nfc -> RadioRow(ImageVector.vectorResource(R.drawable.ic_nfc), R.string.stealth_radio_nfc, nfc, loud = nfc) { context.openSettings(Settings.ACTION_NFC_SETTINGS) } }
-                if (radios.hasUwb) RadioRow(ImageVector.vectorResource(R.drawable.ic_uwb), R.string.stealth_radio_uwb, null, loud = false) { context.openUwbSettings() }
+                // NFC and UWB sit on the same settings screen (connection preferences), so they share a row.
+                if (radios.nfc != null || radios.hasUwb) RadioRow(
+                    ImageVector.vectorResource(R.drawable.ic_nfc), nearFieldLabel(radios), radios.nfc, loud = radios.nfc == true,
+                ) { context.openNearFieldSettings(radios) }
                 Text(stringResource(R.string.stealth_note_gps), style = MaterialTheme.typography.bodySmall)
                 if (garminWatch) Text(stringResource(R.string.stealth_note_watch), style = MaterialTheme.typography.bodySmall)
             }
@@ -301,11 +315,8 @@ private fun StealthNoticeDialog(onDismiss: () -> Unit) {
                     IconLabelButton(R.drawable.ic_scan, R.string.stealth_radio_scanning_short, Modifier.weight(1f)) {
                         context.openSettings(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
                     }
-                    if (radios.nfc != null) IconLabelButton(R.drawable.ic_nfc, R.string.stealth_radio_nfc, Modifier.weight(1f)) {
-                        context.openSettings(Settings.ACTION_NFC_SETTINGS)
-                    }
-                    if (radios.hasUwb) IconLabelButton(R.drawable.ic_uwb, R.string.stealth_radio_uwb, Modifier.weight(1f)) {
-                        context.openUwbSettings()
+                    if (radios.nfc != null || radios.hasUwb) IconLabelButton(R.drawable.ic_nfc, nearFieldLabel(radios), Modifier.weight(1f)) {
+                        context.openNearFieldSettings(radios)
                     }
                 }
                 Text(stringResource(R.string.stealth_notice_airplane), style = MaterialTheme.typography.bodySmall)
