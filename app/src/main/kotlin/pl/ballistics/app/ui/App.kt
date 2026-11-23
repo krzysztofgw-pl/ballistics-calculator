@@ -66,6 +66,7 @@ private sealed interface Editor {
     data object Profiles : Editor
 }
 
+private const val DOPE_TAB = 2
 private const val TARGET_TAB = 3
 private const val RIFLE_TAB = 0
 
@@ -86,6 +87,8 @@ fun App(vm: MainViewModel = viewModel()) {
     val result by vm.result.collectAsStateWithLifecycle()
     val sync by vm.syncState.collectAsStateWithLifecycle()
     var tab by rememberSaveable { mutableIntStateOf(2) }
+    // The DOPE tab's header details; tapping the tab while it is open folds or unfolds them.
+    var dopeDetails by rememberSaveable { mutableStateOf(false) }
     var editor by remember { mutableStateOf<Editor?>(null) }
     // A rifle or load opened from the profile list goes back to the list when closed.
     var fromProfiles by remember { mutableStateOf(false) }
@@ -209,7 +212,7 @@ fun App(vm: MainViewModel = viewModel()) {
                         tabs.forEachIndexed { index, t ->
                             Tab(
                                 selected = tab == index,
-                                onClick = { tab = index },
+                                onClick = { if (tab == index && index == DOPE_TAB) dopeDetails = !dopeDetails else tab = index },
                                 text = { Text(stringResource(t.title)) },
                                 icon = { TabIcon(t, index, suppressorOn) },
                             )
@@ -228,7 +231,7 @@ fun App(vm: MainViewModel = viewModel()) {
                         tabs.forEachIndexed { index, t ->
                             NavigationBarItem(
                                 selected = tab == index,
-                                onClick = { tab = index },
+                                onClick = { if (tab == index && index == DOPE_TAB) dopeDetails = !dopeDetails else tab = index },
                                 icon = { TabIcon(t, index, suppressorOn) },
                                 label = { Text(stringResource(t.title)) },
                             )
@@ -260,7 +263,7 @@ fun App(vm: MainViewModel = viewModel()) {
                 modifier = modifier,
             )
             1 -> ConditionsScreen(data.conditions, data.ui, vm::updateConditions, modifier)
-            2 -> TableScreen(result, data.conditions, vm::updateConditions, modifier)
+            DOPE_TAB -> TableScreen(result, data.conditions, vm::updateConditions, modifier, dopeDetails) { dopeDetails = !dopeDetails }
             else -> TargetScreen(result, data.conditions, data.ui, vm::updateConditions, vm::saveAmmo, vm::addAmmoCopy, modifier)
         }
         }

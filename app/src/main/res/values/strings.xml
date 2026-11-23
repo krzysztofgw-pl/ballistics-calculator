@@ -28,6 +28,8 @@
     <string name="action_delete">Delete</string>
     <string name="action_cancel">Cancel</string>
     <string name="action_close">Close</string>
+    <string name="action_expand">Show details</string>
+    <string name="action_collapse">Hide details</string>
     <string name="action_edit">Edit</string>
     <string name="action_use">Use</string>
     <string name="action_add_rifle">Add rifle</string>

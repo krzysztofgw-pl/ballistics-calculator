@@ -1,6 +1,11 @@
 package pl.ballistics.app.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material3.Icon
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -42,6 +47,8 @@ fun TableScreen(
     conditions: Conditions? = null,
     update: ((Conditions) -> Conditions) -> Unit = {},
     modifier: Modifier = Modifier,
+    details: Boolean = true,
+    onToggleDetails: () -> Unit = {},
 ) {
     when (result) {
         null -> Column(modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -52,19 +59,34 @@ fun TableScreen(
             // A bad range or step is fixed here, so the fields stay reachable.
             conditions?.let { TableExtent(it, update) }
         }
-        is CalcResult.Ok -> Table(result, conditions, update, modifier)
+        is CalcResult.Ok -> Table(result, conditions, update, modifier, details, onToggleDetails)
     }
 }
 
 @Composable
-private fun Table(result: CalcResult.Ok, conditions: Conditions?, update: ((Conditions) -> Conditions) -> Unit, modifier: Modifier) {
+private fun Table(
+    result: CalcResult.Ok,
+    conditions: Conditions?,
+    update: ((Conditions) -> Conditions) -> Unit,
+    modifier: Modifier,
+    details: Boolean,
+    onToggleDetails: () -> Unit,
+) {
     val s = result.solution
     val unit = result.angularUnit
     val click = result.clickValue
 
     Column(modifier.fillMaxSize()) {
         Column(Modifier.padding(horizontal = 12.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            Text("${result.weapon.name} · ${result.ammo.name}", style = MaterialTheme.typography.titleSmall)
+            // The rifle and load stay; the rest folds away with the arrow or a tap on the DOPE tab.
+            Row(Modifier.clickable(onClick = onToggleDetails), verticalAlignment = Alignment.CenterVertically) {
+                Text("${result.weapon.name} · ${result.ammo.name}", style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
+                Icon(
+                    if (details) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
+                    stringResource(if (details) R.string.action_collapse else R.string.action_expand),
+                )
+            }
+            if (details) {
             val summary = buildList {
                 add(stringResource(R.string.summary_muzzle_velocity, s.muzzleVelocityMps.roundToInt()))
                 add(stringResource(R.string.summary_density_altitude, s.densityAltitudeM.roundToInt()))
@@ -72,11 +94,13 @@ private fun Table(result: CalcResult.Ok, conditions: Conditions?, update: ((Cond
             }
             Text(summary.joinToString("  ·  "), style = MaterialTheme.typography.bodyMedium)
             Text(velocitySource(result.weapon, result.ammo), style = MaterialTheme.typography.bodySmall)
+            }
+            // A stability warning shows even folded.
             s.stabilityFactor?.let {
                 if (it < 1.0) Warning(stringResource(R.string.warning_unstable))
                 else if (it < 1.4) Warning(stringResource(R.string.warning_marginal))
             }
-            Text(
+            if (details) Text(
                 stringResource(R.string.table_legend, unit.label, result.weapon.clickValue),
                 style = MaterialTheme.typography.bodySmall,
             )
