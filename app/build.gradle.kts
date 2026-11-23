@@ -14,7 +14,12 @@ val releasePassword = System.getenv("SIGNING_PASSWORD")
 
 android {
     namespace = "pl.ballistics.app"
-    compileSdk = 36
+    // Compose BOM 2026.11 (Compose 1.13, Material3 1.5, core 1.19) must compile against
+    // API 37.1+. compileSdk only affects which APIs we compile against; runtime behaviour
+    // stays governed by targetSdk.
+    compileSdk {
+        version = release(37) { minorApiLevel = 2 }
+    }
 
     defaultConfig {
         applicationId = "com.kgwlabs.ballistics"
@@ -82,7 +87,7 @@ android {
 dependencies {
     implementation(project(":core"))
 
-    val composeBom = platform("androidx.compose:compose-bom:2024.12.01")
+    val composeBom = platform("androidx.compose:compose-bom:2026.11.01")
     implementation(composeBom)
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.material:material-icons-core")
