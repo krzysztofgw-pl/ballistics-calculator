@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.OutlinedButton
 import androidx.core.content.ContextCompat
 import pl.ballistics.app.tile.StealthTileService
 import android.content.Context
@@ -190,11 +189,11 @@ fun StealthBar(onClick: () -> Unit) {
 }
 
 /**
- * Turns stealth mode on or off. It says what the app stops, shows which of the phone's radios
- * still transmit, with a shortcut to each one's settings, since an app cannot switch them off.
+ * Turns stealth mode on or off and shows which of the phone's radios still transmit, each with a
+ * shortcut to its settings, since an app cannot switch them off. The explanations live in Help.
  */
 @Composable
-fun StealthDialog(garminWatch: Boolean, onDismiss: () -> Unit) {
+fun StealthDialog(onDismiss: () -> Unit) {
     val context = LocalContext.current
     val current by Stealth.state.collectAsStateWithLifecycle()
     val radios = rememberRadios()
@@ -215,8 +214,6 @@ fun StealthDialog(garminWatch: Boolean, onDismiss: () -> Unit) {
         },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(stealthSummary(current, garminWatch), style = MaterialTheme.typography.bodyMedium)
-                Text(stringResource(R.string.stealth_radios), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
                 // Each row is red while that radio still gives the phone away.
                 RadioRow(ImageVector.vectorResource(R.drawable.ic_airplane), R.string.stealth_radio_airplane, radios.airplane, loud = !radios.airplane) { context.openSettings(Settings.ACTION_AIRPLANE_MODE_SETTINGS) }
                 RadioRow(ImageVector.vectorResource(R.drawable.ic_wifi), R.string.stealth_radio_wifi, radios.wifi, loud = radios.wifi) { context.openSettings(Settings.ACTION_WIFI_SETTINGS) }
@@ -229,19 +226,17 @@ fun StealthDialog(garminWatch: Boolean, onDismiss: () -> Unit) {
                 if (radios.nfc != null || radios.hasUwb) RadioRow(
                     ImageVector.vectorResource(R.drawable.ic_nfc), nearFieldLabel(radios), radios.nfc, loud = radios.nfc == true,
                 ) { context.openNearFieldSettings(radios) }
-                Text(stringResource(R.string.stealth_note_gps), style = MaterialTheme.typography.bodySmall)
-                if (garminWatch) Text(stringResource(R.string.stealth_note_watch), style = MaterialTheme.typography.bodySmall)
             }
         },
         confirmButton = {
-            OutlinedButton(onClick = {
+            FilledTonalButton(onClick = {
                 val turningOn = !current.on
                 Stealth.set(context, current.copy(on = turningOn))
                 // Once turned on, say that the phone's networks are the user's to switch, unless they asked not to.
                 if (turningOn && Stealth.showNotice(context)) notice = true else onDismiss()
             }) { Text(stringResource(if (current.on) R.string.stealth_turn_off else R.string.stealth_turn_on)) }
         },
-        dismissButton = { OutlinedButton(onClick = onDismiss) { Text(stringResource(R.string.action_close)) } },
+        dismissButton = { FilledTonalButton(onClick = onDismiss) { Text(stringResource(R.string.action_close)) } },
     )
 }
 
@@ -269,7 +264,7 @@ private fun RadioRow(icon: ImageVector, name: Int, on: Boolean?, loud: Boolean, 
             fontWeight = FontWeight.Bold,
             style = MaterialTheme.typography.labelLarge,
         )
-        OutlinedButton(onClick = onOpen, contentPadding = PaddingValues(horizontal = 12.dp)) {
+        FilledTonalButton(onClick = onOpen, contentPadding = PaddingValues(horizontal = 12.dp)) {
             Icon(icon, contentDescription = null, modifier = Modifier.size(ButtonDefaults.IconSize), tint = if (loud) color else LocalContentColor.current)
             Spacer(Modifier.width(ButtonDefaults.IconSpacing))
             Text(stringResource(name), maxLines = 1)
@@ -318,15 +313,9 @@ private fun StealthNoticeDialog(onDismiss: () -> Unit) {
                         context.openNearFieldSettings(radios)
                     }
                 }
-                Text(stringResource(R.string.stealth_notice_airplane), style = MaterialTheme.typography.bodySmall)
-                Text(
-                    stringResource(if (Stealth.state.value.allowGps) R.string.stealth_notice_gps_on else R.string.stealth_notice_gps_off),
-                    style = MaterialTheme.typography.bodyMedium,
-                )
                 if (tileAdded) {
                     Text(stringResource(R.string.stealth_tile_added), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
                 } else {
-                    Text(stringResource(R.string.stealth_notice_tile), style = MaterialTheme.typography.bodyMedium)
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                         FilledTonalButton(onClick = { requestStealthTile(context) { tileAdded = it } }, modifier = Modifier.fillMaxWidth()) {
                             Icon(ImageVector.vectorResource(R.drawable.ic_stealth), null, Modifier.size(ButtonDefaults.IconSize))
@@ -337,14 +326,13 @@ private fun StealthNoticeDialog(onDismiss: () -> Unit) {
                         Text(stringResource(R.string.stealth_notice_tile_manual), style = MaterialTheme.typography.bodySmall)
                     }
                 }
-                Text(stringResource(R.string.stealth_notice_settings), style = MaterialTheme.typography.bodySmall)
                 Row(Modifier.fillMaxWidth().clickable { hide = !hide }, verticalAlignment = Alignment.CenterVertically) {
                     Checkbox(checked = hide, onCheckedChange = { hide = it })
                     Text(stringResource(R.string.action_dont_show_again))
                 }
             }
         },
-        confirmButton = { OutlinedButton(onClick = ::close) { Text(stringResource(R.string.action_ok)) } },
+        confirmButton = { FilledTonalButton(onClick = ::close) { Text(stringResource(R.string.action_ok)) } },
     )
 }
 
@@ -367,19 +355,10 @@ private fun requestStealthTile(context: Context, onResult: (Boolean) -> Unit) {
     }
 }
 
-/** What stealth mode blocks with the current options. */
-@Composable
-private fun stealthSummary(s: Stealth.Settings, garminWatch: Boolean): String = buildString {
-    append(stringResource(R.string.stealth_what))
-    append(' ')
-    append(stringResource(if (s.allowGps) R.string.stealth_what_gps_on else R.string.stealth_what_gps_off))
-    if (garminWatch && !s.allowWatch) append(' ').append(stringResource(R.string.stealth_what_watch_off))
-}
-
-/** An outlined button with an icon and a short label, for the shortcuts to the system settings. */
+/** A tonal button with an icon and a short label, for the shortcuts to the system settings. */
 @Composable
 private fun IconLabelButton(icon: Int, label: Int, modifier: Modifier = Modifier, onClick: () -> Unit) {
-    OutlinedButton(onClick = onClick, modifier = modifier, contentPadding = PaddingValues(horizontal = 12.dp)) {
+    FilledTonalButton(onClick = onClick, modifier = modifier, contentPadding = PaddingValues(horizontal = 12.dp)) {
         Icon(ImageVector.vectorResource(icon), null, Modifier.size(ButtonDefaults.IconSize))
         Spacer(Modifier.width(ButtonDefaults.IconSpacing))
         Text(stringResource(label), maxLines = 1)

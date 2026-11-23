@@ -106,7 +106,7 @@ fun App(vm: MainViewModel = viewModel()) {
     var typing by remember { mutableStateOf(false) }
     val stealth by Stealth.state.collectAsStateWithLifecycle()
     var stealthDialog by remember { mutableStateOf(false) }
-    if (stealthDialog) StealthDialog(data.ui.garminWatch) { stealthDialog = false }
+    if (stealthDialog) StealthDialog { stealthDialog = false }
     if (typing) {
         ManualVelocityDialog(onDone = { typing = false; vm.openTypedSeries(it) }, onDismiss = { typing = false })
     }
