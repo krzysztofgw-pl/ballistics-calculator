@@ -260,6 +260,7 @@ fun LineChart(
                     val w = maxOf(t.size.width, st?.size?.width ?: 0) + 2 * pad
                     val h = t.size.height + (st?.size?.height ?: 0) + pad
                     var top = 0f
+                    var x = 0f
                 }
                 val all = titled.map { p ->
                     Box(
@@ -269,32 +270,50 @@ fun LineChart(
                         Offset(x(p.x), y(p.y.coerceIn(yMin, yMax))),
                     )
                 }
-                // When not all fit beside the line, the biggest values (whichever way) keep their callouts.
-                val fit = maxOf(1, ((h + space) / (all.maxOf { it.h } + space)).toInt())
-                val boxes = all.sortedByDescending { abs(it.p.y) }.take(fit).sortedBy { it.c.y }
+                val boxes = all.sortedBy { it.c.y }
                 val bw = boxes.maxOf { it.w }
                 val cx = boxes.first().c.x
-                // Callouts sit beside the points, toward the roomier side; one sits above its point, several stack by height.
-                val bx = (if (cx + gap + bw <= left + w) cx + gap else cx - gap - bw).coerceIn(left, maxOf(left, left + w - bw))
+                val right = cx + gap
+                val leftSide = cx - gap - bw
+                val rightFits = right + bw <= left + w
+                val leftFits = leftSide >= left
                 if (boxes.size == 1) {
+                    // One callout sits beside its point, toward the roomier side, above it when there is space.
                     val b = boxes.first()
+                    b.x = (if (rightFits) right else leftSide).coerceIn(left, maxOf(left, left + w - b.w))
                     b.top = (if (b.c.y - gap - b.h >= top) b.c.y - gap - b.h else b.c.y + gap).coerceIn(top, maxOf(top, top + h - b.h))
                 } else {
-                    var next = top
-                    boxes.forEach { b -> b.top = maxOf(b.c.y - b.h / 2, next); next = b.top + b.h + space }
-                    val over = next - space - (top + h)
-                    if (over > 0) boxes.forEach { it.top = maxOf(top, it.top - over) }
+                    // Several sit level with their points, on either side of the line like a checkerboard:
+                    // one that would hit the callout above it on one side goes to the other, and only if both
+                    // are taken does it move down.
+                    val sides = listOfNotNull(right.takeIf { rightFits }, leftSide.takeIf { leftFits }).ifEmpty { listOf(left) }
+                    val bottom = FloatArray(sides.size) { top - space }
+                    boxes.forEach { b ->
+                        val want = (b.c.y - b.h / 2).coerceIn(top, maxOf(top, top + h - b.h))
+                        val free = sides.indices.firstOrNull { bottom[it] + space <= want }
+                        val i = free ?: sides.indices.minBy { bottom[it] }
+                        b.x = sides[i]
+                        b.top = maxOf(want, bottom[i] + space)
+                        bottom[i] = b.top + b.h
+                    }
+                    // A column that runs off the bottom moves up as far as the top allows.
+                    sides.forEach { sx ->
+                        val col = boxes.filter { it.x == sx }
+                        val over = (col.maxOfOrNull { it.top + it.h } ?: 0f) - (top + h)
+                        if (over > 0) col.forEach { it.top = maxOf(top, it.top - over) }
+                    }
                 }
                 if (read != null) {
-                    target[0] = bx; target[1] = boxes.minOf { it.top }; target[2] = bx + bw; target[3] = boxes.maxOf { it.top + it.h }
+                    target[0] = boxes.minOf { it.x }; target[1] = boxes.minOf { it.top }
+                    target[2] = boxes.maxOf { it.x + (if (boxes.size == 1) it.w else bw) }; target[3] = boxes.maxOf { it.top + it.h }
                 }
                 val corner = CornerRadius(7.dp.toPx())
                 boxes.forEach { b ->
                     val w0 = if (boxes.size == 1) b.w else bw
-                    drawRoundRect(plate, Offset(bx, b.top), Size(w0, b.h), corner)
-                    drawRoundRect(b.p.color, Offset(bx, b.top), Size(w0, b.h), corner, style = Stroke(1.dp.toPx()))
-                    drawText(b.t, topLeft = Offset(bx + (w0 - b.t.size.width) / 2, b.top + pad / 2))
-                    b.st?.let { drawText(it, topLeft = Offset(bx + (w0 - it.size.width) / 2, b.top + pad / 2 + b.t.size.height)) }
+                    drawRoundRect(plate, Offset(b.x, b.top), Size(w0, b.h), corner)
+                    drawRoundRect(b.p.color, Offset(b.x, b.top), Size(w0, b.h), corner, style = Stroke(1.dp.toPx()))
+                    drawText(b.t, topLeft = Offset(b.x + (w0 - b.t.size.width) / 2, b.top + pad / 2))
+                    b.st?.let { drawText(it, topLeft = Offset(b.x + (w0 - it.size.width) / 2, b.top + pad / 2 + b.t.size.height)) }
                 }
             }
         }
