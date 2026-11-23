@@ -57,18 +57,21 @@ object TableScreen {
     }
 
     private fun cells(p: TrajectoryPoint, unitRad: Double, click: Double?): List<String> {
-        // Correction is the angle to dial: opposite to the impact offset.
+        // Every column is the correction, opposite to the impact offset: the hold in cm, then the angle
+        // and clicks to dial. Direction by arrow or letter, never a minus sign.
         val up = -p.dropRad / unitRad
         val right = -p.windageRad / unitRad
+        val upCm = -p.dropM * 100
+        val rightCm = -p.windageM * 100
         val shown = p.rangeM > 0
         return listOf(
             p.rangeM.roundToInt().toString(),
-            fmt(p.dropM * 100, 1),
-            if (shown) "↑" + fmt(up, 2) else "",
-            if (shown && click != null) (up / click).roundToInt().toString() else "",
-            fmt(p.windageM * 100, 1),
-            if (shown) side(right) + fmt(abs(right), 2) else "",
-            if (shown && click != null) side(right) + (abs(right) / click).roundToInt() else "",
+            vertical(upCm, 0.05) + fmt(abs(upCm), 1),
+            if (shown) vertical(up, 0.005) + fmt(abs(up), 2) else "",
+            if (shown && click != null) vertical(up / click, 0.5) + abs(up / click).roundToInt() else "",
+            side(rightCm, 0.05) + fmt(abs(rightCm), 1),
+            if (shown) side(right, 0.005) + fmt(abs(right), 2) else "",
+            if (shown && click != null) side(right / click, 0.5) + (abs(right) / click).roundToInt() else "",
             p.velocityMps.roundToInt().toString(),
             p.energyJ.roundToInt().toString(),
             fmt(p.timeS, 3),
@@ -76,9 +79,17 @@ object TableScreen {
         )
     }
 
-    fun side(right: Double) = when {
-        right > 0.005 -> "R"
-        right < -0.005 -> "L"
+    /** R or L for a correction to the right or left; nothing within [dead] of zero, where the figure rounds to 0. */
+    fun side(right: Double, dead: Double = 0.005) = when {
+        right > dead -> "R"
+        right < -dead -> "L"
+        else -> ""
+    }
+
+    /** ↑ or ↓ for a correction up or down; nothing within [dead] of zero. */
+    fun vertical(up: Double, dead: Double) = when {
+        up > dead -> "↑"
+        up < -dead -> "↓"
         else -> ""
     }
 }

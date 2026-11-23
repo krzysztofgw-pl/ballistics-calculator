@@ -146,16 +146,19 @@ private fun Warning(text: String) {
 
 @Composable
 private fun PointRow(p: TrajectoryPoint, unitRad: Double, click: Double?) {
-    // Correction is the angle to dial: opposite to the impact offset.
+    // Every column is the correction, opposite to the impact offset: the hold in cm, then the angle
+    // and clicks to dial. Direction by arrow or letter, never a minus sign.
     val up = -p.dropRad / unitRad
     val right = -p.windageRad / unitRad
+    val upCm = -p.dropM * 100
+    val rightCm = -p.windageM * 100
     val cells = listOf(
-        "%.1f".format(p.dropM * 100),
-        if (p.rangeM > 0) "↑%.2f".format(up) else "",
-        if (p.rangeM > 0 && click != null) (up / click).roundToInt().toString() else "",
-        "%.1f".format(p.windageM * 100),
-        if (p.rangeM > 0) side(right) + "%.2f".format(abs(right)) else "",
-        if (p.rangeM > 0 && click != null) side(right) + (abs(right) / click).roundToInt() else "",
+        vertical(upCm, 0.05) + "%.1f".format(abs(upCm)),
+        if (p.rangeM > 0) vertical(up, 0.005) + "%.2f".format(abs(up)) else "",
+        if (p.rangeM > 0 && click != null) vertical(up / click, 0.5) + abs(up / click).roundToInt() else "",
+        side(rightCm, 0.05) + "%.1f".format(abs(rightCm)),
+        if (p.rangeM > 0) side(right, 0.005) + "%.2f".format(abs(right)) else "",
+        if (p.rangeM > 0 && click != null) side(right / click, 0.5) + (abs(right) / click).roundToInt() else "",
         p.velocityMps.roundToInt().toString(),
         p.energyJ.roundToInt().toString(),
         "%.3f".format(p.timeS),
@@ -169,9 +172,17 @@ private fun PointRow(p: TrajectoryPoint, unitRad: Double, click: Double?) {
     }
 }
 
-private fun side(right: Double) = when {
-    right > 0.005 -> "R"
-    right < -0.005 -> "L"
+/** R or L for a correction to the right or left; nothing within [dead] of zero, where the figure rounds to 0. */
+private fun side(right: Double, dead: Double) = when {
+    right > dead -> "R"
+    right < -dead -> "L"
+    else -> ""
+}
+
+/** ↑ or ↓ for a correction up or down; nothing within [dead] of zero. */
+private fun vertical(up: Double, dead: Double) = when {
+    up > dead -> "↑"
+    up < -dead -> "↓"
     else -> ""
 }
 

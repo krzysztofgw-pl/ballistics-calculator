@@ -107,7 +107,7 @@ object S {
     fun summaryStability(sg: String) = "Sg $sg"
     const val warningUnstable = "Bullet is unstable (Sg < 1). Results are unreliable."
     const val warningMarginal = "Marginal stability (Sg < 1.4)."
-    fun tableLegend(unit: String, click: String) = "Corrections in $unit: ↑ up, R/L right/left. One click = $click $unit."
+    fun tableLegend(unit: String, click: String) = "Corrections (cm to hold, $unit to dial): ↑↓ up/down, R/L right/left. One click = $click $unit."
 
     const val labelTargetDistance = "Distance"
     const val labelMovingTarget = "Moving target"
