@@ -8,27 +8,28 @@ WHAT TO DIAL OR HOLD
 • Preview the same holds on any other reticle
 
 DOPE CARD AND RANGE CARD
-• Full drop chart to your maximum range: drop, elevation, clicks, wind drift, velocity, energy, time of flight and Mach
+• DOPE chart to your maximum range: drop, elevation, clicks, wind drift, velocity, energy, time of flight and Mach, corrections as arrows
 • Range card with saved targets: distance, shot angle, azimuth and target size
-• Charts of the wind correction by wind speed and by direction, and spin drift by distance
+• Charts of wind drift by wind speed and direction, spin drift by distance, hit probability by distance, and Coriolis and Eötvös effects by azimuth
+• Read any value with your finger
 
 WIND AND WEATHER
 • Wind dial: a wind clock inside a compass ring with N, E, S and W that turns with your shot azimuth
-• Shooter view (line of fire up) or north up with one tap on the compass button
 • Crosswind from left or right and head or tailwind shown under the dial
 • Phone compass with declination and a calibration check
 • Wind forecast for your location (Open-Meteo) as a 12-hour chart of mean wind, gusts and direction
-• Drag the time window over the hours you will shoot, see the mean wind and a warning when the direction is unsteady
-• Forecast direction as a wind clock or as true bearings, with a shooting height correction (10 m, open ground, woods)
+• Drag the window over your shooting hours; a warning when the direction is unsteady
+• Shooting height correction (10 m, open ground, woods)
 • Temperature, humidity and pressure from the forecast
 • Station pressure from a Garmin watch with the free Station Pressure app: https://apps.garmin.com/apps/2ec4993f-ced4-4fde-ad88-8541ef96c7b2
 • Shot angle (incline) measured with the phone camera
+• Altitude typed in, from a terrain map or from GPS
 
 CHRONOGRAPH IMPORT
-• Open or share a chronograph file straight into the app: Labradar, Labradar LX, Garmin Xero C1 (ShotView CSV or FIT), Athlon Rangecraft (Excel), MagnetoSpeed V3 and Sporter, or any table with a velocity column
+• Open or share a chronograph file: Labradar, Labradar LX, Garmin Xero C1 (CSV or FIT), Athlon Rangecraft, MagnetoSpeed V3 and Sporter, or any table with velocities
 • Or type your velocities shot by shot, in m/s or fps
-• Average, SD and ES, with misread shots flagged automatically and every shot ticked in or out
-• Save the muzzle velocity for one rifle or for the load, corrected to the load's reference powder temperature
+• Average, SD and ES, misread shots flagged
+• Save the muzzle velocity for a rifle or a load, corrected for powder temperature
 
 ACCURATE BALLISTICS SOLVER
 • 3-DOF point-mass trajectory with G1, G7, G2, G5, G6, G8, GI, GS and RA4 drag models
@@ -43,12 +44,18 @@ YOUR RIFLES AND LOADS
 • Muzzle velocity per rifle, and the barrel length of the factory test
 • Suppressor on or off, with its point of impact shift
 • Bullet library with over 600 bullets from Barnes, Berger, Hornady, Lapua, Sierra and Speer with G1 and G7 BCs, plus factory loads
-• BC truing from your range data: true the ballistic coefficient from a measured drop or a downrange velocity
+• BC truing from a measured drop or a downrange velocity
 
 FIELD TOOLS
 • Hit probability for a first-round hit from your group size, velocity SD, wind and range uncertainty
-• Wind bracket, range error and temperature checks
+• Wind bracket drawn on a slice of your reticle, with the bracket by wind direction
+• Range error: where the shot lands if the distance is off
+• Temperature checks
 • Range finding with the reticle (mil-dot ranging)
+
+STEALTH MODE
+• One tap stops every connection the app makes; location from GPS alone
+• Quick Settings tile, and a warning while the phone's radios are on
 
 SYNC AND BACKUP
 • Optional sync between phones with your Google account
