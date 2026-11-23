@@ -73,6 +73,7 @@ import pl.ballistics.app.TargetInputs
 import pl.ballistics.app.lead
 import pl.ballistics.app.data.AmmoProfile
 import pl.ballistics.app.data.AngularUnit
+import pl.ballistics.app.data.ChartKind
 import pl.ballistics.app.data.Conditions
 import pl.ballistics.app.data.FocalPlane
 import pl.ballistics.app.data.UiSettings
@@ -149,7 +150,7 @@ fun TargetScreen(
         windSdMps = conditions.windUncertaintyMps.toNumber()?.takeIf { it >= 0 } ?: 1.0,
         rangeSdM = conditions.rangeUncertaintyM.toNumber()?.takeIf { it >= 0 } ?: 5.0,
         groupRad = (weapon.groupMoa.toNumber()?.takeIf { it > 0 } ?: TargetInputs.DEFAULT_GROUP_MOA) * Units.MOA,
-        charts = ui.showCharts,
+        charts = ui.charts,
         chartsToM = maxDistance,
     )
     // The distance is solved on its own first; the sweeps for the charts and tools follow once it settles,
@@ -393,9 +394,9 @@ fun TargetScreen(
         }
         if (sfp) Text(stringResource(R.string.sfp_note, calMag.magFmt()), style = MaterialTheme.typography.bodySmall)
 
-        TargetTools(result, conditions, update, analysis, inputs, reticle, scale, ui.showCharts, { setDistance(it) }, onSaveAmmo, onAddAmmoCopy)
-        if (analysis != null && ui.showCharts) {
-            Collapsible(stringResource(R.string.section_charts)) { TargetCharts(result, analysis, distance) }
+        TargetTools(result, conditions, update, analysis, inputs, reticle, scale, ui.charts, { setDistance(it) }, onSaveAmmo, onAddAmmoCopy)
+        if (analysis != null && ui.charts.any { it in ChartKind.card }) {
+            Collapsible(stringResource(R.string.section_charts)) { TargetCharts(result, analysis, distance, ui.charts) }
         }
     }
 }
@@ -521,7 +522,7 @@ private fun clock(deg: Double): String = clockText(deg)
 
 /** Spin drift by distance and the windage correction by wind speed and by wind direction at the chosen distance. */
 @Composable
-private fun TargetCharts(result: CalcResult.Ok, a: TargetAnalysis, distance: Double) {
+private fun TargetCharts(result: CalcResult.Ok, a: TargetAnalysis, distance: Double, charts: Set<ChartKind>) {
     val unit = result.angularUnit
     val digits = if (unit == AngularUnit.MOA) 1 else 2
     fun correction(v: Double): String = when {
@@ -562,7 +563,9 @@ private fun TargetCharts(result: CalcResult.Ok, a: TargetAnalysis, distance: Dou
     )
 
     val drift = result.solution.points.filter { it.rangeM > 0 }
-    if (drift.any { it.spinDriftM != 0.0 }) {
+    if (ChartKind.SPIN_DRIFT !in charts) {
+        // Turned off in Settings.
+    } else if (drift.any { it.spinDriftM != 0.0 }) {
         // Spin drift pushes the bullet one way and grows with distance; the correction is the other way.
         // The chart shows how much, rising, with the direction in the axis labels.
         fun corr(p: TrajectoryPoint) = -atan2(p.spinDriftM, p.rangeM) / unit.radians
@@ -592,7 +595,10 @@ private fun TargetCharts(result: CalcResult.Ok, a: TargetAnalysis, distance: Dou
     }
 
     // Coriolis and Eötvös by direction of fire, without wind, at the chosen distance.
-    if (a.byAzimuth.size > 1) {
+    val azimuthCharts = ChartKind.AZIMUTH_WINDAGE in charts || ChartKind.AZIMUTH_ELEVATION in charts
+    if (!azimuthCharts) {
+        // Turned off in Settings.
+    } else if (a.byAzimuth.size > 1) {
         val az = Math.toDegrees(result.setup.conditions.azimuthRad).mod(360.0)
         fun at(f: (AzimuthRow) -> Double): Double {
             val rows = a.byAzimuth
@@ -606,7 +612,7 @@ private fun TargetCharts(result: CalcResult.Ok, a: TargetAnalysis, distance: Dou
         fun compass(deg: Double) = when (deg.roundToInt()) { 0, 360 -> "N"; 90 -> "E"; 180 -> "S"; 270 -> "W"; else -> "" }
         fun upDown(v: Double) = if (abs(v) < 0.5 * 10.0.pow(-(digits + 1))) "0" else (if (v > 0) "↑" else "↓") + abs(v).fmt(digits + 1)
         val windage = at { it.windageRad } / unit.radians
-        LineChart(
+        if (ChartKind.AZIMUTH_WINDAGE in charts) LineChart(
             title = stringResource(R.string.chart_azimuth_windage, unit.label, range),
             series = listOf(ChartSeries("", chartColors[0], a.byAzimuth.map { it.azimuthDeg to it.windageRad / unit.radians })),
             xTicks = (0..4).map { it * 90.0 },
@@ -616,7 +622,7 @@ private fun TargetCharts(result: CalcResult.Ok, a: TargetAnalysis, distance: Dou
             points = listOf(ChartPoint(az, windage, chartColors[0], AnnotatedString("${correction(windage)} ${unit.label}"), where)),
         )
         val change = at { it.elevationChangeRad } / unit.radians
-        LineChart(
+        if (ChartKind.AZIMUTH_ELEVATION in charts) LineChart(
             title = stringResource(R.string.chart_azimuth_elevation, unit.label, range),
             series = listOf(ChartSeries("", chartColors[1], a.byAzimuth.map { it.azimuthDeg to it.elevationChangeRad / unit.radians })),
             xTicks = (0..4).map { it * 90.0 },

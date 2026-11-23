@@ -352,6 +352,14 @@
     <string name="chart_azimuth_elevation">Elevation change (%1$s) by azimuth at %2$d m, against shooting north</string>
     <string name="azimuth_charts_need_coriolis">Charts by azimuth need Coriolis and Eötvös effects on in Conditions.</string>
     <string name="label_show_charts">Charts</string>
+    <string name="chart_kind_bracket_direction">Wind bracket by direction</string>
+    <string name="chart_kind_range_error">Range error</string>
+    <string name="chart_kind_hit_range">Hit probability by distance</string>
+    <string name="chart_kind_wind_speed">Wind correction by speed</string>
+    <string name="chart_kind_wind_direction">Wind correction by direction</string>
+    <string name="chart_kind_spin_drift">Spin drift</string>
+    <string name="chart_kind_azimuth_windage">Windage by azimuth</string>
+    <string name="chart_kind_azimuth_elevation">Elevation by azimuth</string>
     <string name="spin_drift_point">%1$s cm · %2$d m</string>
     <string name="spin_drift_needs_data">Spin drift needs the bullet length and the barrel twist.</string>
     <string name="spin_drift_off">Spin drift is off in Conditions.</string>

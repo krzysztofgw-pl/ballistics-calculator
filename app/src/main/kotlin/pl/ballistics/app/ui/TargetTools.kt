@@ -38,6 +38,7 @@ import pl.ballistics.app.TargetAnalysis
 import pl.ballistics.app.TargetInputs
 import pl.ballistics.app.data.AmmoProfile
 import pl.ballistics.app.data.AngularUnit
+import pl.ballistics.app.data.ChartKind
 import pl.ballistics.app.data.Conditions
 import pl.ballistics.app.rangeFromSize
 import pl.ballistics.app.reticle.Reticle
@@ -87,7 +88,7 @@ fun TargetTools(
     inputs: TargetInputs,
     reticle: Reticle,
     reticleScale: Double,
-    charts: Boolean,
+    charts: Set<ChartKind>,
     onUseDistance: (Double) -> Unit,
     onSaveAmmo: (AmmoProfile) -> Unit,
     onAddAmmoCopy: (from: AmmoProfile, copy: AmmoProfile) -> Unit,
@@ -124,7 +125,7 @@ fun TargetTools(
             }.filter { it.x.isFinite() }
             val spreadText = stringResource(R.string.wind_bracket_spread, (spread / unit.radians).f(digits), unit.label, cm(spread * analysis.point.rangeM))
             if (holds.isNotEmpty()) WindBracketView(reticle, holds, if (holds.size == 2) spreadText else null)
-            if (charts) analysis.bracketSweep?.let { sw ->
+            if (ChartKind.BRACKET_DIRECTION in charts) analysis.bracketSweep?.let { sw ->
                 val lo = conditions.windFromMinDeg.toNumber()?.mod(360.0)
                 val hi = conditions.windFromMaxDeg.toNumber()?.mod(360.0)
                 // The forecast's swing of direction, clockwise from [lo] to [hi]; dropped once the direction is set outside it by hand.
@@ -177,7 +178,7 @@ fun TargetTools(
                     Text("${cm(abs(m.missM))} cm", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 }
             }
-            if (charts && analysis.rangeCurve.size > 1) {
+            if (ChartKind.RANGE_ERROR in charts && analysis.rangeCurve.size > 1) {
                 val half = inputs.heightM * 50
                 LineChart(
                     title = stringResource(R.string.chart_range_error),
@@ -256,7 +257,7 @@ fun TargetTools(
                 ),
                 style = MaterialTheme.typography.bodySmall,
             )
-            if (charts && analysis.hitByRange.size > 1) {
+            if (ChartKind.HIT_RANGE in charts && analysis.hitByRange.size > 1) {
                 val to = analysis.hitByRange.last().first
                 LineChart(
                     title = stringResource(R.string.chart_hit_range),

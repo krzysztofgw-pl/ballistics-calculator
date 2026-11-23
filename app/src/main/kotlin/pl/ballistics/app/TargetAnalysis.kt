@@ -1,5 +1,6 @@
 package pl.ballistics.app
 
+import pl.ballistics.app.data.ChartKind
 import pl.ballistics.core.TrajectoryPoint
 import pl.ballistics.core.Wind
 import kotlin.math.abs
@@ -21,8 +22,8 @@ data class TargetInputs(
     val rangeSdM: Double = 5.0,
     /** Extreme spread of a 5-shot group, as an angle. */
     val groupRad: Double = DEFAULT_GROUP_MOA * pl.ballistics.core.Units.MOA,
-    /** Work out the sweeps the charts need; off when the charts are hidden. */
-    val charts: Boolean = true,
+    /** The charts to work out the sweeps for; the hidden ones are skipped. */
+    val charts: Set<ChartKind> = ChartKind.entries.toSet(),
     /** The farthest distance the hit probability chart goes to. */
     val chartsToM: Double = 1000.0,
 ) {
@@ -136,14 +137,14 @@ data class TargetAnalysis(
             val hit = hitChance(setup, zeroElevationRad, rangeM, inputs) ?: return null
             val charts = inputs.charts
 
-            val bracketSweep = if (charts && bracket != null) {
+            val bracketSweep = if (ChartKind.BRACKET_DIRECTION in charts && bracket != null) {
                 BracketSweep(
                     SWEEP.map { it to correction(bracket.minMps, it) }.filterNot { it.second.isNaN() },
                     SWEEP.map { it to correction(bracket.maxMps, it) }.filterNot { it.second.isNaN() },
                 )
             } else null
 
-            val byAzimuth = if (charts && setup.conditions.latitudeRad != null) {
+            val byAzimuth = if ((ChartKind.AZIMUTH_WINDAGE in charts || ChartKind.AZIMUTH_ELEVATION in charts) && setup.conditions.latitudeRad != null) {
                 fun at(azDeg: Double) = setup.pointAt(
                     rangeM, zeroElevationRad, emptyList(),
                     conditions = setup.conditions.copy(azimuthRad = Math.toRadians(azDeg)),
@@ -156,13 +157,13 @@ data class TargetAnalysis(
                 }
             } else emptyList()
 
-            val hitByRange = if (charts) {
+            val hitByRange = if (ChartKind.HIT_RANGE in charts) {
                 (1..HIT_SAMPLES).map { inputs.chartsToM * it / HIT_SAMPLES }.mapNotNull { r ->
                     hitChance(setup, zeroElevationRad, r, inputs)?.let { r to it.probability }
                 }
             } else emptyList()
 
-            val rangeCurve = if (charts) {
+            val rangeCurve = if (ChartKind.RANGE_ERROR in charts) {
                 RANGE_CURVE.filter { rangeM + it > 0 }.mapNotNull { e ->
                     if (e == 0.0) RangeMiss(0.0, 0.0)
                     else setup.pointAt(rangeM + e, zeroElevationRad)?.let { RangeMiss(e, (it.dropRad - point.dropRad) * (rangeM + e)) }
@@ -171,8 +172,8 @@ data class TargetAnalysis(
 
             return TargetAnalysis(
                 point = point,
-                bySpeed = if (charts) DIRECTIONS.associateWith { d -> SPEEDS.map { it to correction(it, d) }.filterNot { it.second.isNaN() } } else emptyMap(),
-                byDirection = if (charts) DIRECTION_SPEEDS.associateWith { s -> SWEEP.map { it to correction(s, it) }.filterNot { it.second.isNaN() } } else emptyMap(),
+                bySpeed = if (ChartKind.WIND_SPEED in charts) DIRECTIONS.associateWith { d -> SPEEDS.map { it to correction(it, d) }.filterNot { it.second.isNaN() } } else emptyMap(),
+                byDirection = if (ChartKind.WIND_DIRECTION in charts) DIRECTION_SPEEDS.associateWith { s -> SWEEP.map { it to correction(s, it) }.filterNot { it.second.isNaN() } } else emptyMap(),
                 tolerance = tolerance,
                 bracket = bracket,
                 temperatures = temperatures,

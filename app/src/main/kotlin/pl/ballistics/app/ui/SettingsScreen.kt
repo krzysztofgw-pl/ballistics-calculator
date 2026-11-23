@@ -65,6 +65,7 @@ import pl.ballistics.app.data.AltitudeSource
 import pl.ballistics.app.data.Correction
 import pl.ballistics.app.data.SyncState
 import pl.ballistics.app.data.ThemeMode
+import pl.ballistics.app.data.ChartKind
 import pl.ballistics.app.data.UiSettings
 import pl.ballistics.app.reticle.Reticles
 import java.time.LocalDate
@@ -151,6 +152,15 @@ fun SettingsScreen(
                 Placement(stringResource(R.string.label_tabs), ui.tabsAtTop) { v -> onUi { it.copy(tabsAtTop = v) } }
                 Placement(stringResource(R.string.label_sub_tabs), ui.subTabsAtTop) { v -> onUi { it.copy(subTabsAtTop = v) } }
                 SwitchRow(stringResource(R.string.label_show_charts), ui.showCharts) { v -> onUi { it.copy(showCharts = v) } }
+                if (ui.showCharts) {
+                    Column(Modifier.padding(start = 16.dp)) {
+                        ChartKind.entries.forEach { kind ->
+                            SwitchRow(stringResource(kind.label), kind !in ui.hiddenCharts) { on ->
+                                onUi { it.copy(hiddenCharts = if (on) it.hiddenCharts - kind else it.hiddenCharts + kind) }
+                            }
+                        }
+                    }
+                }
             }
 
             Section(stringResource(R.string.section_measurements)) {
