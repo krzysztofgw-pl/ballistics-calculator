@@ -47,6 +47,13 @@ class CloudSync(private val context: Context, private val onRemote: (remote: App
     /** The account this phone's data was last merged with. */
     private val prefs = context.getSharedPreferences("sync", Context.MODE_PRIVATE)
 
+    /**
+     * In stealth mode Firestore is shut down, not only taken offline: a running instance keeps
+     * Firebase Auth refreshing its token in the background. Edits made meanwhile stay on the phone
+     * and go up when sync resumes, as after any time offline.
+     */
+    private var paused = Stealth.blocksNetwork
+
     private val _state = MutableStateFlow<SyncState>(if (available) SyncState.SignedOut else SyncState.Unavailable)
     val state: StateFlow<SyncState> = _state.asStateFlow()
 
@@ -60,7 +67,7 @@ class CloudSync(private val context: Context, private val onRemote: (remote: App
                     _state.value = SyncState.SignedOut
                 } else {
                     _state.value = SyncState.SignedIn(user.email)
-                    listen(user.uid)
+                    if (!paused) listen(user.uid)
                 }
             }
         }
@@ -93,7 +100,22 @@ class CloudSync(private val context: Context, private val onRemote: (remote: App
     /** Called when the signed-in user has no cloud copy yet, so the local data gets uploaded. */
     var pendingFirstPush: (() -> Unit)? = null
 
+    /** Stops all Firestore traffic while [pause] is true; resuming listens again, and the newer copy wins as usual. */
+    fun setPaused(pause: Boolean) {
+        if (!available || pause == paused) return
+        paused = pause
+        if (pause) {
+            listener?.remove()
+            listener = null
+            runCatching { db.terminate() }
+        } else {
+            // After terminate(), getInstance() hands out a fresh instance.
+            auth.currentUser?.let { listen(it.uid) }
+        }
+    }
+
     fun push(data: AppData) {
+        if (paused) return
         val uid = if (available) auth.currentUser?.uid else null
         uid ?: return
         db.collection(USERS).document(uid).set(
@@ -105,6 +127,7 @@ class CloudSync(private val context: Context, private val onRemote: (remote: App
     /** Google sign-in through Credential Manager; [activityContext] must be an Activity. */
     suspend fun signIn(activityContext: Context): String? {
         if (!available) return context.getString(R.string.sync_not_configured)
+        if (Stealth.blocksNetwork) return context.getString(R.string.stealth_blocked)
         return try {
             val credential = googleCredential(activityContext) ?: return context.getString(R.string.sync_missing_client_id)
             auth.signInWithCredential(credential).await()
@@ -136,6 +159,7 @@ class CloudSync(private val context: Context, private val onRemote: (remote: App
      */
     suspend fun deleteAccount(activityContext: Context): String? {
         if (!available) return context.getString(R.string.sync_not_configured)
+        if (Stealth.blocksNetwork) return context.getString(R.string.stealth_blocked)
         val user = auth.currentUser ?: return null
         return try {
             val credential = googleCredential(activityContext) ?: return context.getString(R.string.sync_missing_client_id)
@@ -163,6 +187,7 @@ class CloudSync(private val context: Context, private val onRemote: (remote: App
      */
     suspend fun suggest(suggestion: BulletSuggestion, appVersion: String): String? {
         if (!available) return context.getString(R.string.sync_not_configured)
+        if (Stealth.blocksNetwork) return context.getString(R.string.stealth_blocked)
         val uid = auth.currentUser?.uid ?: return context.getString(R.string.suggest_sign_in)
         val quotaRef = db.collection(QUOTA).document(uid)
         val submissionRef = db.collection(SUBMISSIONS).document()

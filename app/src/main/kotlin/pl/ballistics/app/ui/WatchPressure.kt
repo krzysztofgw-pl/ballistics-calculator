@@ -110,6 +110,7 @@ fun WatchPressureButton(update: ((Conditions) -> Conditions) -> Unit) {
                             WatchFix.InstallGarminConnect.takeUnless { GarminPressure.garminConnectInstalled(context) },
                         )
                         GarminPressure.Result.NoWatch -> WatchError(context.getString(R.string.watch_pressure_no_watch))
+                        GarminPressure.Result.Blocked -> WatchError(context.getString(R.string.stealth_watch_blocked))
                         GarminPressure.Result.AppNotInstalled ->
                             WatchError(context.getString(R.string.watch_pressure_not_installed), WatchFix.InstallWatchApp)
                         is GarminPressure.Result.NoAnswer -> WatchError(context.getString(R.string.watch_pressure_no_answer, result.details))

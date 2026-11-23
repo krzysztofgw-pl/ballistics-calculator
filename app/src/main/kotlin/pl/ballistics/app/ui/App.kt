@@ -43,6 +43,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import pl.ballistics.app.MainViewModel
 import pl.ballistics.app.R
+import pl.ballistics.app.data.Stealth
 import pl.ballistics.app.data.SyncState
 import pl.ballistics.app.data.AmmoProfile
 import pl.ballistics.app.data.WeaponProfile
@@ -103,6 +104,9 @@ fun App(vm: MainViewModel = viewModel()) {
         ChronographDialog(state, data, vm::applyChronograph, vm::closeChronograph)
     }
     var typing by remember { mutableStateOf(false) }
+    val stealth by Stealth.state.collectAsStateWithLifecycle()
+    var stealthDialog by remember { mutableStateOf(false) }
+    if (stealthDialog) StealthDialog(data.ui.garminWatch) { stealthDialog = false }
     if (typing) {
         ManualVelocityDialog(onDone = { typing = false; vm.openTypedSeries(it) }, onDismiss = { typing = false })
     }
@@ -164,6 +168,8 @@ fun App(vm: MainViewModel = viewModel()) {
                 onExport = vm::exportData,
                 onImport = vm::importData,
                 onCheckUpdate = { updater.check(asked = true) },
+                stealthOn = stealth.on,
+                onOpenStealth = { stealthDialog = true },
                 onOpenProfiles = { fromProfiles = true; profilesReturn = Editor.Settings; editor = Editor.Profiles },
                 onClose = { editor = null },
             )
@@ -197,6 +203,7 @@ fun App(vm: MainViewModel = viewModel()) {
             // No title bar: the tabs name the screen, and help and settings sit on the Rifle tab.
             Column(Modifier.windowInsetsPadding(WindowInsets.systemBars.union(WindowInsets.displayCutout).only(WindowInsetsSides.Horizontal))) {
                 Spacer(Modifier.windowInsetsTopHeight(WindowInsets.systemBars.union(WindowInsets.displayCutout)))
+                if (stealth.on) StealthBar { stealthDialog = true }
                 if (data.ui.tabsAtTop) {
                     TabRow(selectedTabIndex = tab) {
                         tabs.forEachIndexed { index, t ->
@@ -246,6 +253,8 @@ fun App(vm: MainViewModel = viewModel()) {
                 onOpenProfiles = { fromProfiles = true; profilesReturn = null; editor = Editor.Profiles },
                 onOpenHelp = { editor = Editor.Help },
                 onOpenSettings = { editor = Editor.Settings },
+                stealthOn = stealth.on,
+                onOpenStealth = { stealthDialog = true },
                 onOpenChronograph = vm::openChronograph,
                 onTypeVelocities = { typing = true },
                 modifier = modifier,

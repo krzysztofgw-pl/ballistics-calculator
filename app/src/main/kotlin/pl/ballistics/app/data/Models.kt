@@ -238,8 +238,10 @@ data class UiSettings(
     val keepScreenOn: Boolean = false,
     /** A location fix (forecast, compass) also sets the latitude for Coriolis. */
     val locationSetsLatitude: Boolean = true,
-    /** The forecast also sets the altitude, from the terrain height at the location. */
+    /** Older setting: the forecast set the altitude. Read only to choose [altitudeFrom] for settings saved before [altitudeSource]. */
     val locationSetsAltitude: Boolean = false,
+    /** Where the altitude comes from; null in settings saved before there was a choice. */
+    val altitudeSource: AltitudeSource? = null,
     /** The forecast shows wind directions as true bearings, north up; otherwise relative to the line of fire, as a clock. */
     val forecastTrueBearing: Boolean = false,
     /** Offer reading the station pressure from a Garmin watch on the conditions screen. */
@@ -250,6 +252,19 @@ data class UiSettings(
     val corrections: Map<String, Correction> = emptyMap(),
 ) {
     fun correction(reticleId: String): Correction = corrections[reticleId] ?: Correction.defaultFor(reticleId)
+
+    val altitudeFrom: AltitudeSource
+        get() = altitudeSource ?: if (locationSetsAltitude) AltitudeSource.TERRAIN else AltitudeSource.MANUAL
+}
+
+/** Where the altitude of the firing point comes from. */
+enum class AltitudeSource(@StringRes val label: Int) {
+    /** Typed in. */
+    MANUAL(R.string.altitude_manual),
+    /** Terrain height at the location from an elevation model: GUGiK's 1 m lidar model in Poland, Copernicus elsewhere. Needs the network. */
+    TERRAIN(R.string.altitude_terrain),
+    /** The phone's own GPS, converted to height above sea level; works offline. */
+    GPS(R.string.altitude_gps),
 }
 
 /** Whether to dial each axis on the turrets or hold it on the reticle. */

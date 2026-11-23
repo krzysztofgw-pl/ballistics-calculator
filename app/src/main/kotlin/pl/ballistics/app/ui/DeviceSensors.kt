@@ -13,11 +13,18 @@ import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Bundle
+import android.os.Handler
+import android.location.OnNmeaMessageListener
+import android.location.altitude.AltitudeConverter
 import android.os.Looper
 import android.os.Build
 import android.os.CancellationSignal
 import androidx.core.content.ContextCompat
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withContext
+import pl.ballistics.app.data.Nmea
+import pl.ballistics.app.data.Stealth
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.coroutines.resume
 import kotlin.math.abs
@@ -35,19 +42,26 @@ object DeviceSensors {
         ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED
     }
 
-    /** A fresh fix if one comes within 20 s, otherwise the most recent known one; null without permission. */
+    /**
+     * A fresh fix if one comes within 20 s, otherwise the most recent known one; null without permission.
+     * In stealth mode only the satellites are used (the network and fused providers send nearby Wi-Fi
+     * and cell towers to a server), with longer to wait, since an unassisted first fix is slow.
+     */
     @SuppressLint("MissingPermission")
     suspend fun location(context: Context): Location? {
         if (!hasLocationPermission(context)) return null
         val lm = context.getSystemService(LocationManager::class.java) ?: return null
+        val satellitesOnly = Stealth.satellitesOnly
         val providers = buildList {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) add(LocationManager.FUSED_PROVIDER)
-            add(LocationManager.NETWORK_PROVIDER)
+            if (!satellitesOnly) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) add(LocationManager.FUSED_PROVIDER)
+                add(LocationManager.NETWORK_PROVIDER)
+            }
             add(LocationManager.GPS_PROVIDER)
         }.filter { runCatching { lm.isProviderEnabled(it) }.getOrDefault(false) }
 
         for (provider in providers) {
-            val fix = withTimeoutOrNull(20_000) {
+            val fix = withTimeoutOrNull(if (satellitesOnly) 90_000 else 20_000) {
                 suspendCancellableCoroutine<Location?> { cont ->
                     val signal = CancellationSignal()
                     cont.invokeOnCancellation { signal.cancel() }
@@ -80,7 +94,78 @@ object DeviceSensors {
             }
             if (fix != null) return fix
         }
-        return lastKnown(context)
+        return if (satellitesOnly) runCatching { lm.getLastKnownLocation(LocationManager.GPS_PROVIDER) }.getOrNull() else lastKnown(context)
+    }
+
+    /**
+     * Height above sea level from the satellites, and its vertical accuracy when the phone gives one.
+     * [ellipsoidal] means it could not be converted and is the raw height above the WGS84 ellipsoid,
+     * which in Poland reads some 30-40 m high.
+     */
+    data class GpsAltitude(val metres: Double, val accuracyM: Double?, val ellipsoidal: Boolean)
+
+    /**
+     * Listens to GPS_PROVIDER alone (no network help, so it works offline and in stealth mode) for up
+     * to [timeoutMs], keeping the fix with the best vertical accuracy and stopping early once it is
+     * within [goodEnoughM]. GPS heights are raw heights above the ellipsoid: Android 14+ converts them
+     * with its built-in geoid model; before that, the receiver's own NMEA GGA sentence carries the
+     * height above sea level. Null without fine location permission, with GPS off, or without a fix.
+     */
+    @SuppressLint("MissingPermission")
+    suspend fun gpsAltitude(context: Context, timeoutMs: Long = 90_000, goodEnoughM: Float = 8f): GpsAltitude? {
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) return null
+        val lm = context.getSystemService(LocationManager::class.java) ?: return null
+        if (!runCatching { lm.isProviderEnabled(LocationManager.GPS_PROVIDER) }.getOrDefault(false)) return null
+
+        var best: Location? = null
+        var ggaMsl: Double? = null
+        var ggaAtBest: Double? = null
+        fun vertical(l: Location): Float = if (l.hasVerticalAccuracy()) l.verticalAccuracyMeters else Float.MAX_VALUE
+        val goodEnough = kotlinx.coroutines.CompletableDeferred<Unit>()
+
+        val nmea = OnNmeaMessageListener { message, _ -> Nmea.ggaMslHeight(message)?.let { ggaMsl = it } }
+        val listener = object : LocationListener {
+            override fun onLocationChanged(location: Location) {
+                if (!location.hasAltitude()) return
+                val b = best
+                if (b == null || vertical(location) <= vertical(b)) {
+                    best = location
+                    ggaAtBest = ggaMsl
+                }
+                if (vertical(location) <= goodEnoughM) goodEnough.complete(Unit)
+            }
+
+            @Deprecated("Deprecated in Java")
+            override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) = Unit
+            override fun onProviderEnabled(provider: String) = Unit
+            override fun onProviderDisabled(provider: String) = Unit
+        }
+        try {
+            runCatching { lm.addNmeaListener(nmea, Handler(Looper.getMainLooper())) }
+            lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000L, 0f, listener, Looper.getMainLooper())
+            withTimeoutOrNull(timeoutMs) { goodEnough.await() }
+        } catch (e: SecurityException) {
+            return null
+        } finally {
+            lm.removeUpdates(listener)
+            runCatching { lm.removeNmeaListener(nmea) }
+        }
+        val fix = best ?: return null
+        val accuracy = if (fix.hasVerticalAccuracy()) fix.verticalAccuracyMeters.toDouble() else null
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            val converted = withContext(Dispatchers.IO) {
+                runCatching {
+                    AltitudeConverter().addMslAltitudeToLocation(context, fix)
+                    if (fix.hasMslAltitude()) fix.mslAltitudeMeters else null
+                }.getOrNull()
+            }
+            if (converted != null) {
+                val mslAccuracy = if (fix.hasMslAltitudeAccuracy()) fix.mslAltitudeAccuracyMeters.toDouble() else accuracy
+                return GpsAltitude(converted, mslAccuracy, ellipsoidal = false)
+            }
+        }
+        (ggaAtBest ?: ggaMsl)?.let { return GpsAltitude(it, accuracy, ellipsoidal = false) }
+        return GpsAltitude(fix.altitude, accuracy, ellipsoidal = true)
     }
 
     @SuppressLint("MissingPermission")

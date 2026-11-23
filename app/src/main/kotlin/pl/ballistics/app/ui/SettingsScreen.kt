@@ -62,6 +62,7 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import pl.ballistics.app.BuildConfig
 import pl.ballistics.app.R
+import pl.ballistics.app.data.AltitudeSource
 import pl.ballistics.app.data.Correction
 import pl.ballistics.app.data.SyncState
 import pl.ballistics.app.data.ThemeMode
@@ -84,6 +85,8 @@ fun SettingsScreen(
     onExport: () -> String,
     onImport: (String) -> Boolean,
     onCheckUpdate: () -> Unit,
+    stealthOn: Boolean,
+    onOpenStealth: () -> Unit,
     onOpenProfiles: () -> Unit,
     onClose: () -> Unit,
 ) {
@@ -128,6 +131,11 @@ fun SettingsScreen(
                 Text(stringResource(R.string.action_profiles))
             }
 
+            Section(stringResource(R.string.stealth_title), ImageVector.vectorResource(R.drawable.ic_stealth)) {
+                // Both ways go through the dialog, which shows what is blocked and the phone's radios.
+                SwitchRow(stringResource(R.string.stealth_title), stealthOn) { onOpenStealth() }
+            }
+
             Section(stringResource(R.string.section_appearance)) {
                 ThemeMode.entries.forEach { mode ->
                     Row(
@@ -155,9 +163,10 @@ fun SettingsScreen(
                 SwitchRow(stringResource(R.string.label_location_latitude), ui.locationSetsLatitude) { v ->
                     onUi { it.copy(locationSetsLatitude = v) }
                 }
-                SwitchRow(stringResource(R.string.label_location_altitude), ui.locationSetsAltitude) { v ->
-                    onUi { it.copy(locationSetsAltitude = v) }
-                }
+                Choice(
+                    stringResource(R.string.label_altitude_source), ui.altitudeFrom, AltitudeSource.entries,
+                    name = { stringResource(it.label) },
+                ) { source -> onUi { it.copy(altitudeSource = source) } }
                 TwoOptions(
                     stringResource(R.string.label_forecast_direction),
                     stringResource(R.string.option_clock), stringResource(R.string.option_true),
@@ -188,7 +197,9 @@ fun SettingsScreen(
             }
 
             Section(stringResource(R.string.section_sync)) {
-                when (sync) {
+                if (stealthOn && sync !is SyncState.Unavailable) {
+                    Text(stringResource(R.string.sync_paused_stealth), style = MaterialTheme.typography.bodyMedium)
+                } else when (sync) {
                     SyncState.Unavailable -> Unit
                     SyncState.SignedOut -> GoogleButton(stringResource(R.string.action_sign_in_google)) {
                         scope.launch {

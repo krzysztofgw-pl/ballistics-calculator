@@ -169,6 +169,7 @@ object BulletLibrary {
         val cache = File(context.filesDir, CACHE)
         runCatching { BulletBundle.parse(cache.readText()) }.getOrNull()?.let(::offer)
         if (cache.exists() && System.currentTimeMillis() - cache.lastModified() < REFRESH_MS) return@withContext
+        if (Stealth.blocksNetwork) return@withContext
         runCatching {
             val text = download()
             val bundle = BulletBundle.parse(text) ?: return@runCatching
@@ -186,6 +187,7 @@ object BulletLibrary {
     }
 
     private fun download(): String {
+        Stealth.checkNetwork()
         val connection = URL(BUNDLE_URL).openConnection() as HttpURLConnection
         connection.connectTimeout = 10_000
         connection.readTimeout = 20_000

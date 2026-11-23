@@ -61,6 +61,7 @@ object WindForecast {
     data class Result(val hours: List<ForecastHour>, val elevationM: Double?)
 
     suspend fun fetch(latitude: Double, longitude: Double): Result = withContext(Dispatchers.IO) {
+        Stealth.checkNetwork()
         val connection = URL(String.format(Locale.US, URL_FORMAT, latitude, longitude)).openConnection() as HttpURLConnection
         connection.connectTimeout = 10_000
         connection.readTimeout = 15_000
@@ -80,7 +81,7 @@ object WindForecast {
         }
     }
 
-    private val USER_AGENT = "KGWLabs-Ballistics/${pl.ballistics.app.BuildConfig.VERSION_NAME} (Android; +https://github.com/krzysztofgw-pl/ballistics-calculator)"
+    val USER_AGENT = "KGWLabs-Ballistics/${pl.ballistics.app.BuildConfig.VERSION_NAME} (Android; +https://github.com/krzysztofgw-pl/ballistics-calculator)"
 
     /** The service answered, but not with a forecast: [code] is the HTTP status, [reason] what Open-Meteo says, if anything. */
     class RefusedException(val code: Int, val reason: String?) : java.io.IOException("HTTP $code" + (reason?.let { ": $it" } ?: ""))
