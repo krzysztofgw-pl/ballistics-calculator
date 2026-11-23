@@ -55,9 +55,23 @@ import pl.ballistics.app.R
 import pl.ballistics.app.data.Stealth
 
 /** Which of the phone's radios are on; read again each time the app comes back to the front. */
-data class Radios(val airplane: Boolean, val wifi: Boolean, val bluetooth: Boolean, val location: Boolean) {
-    /** Radios that still transmit: cellular is covered by airplane mode. GPS only receives, so it is left out. */
-    val transmitting: Boolean get() = !airplane || wifi || bluetooth
+data class Radios(
+    val airplane: Boolean,
+    val wifi: Boolean,
+    val bluetooth: Boolean,
+    val location: Boolean,
+    /**
+     * "Wi-Fi scanning" / "Bluetooth scanning" in the location settings: the phone keeps scanning with
+     * Wi-Fi or Bluetooth switched off, and a Wi-Fi scan sends probe requests. Airplane mode does not stop it.
+     */
+    val scanning: Boolean,
+) {
+    /**
+     * Whether the phone still transmits. Cellular is covered by airplane mode; Wi-Fi and Bluetooth are
+     * checked on their own, since airplane mode does not always turn them off (Android remembers if they
+     * were turned back on in airplane mode). GPS only receives, so it is left out.
+     */
+    val transmitting: Boolean get() = !airplane || wifi || bluetooth || (scanning && location)
 
     companion object {
         /** Global settings, readable without any permission. */
@@ -73,6 +87,7 @@ data class Radios(val airplane: Boolean, val wifi: Boolean, val bluetooth: Boole
                 airplane = global(Settings.Global.AIRPLANE_MODE_ON),
                 wifi = global(Settings.Global.WIFI_ON),
                 bluetooth = global(Settings.Global.BLUETOOTH_ON),
+                scanning = global("wifi_scan_always_enabled") || global("ble_scan_always_enabled"),
                 location = location,
             )
         }
@@ -105,6 +120,7 @@ private fun loudRadios(r: Radios): String = buildList {
     if (!r.airplane) add(stringResource(R.string.stealth_radio_airplane) + " " + stringResource(R.string.stealth_state_off))
     if (r.wifi) add(stringResource(R.string.stealth_radio_wifi))
     if (r.bluetooth) add(stringResource(R.string.stealth_radio_bluetooth))
+    if (r.scanning && r.location) add(stringResource(R.string.stealth_radio_scanning))
 }.joinToString(", ")
 
 /** A thin bar over every tab while stealth mode is on, warning when the phone's radios still transmit. */
@@ -168,6 +184,9 @@ fun StealthDialog(garminWatch: Boolean, onDismiss: () -> Unit) {
                 RadioRow(R.string.stealth_radio_wifi, radios.wifi, loud = radios.wifi) { context.openSettings(Settings.ACTION_WIFI_SETTINGS) }
                 RadioRow(R.string.stealth_radio_bluetooth, radios.bluetooth, loud = radios.bluetooth) { context.openSettings(Settings.ACTION_BLUETOOTH_SETTINGS) }
                 RadioRow(R.string.stealth_radio_location, radios.location, loud = false) { context.openSettings(Settings.ACTION_LOCATION_SOURCE_SETTINGS) }
+                if (radios.location) RadioRow(R.string.stealth_radio_scanning, radios.scanning, loud = radios.scanning) {
+                    context.openSettings(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
+                }
                 Text(stringResource(R.string.stealth_note_gps), style = MaterialTheme.typography.bodySmall)
                 if (garminWatch) Text(stringResource(R.string.stealth_note_watch), style = MaterialTheme.typography.bodySmall)
             }
@@ -219,14 +238,18 @@ private fun StealthNoticeDialog(onDismiss: () -> Unit) {
         text = {
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(stringResource(R.string.stealth_notice_manual), style = MaterialTheme.typography.bodyMedium)
+                IconLabelButton(R.drawable.ic_airplane, R.string.stealth_radio_airplane, Modifier.fillMaxWidth()) {
+                    context.openSettings(Settings.ACTION_AIRPLANE_MODE_SETTINGS)
+                }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    IconLabelButton(R.drawable.ic_airplane, R.string.stealth_radio_airplane, Modifier.weight(1f)) {
-                        context.openSettings(Settings.ACTION_AIRPLANE_MODE_SETTINGS)
+                    IconLabelButton(R.drawable.ic_wifi, R.string.stealth_radio_wifi, Modifier.weight(1f)) {
+                        context.openSettings(Settings.ACTION_WIFI_SETTINGS)
                     }
                     IconLabelButton(R.drawable.ic_bluetooth, R.string.stealth_radio_bluetooth, Modifier.weight(1f)) {
                         context.openSettings(Settings.ACTION_BLUETOOTH_SETTINGS)
                     }
                 }
+                Text(stringResource(R.string.stealth_notice_airplane), style = MaterialTheme.typography.bodySmall)
                 Text(
                     stringResource(if (Stealth.state.value.allowGps) R.string.stealth_notice_gps_on else R.string.stealth_notice_gps_off),
                     style = MaterialTheme.typography.bodyMedium,
