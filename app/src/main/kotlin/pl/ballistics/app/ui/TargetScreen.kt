@@ -56,6 +56,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.text.TextMeasurer
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
@@ -66,6 +67,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import pl.ballistics.app.CalcResult
 import pl.ballistics.app.Lead
+import pl.ballistics.app.AzimuthRow
 import pl.ballistics.app.TargetAnalysis
 import pl.ballistics.app.TargetInputs
 import pl.ballistics.app.lead
@@ -147,6 +149,8 @@ fun TargetScreen(
         windSdMps = conditions.windUncertaintyMps.toNumber()?.takeIf { it >= 0 } ?: 1.0,
         rangeSdM = conditions.rangeUncertaintyM.toNumber()?.takeIf { it >= 0 } ?: 5.0,
         groupRad = (weapon.groupMoa.toNumber()?.takeIf { it > 0 } ?: TargetInputs.DEFAULT_GROUP_MOA) * Units.MOA,
+        charts = ui.showCharts,
+        chartsToM = maxDistance,
     )
     // The distance is solved on its own first; the sweeps for the charts and tools follow once it settles,
     // and until then the previous ones for the same distance stay on screen.
@@ -389,8 +393,8 @@ fun TargetScreen(
         }
         if (sfp) Text(stringResource(R.string.sfp_note, calMag.magFmt()), style = MaterialTheme.typography.bodySmall)
 
-        TargetTools(result, conditions, update, analysis, inputs, reticle, scale, { setDistance(it) }, onSaveAmmo, onAddAmmoCopy)
-        if (analysis != null) {
+        TargetTools(result, conditions, update, analysis, inputs, reticle, scale, ui.showCharts, { setDistance(it) }, onSaveAmmo, onAddAmmoCopy)
+        if (analysis != null && ui.showCharts) {
             Collapsible(stringResource(R.string.section_charts)) { TargetCharts(result, analysis, distance) }
         }
     }
@@ -559,27 +563,69 @@ private fun TargetCharts(result: CalcResult.Ok, a: TargetAnalysis, distance: Dou
 
     val drift = result.solution.points.filter { it.rangeM > 0 }
     if (drift.any { it.spinDriftM != 0.0 }) {
-        // Spin drift pushes the bullet one way; the correction is the other way.
+        // Spin drift pushes the bullet one way and grows with distance; the correction is the other way.
+        // The chart shows how much, rising, with the direction in the axis labels.
+        fun corr(p: TrajectoryPoint) = -atan2(p.spinDriftM, p.rangeM) / unit.radians
+        val side = if (drift.sumOf { corr(it) } >= 0) "R" else "L"
+        fun held(v: Double) = if (abs(v) < 0.5 * 10.0.pow(-digits)) "0" else side + abs(v).fmt(digits)
+        val p = a.point
         LineChart(
             title = stringResource(R.string.chart_spin_drift, unit.label),
-            series = listOf(ChartSeries("", chartColors[0], drift.map { it.rangeM to -atan2(it.spinDriftM, it.rangeM) / unit.radians })),
+            series = listOf(ChartSeries("", chartColors[0], drift.map { it.rangeM to abs(corr(it)) })),
             xTicks = niceTicks(0.0, drift.last().rangeM).filter { it <= drift.last().rangeM },
             xLabel = { it.roundToInt().toString() },
-            yLabel = ::correction,
+            yLabel = ::held,
             markerX = distance,
-        )
-        val p = a.point
-        Text(
-            stringResource(
-                R.string.spin_drift_at, p.rangeM.roundToInt(), (p.spinDriftM * 100).fmt(1),
-                correction(-atan2(p.spinDriftM, p.rangeM) / unit.radians), unit.label,
+            points = listOf(
+                ChartPoint(
+                    p.rangeM, abs(corr(p)), chartColors[0],
+                    AnnotatedString("${held(corr(p))} ${unit.label}"),
+                    stringResource(R.string.spin_drift_point, (abs(p.spinDriftM) * 100).fmt(1), p.rangeM.roundToInt()),
+                ),
             ),
-            style = MaterialTheme.typography.bodyMedium,
         )
     } else {
         Text(
             stringResource(if (result.setup.options.spinDrift) R.string.spin_drift_needs_data else R.string.spin_drift_off),
             style = MaterialTheme.typography.bodySmall,
         )
+    }
+
+    // Coriolis and Eötvös by direction of fire, without wind, at the chosen distance.
+    if (a.byAzimuth.size > 1) {
+        val az = Math.toDegrees(result.setup.conditions.azimuthRad).mod(360.0)
+        fun at(f: (AzimuthRow) -> Double): Double {
+            val rows = a.byAzimuth
+            val i = rows.indexOfFirst { it.azimuthDeg >= az }.takeIf { it > 0 } ?: return f(rows.first())
+            val (p, q) = rows[i - 1] to rows[i]
+            val k = (az - p.azimuthDeg) / (q.azimuthDeg - p.azimuthDeg)
+            return f(p) + k * (f(q) - f(p))
+        }
+        val range = a.point.rangeM.roundToInt()
+        val where = "${az.roundToInt()}° · $range m"
+        fun compass(deg: Double) = when (deg.roundToInt()) { 0, 360 -> "N"; 90 -> "E"; 180 -> "S"; 270 -> "W"; else -> "" }
+        fun upDown(v: Double) = if (abs(v) < 0.5 * 10.0.pow(-(digits + 1))) "0" else (if (v > 0) "↑" else "↓") + abs(v).fmt(digits + 1)
+        val windage = at { it.windageRad } / unit.radians
+        LineChart(
+            title = stringResource(R.string.chart_azimuth_windage, unit.label, range),
+            series = listOf(ChartSeries("", chartColors[0], a.byAzimuth.map { it.azimuthDeg to it.windageRad / unit.radians })),
+            xTicks = (0..4).map { it * 90.0 },
+            xLabel = ::compass,
+            yLabel = ::correction,
+            markerX = az,
+            points = listOf(ChartPoint(az, windage, chartColors[0], AnnotatedString("${correction(windage)} ${unit.label}"), where)),
+        )
+        val change = at { it.elevationChangeRad } / unit.radians
+        LineChart(
+            title = stringResource(R.string.chart_azimuth_elevation, unit.label, range),
+            series = listOf(ChartSeries("", chartColors[1], a.byAzimuth.map { it.azimuthDeg to it.elevationChangeRad / unit.radians })),
+            xTicks = (0..4).map { it * 90.0 },
+            xLabel = ::compass,
+            yLabel = ::upDown,
+            markerX = az,
+            points = listOf(ChartPoint(az, change, chartColors[1], AnnotatedString("${upDown(change)} ${unit.label}"), where)),
+        )
+    } else {
+        Text(stringResource(R.string.azimuth_charts_need_coriolis), style = MaterialTheme.typography.bodySmall)
     }
 }

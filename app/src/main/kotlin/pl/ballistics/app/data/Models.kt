@@ -177,6 +177,9 @@ data class Conditions(
     /** Lightest and strongest wind expected; the forecast fills them in. Blank means not given. */
     val windMinMps: String = "",
     val windMaxMps: String = "",
+    /** The forecast's swing of the wind direction, degrees from the line of fire like [windFromDeg]; blank when not given. */
+    val windFromMinDeg: String = "",
+    val windFromMaxDeg: String = "",
     /** How well the wind and the distance are known (1 σ), for the hit probability. */
     val windUncertaintyMps: String = "1",
     val rangeUncertaintyM: String = "5",
@@ -187,7 +190,7 @@ data class Conditions(
         return copy(
             targetRangeM = d.targetRangeM, targetMoving = d.targetMoving, targetSpeedMps = d.targetSpeedMps, targetDirectionDeg = d.targetDirectionDeg,
             targetWidthCm = d.targetWidthCm, targetHeightCm = d.targetHeightCm, windMinMps = d.windMinMps,
-            windMaxMps = d.windMaxMps, windUncertaintyMps = d.windUncertaintyMps, rangeUncertaintyM = d.rangeUncertaintyM,
+            windMaxMps = d.windMaxMps, windFromMinDeg = d.windFromMinDeg, windFromMaxDeg = d.windFromMaxDeg, windUncertaintyMps = d.windUncertaintyMps, rangeUncertaintyM = d.rangeUncertaintyM,
         )
     }
 
@@ -236,6 +239,8 @@ data class UiSettings(
     val tabsAtTop: Boolean = false,
     val subTabsAtTop: Boolean = false,
     val keepScreenOn: Boolean = false,
+    /** Charts in the target tools and the Charts card; off saves the work of drawing them. */
+    val showCharts: Boolean = true,
     /** A location fix (forecast, compass) also sets the latitude for Coriolis. */
     val locationSetsLatitude: Boolean = true,
     /** Older setting: the forecast set the altitude. Read only to choose [altitudeFrom] for settings saved before [altitudeSource]. */

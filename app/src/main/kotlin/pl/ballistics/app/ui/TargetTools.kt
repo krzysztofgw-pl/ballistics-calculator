@@ -26,7 +26,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import pl.ballistics.app.CalcResult
 import pl.ballistics.app.R
@@ -61,6 +65,15 @@ fun Collapsible(title: String, content: @Composable ColumnScope.() -> Unit) {
     }
 }
 
+/** The stretch clockwise from [from] to [to] degrees, split in two where it passes north. */
+private fun arc(from: Double, to: Double): List<ClosedFloatingPointRange<Double>> =
+    if (from <= to) listOf(from..to) else listOf(from..360.0, 0.0..to)
+
+private fun inArc(deg: Double, from: Double, to: Double): Boolean {
+    val d = deg.mod(360.0)
+    return if (from <= to) d in from..to else d >= from || d <= to
+}
+
 private fun Double.f(decimals: Int) = "%.${decimals}f".format(this)
 private fun cm(m: Double) = (m * 100).roundToInt().toString()
 
@@ -74,6 +87,7 @@ fun TargetTools(
     inputs: TargetInputs,
     reticle: Reticle,
     reticleScale: Double,
+    charts: Boolean,
     onUseDistance: (Double) -> Unit,
     onSaveAmmo: (AmmoProfile) -> Unit,
     onAddAmmoCopy: (from: AmmoProfile, copy: AmmoProfile) -> Unit,
@@ -108,10 +122,40 @@ fun TargetTools(
                 add(BracketHold(x(b.minRad), side(b.minRad), "${b.minMps.f(1)} m/s", strong = false))
                 if (abs(b.maxRad - b.minRad) > 1e-9) add(BracketHold(x(b.maxRad), side(b.maxRad), "${b.maxMps.f(1)} m/s", strong = true))
             }.filter { it.x.isFinite() }
-            if (holds.isNotEmpty()) WindBracketView(
-                reticle, holds,
-                if (holds.size == 2) stringResource(R.string.wind_bracket_spread, (spread / unit.radians).f(digits), unit.label, cm(spread * analysis.point.rangeM)) else null,
-            )
+            val spreadText = stringResource(R.string.wind_bracket_spread, (spread / unit.radians).f(digits), unit.label, cm(spread * analysis.point.rangeM))
+            if (holds.isNotEmpty()) WindBracketView(reticle, holds, if (holds.size == 2) spreadText else null)
+            if (charts) analysis.bracketSweep?.let { sw ->
+                val lo = conditions.windFromMinDeg.toNumber()?.mod(360.0)
+                val hi = conditions.windFromMaxDeg.toNumber()?.mod(360.0)
+                // The forecast's swing of direction, clockwise from [lo] to [hi]; dropped once the direction is set outside it by hand.
+                val bands = if (lo != null && hi != null && inArc(b.fromDeg, lo, hi)) arc(lo, hi) else emptyList()
+                LineChart(
+                    title = stringResource(R.string.chart_bracket_direction, unit.label, analysis.point.rangeM.roundToInt()),
+                    series = listOf(
+                        ChartSeries("${b.minMps.f(1)} m/s", BracketLight, sw.light.map { (d, c) -> d to c / unit.radians }),
+                        ChartSeries("${b.maxMps.f(1)} m/s", BracketStrong, sw.strong.map { (d, c) -> d to c / unit.radians }),
+                    ),
+                    xTicks = (0..4).map { it * 90.0 },
+                    xLabel = { clockText(it) },
+                    yLabel = { v -> side(v * unit.radians) },
+                    markerX = b.fromDeg,
+                    points = listOf(
+                        ChartPoint(b.fromDeg, b.minRad / unit.radians, BracketLight),
+                        ChartPoint(
+                            b.fromDeg, b.maxRad / unit.radians, BracketStrong,
+                            buildAnnotatedString {
+                                withStyle(SpanStyle(color = BracketLight)) { append(side(b.minRad)) }
+                                append(" – ")
+                                withStyle(SpanStyle(color = BracketStrong)) { append(side(b.maxRad)) }
+                            },
+                            "${clockText(b.fromDeg)} · $spreadText",
+                        ),
+                    ),
+                    fillBetween = BracketSpread,
+                    xBands = bands,
+                    xBandLabel = if (lo != null && hi != null) stringResource(R.string.chart_forecast_direction, clockText(lo), clockText(hi)) else null,
+                )
+            }
         }
     }
 
@@ -132,6 +176,22 @@ fun TargetTools(
                     )
                     Text("${cm(abs(m.missM))} cm", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 }
+            }
+            if (charts && analysis.rangeCurve.size > 1) {
+                val half = inputs.heightM * 50
+                LineChart(
+                    title = stringResource(R.string.chart_range_error),
+                    series = listOf(ChartSeries("", chartColors[1], analysis.rangeCurve.map { it.errorM to it.missM * 100 })),
+                    xTicks = listOf(-50.0, -25.0, 0.0, 25.0, 50.0).filter { e -> analysis.rangeCurve.any { abs(it.errorM - e) < 1e-6 } },
+                    xLabel = { e -> if (e > 0) "+" + e.roundToInt() else if (e < 0) "−" + abs(e).roundToInt() else "0" },
+                    yLabel = { v -> if (abs(v) < 1e-9) "0" else (if (v > 0) "↑" else "↓") + abs(v).roundToInt() },
+                    markerX = 0.0,
+                    points = listOfNotNull(
+                        t.shortM?.let { ChartPoint(it, half, chartColors[1]) },
+                        t.longM?.let { ChartPoint(it, -half, chartColors[1]) },
+                    ),
+                    yBand = -half..half,
+                )
             }
             Text(
                 stringResource(
@@ -196,6 +256,23 @@ fun TargetTools(
                 ),
                 style = MaterialTheme.typography.bodySmall,
             )
+            if (charts && analysis.hitByRange.size > 1) {
+                val to = analysis.hitByRange.last().first
+                LineChart(
+                    title = stringResource(R.string.chart_hit_range),
+                    series = listOf(ChartSeries("", chartColors[2], listOf(0.0 to 100.0) + analysis.hitByRange.map { (r, p) -> r to p * 100 })),
+                    xTicks = niceTicks(0.0, to).filter { it <= to + 1e-6 },
+                    xLabel = { it.roundToInt().toString() },
+                    yLabel = { "${it.roundToInt()} %" },
+                    markerX = analysis.point.rangeM,
+                    points = listOf(
+                        ChartPoint(
+                            analysis.point.rangeM, h.probability * 100, chartColors[2],
+                            AnnotatedString("${(h.probability * 100).roundToInt()} %"), "${analysis.point.rangeM.roundToInt()} m",
+                        ),
+                    ),
+                )
+            }
         }
     }
 

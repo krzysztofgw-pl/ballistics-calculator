@@ -36,6 +36,8 @@ data class WindSummary(
     val fromDeg: Double,
     val minSpeedMps: Double,
     val maxSpeedMps: Double,
+    /** How far the hourly directions swing each side of [fromDeg]: the most counter-clockwise (negative) and clockwise, in degrees. */
+    val fromSpreadDeg: ClosedFloatingPointRange<Double> = 0.0..0.0,
     val gustMps: Double?,
     /** Length of the mean vector over the mean speed: 1 = steady direction, near 0 = swirling. */
     val steadiness: Double,
@@ -132,9 +134,12 @@ object WindForecast {
         north /= hours.size
         val mean = hours.sumOf { it.speedMps } / hours.size
         val vector = hypot(east, north)
+        val from = Math.toDegrees(atan2(-east, -north)).mod(360.0)
+        val swings = hours.filter { it.speedMps > 0 }.map { ((it.fromDeg - from + 540.0).mod(360.0)) - 180.0 }
         return WindSummary(
             speedMps = mean,
-            fromDeg = Math.toDegrees(atan2(-east, -north)).mod(360.0),
+            fromDeg = from,
+            fromSpreadDeg = (swings.minOrNull() ?: 0.0)..(swings.maxOrNull() ?: 0.0),
             minSpeedMps = hours.minOf { it.speedMps },
             maxSpeedMps = hours.maxOf { it.speedMps },
             gustMps = hours.mapNotNull { it.gustMps }.maxOrNull(),
