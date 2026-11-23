@@ -248,7 +248,7 @@
     <string name="hemisphere_north">N</string>
     <string name="hemisphere_south">S</string>
 
-    <!-- Table -->
+    <!-- DOPE -->
     <string name="col_range">m</string>
     <string name="col_drop">Drop cm</string>
     <string name="col_elevation">Elev.</string>
@@ -328,8 +328,8 @@
     <string name="field_cant">cant</string>
     <string name="field_latitude">latitude</string>
     <string name="field_azimuth">azimuth</string>
-    <string name="field_table_range">table range</string>
-    <string name="field_table_step">table step</string>
+    <string name="field_table_range">DOPE range</string>
+    <string name="field_table_step">DOPE step</string>
     <string name="label_target_distance">Distance</string>
     <string name="action_closer">1 m closer</string>
     <string name="action_farther">1 m farther</string>
@@ -459,11 +459,11 @@
     <!-- Help: each answer's paragraphs are separated by a blank line (\n\n). -->
     <string name="title_help">Help</string>
     <string name="help_start_title">Where do I start?</string>
-    <string name="help_start">Settings, Profiles: add your rifle with its scope and zero, and your load (from the library or your own data). The Rifle tab picks the rifle and load in use and whether the suppressor is on.\n\nConditions: set the wind, temperature, pressure and altitude, and the shot angle if you shoot up or down.\n\nDOPE gives the scope settings for every range; Target gives the correction for one distance, drawn on your reticle.</string>
+    <string name="help_start">Settings, Profiles: add your rifle with its scope and zero, and your load (from the library or your own data). The Rifle tab picks the rifle and load in use and whether the suppressor is on.\n\nConditions: set the wind, temperature, pressure and altitude, and the shot angle if you shoot up or down. Where the altitude comes from (typed in, terrain map or GPS) is set in Settings.\n\nDOPE gives the scope settings for every range; Target gives the correction for one distance, drawn on your reticle.</string>
     <string name="help_suppressor_title">How does the suppressor work?</string>
     <string name="help_suppressor">Turn on Suppressor in the rifle section of the rifle profile. Then, in the zero section, say whether you zeroed with it on (Suppressed) or off (Bare), and enter where the impact goes in the other state, up and right from the zero in the turret unit (negative for down or left). Shoot a group in that state at your zero range to find it. Switching which state the zero was shot in flips the signs.\n\nOn the Rifle tab, switch the suppressor on or off. When it differs from the zero, every correction includes the shift and the rifle on the Rifle tab icon carries a suppressor while it is on.</string>
     <string name="help_zero_title">What goes into the zero?</string>
-    <string name="help_zero">The zero range and the temperature and pressure on the day you zeroed. The app computes the bore angle that hits at that range in those conditions, and keeps it for every other shot.\n\nIf you zeroed in very different weather, entering it moves the whole table by the difference.</string>
+    <string name="help_zero">The zero range and the temperature and pressure on the day you zeroed. The app computes the bore angle that hits at that range in those conditions, and keeps it for every other shot.\n\nIf you zeroed in very different weather, entering it moves the whole DOPE by the difference.</string>
     <string name="help_pressure_title">QNH or station pressure?</string>
     <string name="help_pressure">QNH is the pressure reduced to sea level: weather reports, forecasts and airports give it. With QNH the app also needs the altitude, to work out the pressure where you stand.\n\nStation pressure is what a barometer reads where you are: a Kestrel or a Garmin watch. It needs no altitude.\n\nPick the one you actually have; using QNH as station pressure at altitude is a large error.</string>
     <string name="help_velocity_title">Which muzzle velocity is used?</string>
@@ -476,14 +476,26 @@
     <string name="help_target">Set the distance with the field, the arrows or the slider. The corners of the reticle say what to dial and what to hold for elevation and windage; the red points are where the bullet goes at each distance.\n\nWhether each axis is dialed or held is set per reticle in Settings. Dial corrections are whole clicks, holds are to 0.05.</string>
     <string name="help_moving_title">How does the moving target work?</string>
     <string name="help_moving">Tick Moving target, enter its speed and set its course on the small dial in the reticle\'s corner (tap it first to unlock it): up is away from you, right is to the right.\n\nThe blue point is where to hold so the bullet meets the target, using the time of flight.</string>
-    <string name="help_table_title">What is in the table?</string>
-    <string name="help_table">For each range: drop, elevation and clicks, wind drift and windage, velocity, energy, time of flight and Mach. Its range and step are set below it.</string>
+    <string name="help_table_title">What is in the DOPE?</string>
+    <string name="help_table">For each range: drop, elevation and clicks, wind drift and windage, velocity, energy, time of flight and Mach. Its range and step are set below it; tap the open tab or the arrow to fold the details at the top.\n\nThe cm columns say where the bullet goes: drop below the line of sight, drift with the wind. The MRAD or MOA and clicks columns are the correction: up has no mark, ↓ means dial down (short of the zero), and R or L is the windage.</string>
+    <string name="help_altitude_title">Where does the altitude come from?</string>
+    <string name="help_altitude">Settings, Measurements and location, Altitude from: typed in, the terrain map or GPS. The terrain map gives the ground height at your location (a 1 m lidar model in Poland, a 90 m model elsewhere) and needs the internet. GPS works anywhere under open sky, also in stealth mode; the height is converted to above sea level.\n\nThe altitude matters only with QNH: with station pressure the app does not need it.</string>
+    <string name="help_garmin_title">How do I use a Garmin watch?</string>
+    <string name="help_garmin">Install the free Station Pressure app on the watch from the Connect IQ Store and turn on Pressure from a Garmin watch in Settings, External devices. The Garmin button under the pressure on Conditions reads the watch\'s barometer as station pressure.</string>
+    <string name="help_forecast_title">How does the wind forecast work?</string>
+    <string name="help_forecast">Forecast under the wind dial gets the wind for your location from Open-Meteo. Pick the hours you will shoot on the chart and the shooting height, then Use fills in the wind, and the atmosphere too if you leave that on. The ? in the forecast window explains the chart.</string>
+    <string name="help_chrono_title">How do I import chronograph data?</string>
+    <string name="help_chrono">Chrono on the Rifle tab opens a chronograph file (Labradar, Labradar LX, Garmin Xero, Athlon Rangecraft, MagnetoSpeed or any table with a velocity column) or lets you type the velocities. You can also share a file from another app straight into this one.\n\nYou see the average, SD and ES; shots that look misread are flagged, and each shot can be ticked in or out. Save the velocity for this rifle only, or for the load (all rifles); it is corrected to the load\'s reference powder temperature.</string>
+    <string name="help_tools_title">What are the tools on the Target tab?</string>
+    <string name="help_tools">Under the reticle, each card is a tool for the chosen distance:\n\nWind bracket: the holds for the lightest and strongest wind you expect, drawn on a slice of your reticle, and the spread between them.\n\nRange error: where the bullet lands if the distance is off by a few metres, and the window of distances that still hits a target of your size.\n\nTemperature: how the velocity and elevation change if the powder is warmer or colder.\n\nHit probability: the chance of a first-round hit from your group size, velocity SD, and how well you know the wind and the distance.\n\nRanging with the reticle: the distance from the target\'s size and how many MRAD or MOA it reads.\n\nBC from range data: the BC that matches a measured drop or downrange velocity, saved to the load or as a copy.</string>
+    <string name="help_charts_title">How do I read the charts?</string>
+    <string name="help_charts">The charts show how a correction changes with distance, wind or azimuth, with the current value marked. Drag a finger along a chart to read any point; the reading stays when you lift it. On the charts by distance, hold the finger still to make that the target distance. A tap clears the reading.\n\nEach chart can be turned off in Settings, Layout, Charts; a chart that is off is not worked out either.</string>
     <string name="help_sync_title">How are my profiles kept?</string>
     <string name="help_sync">Sign in with Google in Settings to sync between phones. Export writes all profiles to a file you can import again, here or in the web version.</string>
     <string name="help_update_title">How do I update the app?</string>
     <string name="help_update">Settings, About, Check for update downloads the newest build and opens the installer. Turn on the check at start to be told when there is one.</string>
     <string name="help_accuracy_title">How far can I trust it?</string>
-    <string name="help_accuracy">It is only as good as its inputs: muzzle velocity, BC, the zero and the wind matter most. Confirm the dope with live fire at the distances you use, and correct the velocity until the table matches your hits.</string>
+    <string name="help_accuracy">It is only as good as its inputs: muzzle velocity, BC, the zero and the wind matter most. Confirm the dope with live fire at the distances you use, and correct the velocity until the DOPE matches your hits.</string>
     <!-- Suggesting a bullet to the community database -->
     <string name="action_ok">OK</string>
     <string name="action_suggest_bullet">Suggest to database</string>

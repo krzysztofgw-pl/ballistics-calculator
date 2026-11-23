@@ -23,6 +23,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import pl.ballistics.app.BuildConfig
 import pl.ballistics.app.R
 
 /** One question and its answer; the answer's paragraphs are separated by blank lines. */
@@ -35,15 +36,22 @@ private val topics = listOf(
     Topic(R.string.help_velocity_title, R.string.help_velocity),
     Topic(R.string.help_suppressor_title, R.string.help_suppressor),
     Topic(R.string.help_wind_title, R.string.help_wind),
+    Topic(R.string.help_forecast_title, R.string.help_forecast),
+    Topic(R.string.help_altitude_title, R.string.help_altitude),
+    Topic(R.string.help_garmin_title, R.string.help_garmin),
     Topic(R.string.help_angle_title, R.string.help_angle),
+    Topic(R.string.help_chrono_title, R.string.help_chrono),
     Topic(R.string.help_target_title, R.string.help_target),
     Topic(R.string.help_moving_title, R.string.help_moving),
+    Topic(R.string.help_tools_title, R.string.help_tools),
+    Topic(R.string.help_charts_title, R.string.help_charts),
     Topic(R.string.help_table_title, R.string.help_table),
     Topic(R.string.help_sync_title, R.string.help_sync),
     Topic(R.string.help_stealth_title, R.string.help_stealth),
-    Topic(R.string.help_update_title, R.string.help_update),
+    // Only the GitHub build updates itself; Play updates it in the store.
+    Topic(R.string.help_update_title, R.string.help_update).takeIf { BuildConfig.SELF_UPDATE },
     Topic(R.string.help_accuracy_title, R.string.help_accuracy),
-)
+).filterNotNull()
 
 /** How to use the app, as questions that open to their answers. */
 @OptIn(ExperimentalMaterial3Api::class)

@@ -29,7 +29,7 @@ android {
         // the workflow run number + 100, as the first Play upload was 253.
         val build = System.getenv("BUILD_NUMBER")?.toIntOrNull()?.plus(100)
         versionCode = build ?: 2
-        versionName = "1.0.0" + (build?.let { "-build.$it" } ?: "")
+        versionName = "1.1.0" + (build?.let { "-build.$it" } ?: "")
     }
 
     // github: APKs on the repository's releases, with the in-app updater.
