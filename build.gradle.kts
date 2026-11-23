@@ -28,7 +28,7 @@ allprojects {
 }
 
 // The Kotlin/JS build tools (webpack, its dev server, Karma, Mocha) only run at build
-// time, but GitHub reports their known vulnerabilities. Kotlin 2.2.0 pins older
+// time, but GitHub reports their known vulnerabilities. Kotlin pins older
 // versions, so raise them here; kotlin-js-store/package-lock.json follows
 // (./gradlew kotlinUpgradePackageLock). Remove entries once Kotlin ships newer ones.
 plugins.withType<org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsRootPlugin> {
@@ -41,5 +41,6 @@ plugins.withType<org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsRootPlugin>
         override("serialize-javascript", "^7.1.3")
         override("node-forge", "^1.4.3")
         override("uuid", "^11.1.1")
+        override("minimatch", "^11.0.1")
     }
 }

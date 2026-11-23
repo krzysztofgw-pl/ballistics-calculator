@@ -4,8 +4,16 @@ An Android ballistic calculator by **KGW Labs** (`com.kgwlabs.ballistics`).
 
 Ballistics computes bullet trajectories with a 3DOF point-mass solver built on established, publicly documented
 models: standard drag functions, Doppler-derived drag curves, a humid-air atmosphere, Coriolis, spin drift and
-aerodynamic jump. It keeps rifle and load profiles, gives a dope table with turret clicks, draws the holds on
+aerodynamic jump. It keeps rifle and load profiles, gives a DOPE chart with turret clicks, draws the holds on
 your scope's reticle, and syncs everything to the cloud.
+
+Current version: **1.1.0**, on [Google Play](https://play.google.com/store/apps/details?id=com.kgwlabs.ballistics)
+as "Ballistics by KGW Labs", and as an APK from the [latest release](#installing).
+
+| | | | |
+|---|---|---|---|
+| ![Reticle](fastlane/metadata/android/en-US/images/phoneScreenshots/01.png) | ![DOPE](fastlane/metadata/android/en-US/images/phoneScreenshots/02.png) | ![Wind](fastlane/metadata/android/en-US/images/phoneScreenshots/03.png) | ![Forecast](fastlane/metadata/android/en-US/images/phoneScreenshots/04.png) |
+| ![Wind bracket](fastlane/metadata/android/en-US/images/phoneScreenshots/05.png) | ![Charts](fastlane/metadata/android/en-US/images/phoneScreenshots/06.png) | ![Chronograph](fastlane/metadata/android/en-US/images/phoneScreenshots/07.png) | ![Stealth mode](fastlane/metadata/android/en-US/images/phoneScreenshots/08.png) |
 
 > **Safety note.** A calculator only predicts. Always confirm the dope with live fire before relying on it,
 > and check library bullet data against the manufacturer's current figures.
@@ -15,7 +23,7 @@ your scope's reticle, and syncs everything to the cloud.
 ### Rifle
 The first tab: the rifle and load in use, picked from full-width dropdowns under a large rifle and bullet silhouette, with a wrench next to each
 to edit it, a one-line summary (caliber, scope, zero, muzzle velocity) and the profile list. Help and
-settings sit at its top right; there is no title bar, the tabs name the screen. When the rifle has a
+settings sit at its top right, next to the stealth mode aircraft (bare while off, filled while on); there is no title bar, the tabs name the screen. The Chrono button imports chronograph data. When the rifle has a
 suppressor configured, a switch says whether it is on; the rifle on the Rifle tab icon then carries a suppressor. Rifles and loads are marked with rifle and bullet icons instead of their names (the pickers on the Rifle tab, the profile list, the editors).
 
 ### Profiles
@@ -26,7 +34,7 @@ Settings → Profiles (or the Profiles button on the Rifle tab) lists and edits 
   temperature and pressure (station pressure, or QNH with the zeroing altitude).
 - **Suppressor**: switched on with the rifle (next to the twist direction); then the zero section asks whether the zero was shot suppressed or bare, and where the impact goes in the other
   state (up and right from the zero, in the turret unit; switching the zero state flips the signs). With the suppressor in the other state than at
-  zeroing, every correction (table, target, holds) includes that shift.
+  zeroing, every correction (DOPE, target, holds) includes that shift.
 - **Sight height helper**: compute it from a caliper measurement, or estimate it from the objective diameter,
   ring height and rail.
 - **Loads**: reference muzzle velocity with the barrel length it was measured in, powder temperature sensitivity, bullet weight, diameter, length and twist,
@@ -51,11 +59,11 @@ standard 1.0 m/s per °C when none is entered; factory velocities are referenced
 Wind first (it changes most), then temperature, pressure, altitude and humidity, look angle and cant, and
 Coriolis (latitude), spin drift and aerodynamic jump. Each tab keeps its scroll position.
 
-- **Wind and azimuth dial**: one 360° dial for both, with a switch for which one a tap or drag sets.
-  North up it reads like a map: the shot goes out along the azimuth and the wind comes in from its true
-  bearing. Otherwise the line of fire points up, the wind reads as a clock and a north marker shows the
-  azimuth. Moving the azimuth keeps the wind where it is in the frame shown. A dial takes touches only after a
-  tap unlocks it (its rim turns coloured); a tap anywhere else locks it, so scrolling over it changes nothing.
+- **Wind dial**: a wind clock (hours.minutes, e.g. 3.30) inside a compass ring. In the shooter view the line
+  of fire points up and dragging the ring sets the azimuth; a round map-style button with a red needle
+  switches to north up, where the clock turns instead and a tap on the ring points at the target. Under the
+  dial: the azimuth, the crosswind (from left or right) and the head or tailwind. A dial takes touches only
+  after a tap unlocks it (its rim turns coloured); a tap anywhere else locks it, so scrolling over it changes nothing.
 - **Phone compass** for the azimuth, corrected for magnetic declination when the location is known. Each
   reading is checked: the phone's own calibration status and heading accuracy, and the measured field
   against the Earth's field at the location. A warning suggests a figure-eight calibration away from steel.
@@ -67,16 +75,30 @@ Coriolis (latitude), spin drift and aerodynamic jump. Each tab keeps its scroll 
 - **Pressure from a Garmin watch**: the barometer's station pressure, sent by a small Connect IQ watch
   app through Garmin Connect. See [garmin](garmin/README.md) for installing it.
 - **Wind from the forecast**: the hourly forecast for the phone's location
-  ([Open-Meteo](https://open-meteo.com), free for non-commercial use) averaged over a chosen window: mean
-  speed, vector-mean direction, gusts and how steady the direction is. The 10 m forecast can be scaled to a
-  ~2 m line of fire, and the direction is converted to the line of fire with the shot azimuth. Temperature,
-  humidity and pressure can be filled in from the same forecast. Settings decide whether a location fix
-  also sets the latitude and whether the forecast sets the altitude (terrain height at the location).
+  ([Open-Meteo](https://open-meteo.com), free for non-commercial use) as a 12-hour chart of mean wind, gusts
+  and direction arrows (as a clock or true bearings, set in Settings). Drag the window over the hours you will
+  shoot: mean speed, vector-mean direction, gusts and a warning when the direction is unsteady. The 10 m
+  forecast can be scaled to the shooting height (10 m, open ground or woods at ~2 m), and the direction is
+  converted to the line of fire with the shot azimuth. Temperature, humidity and pressure can be filled in
+  from the same forecast; the direction swing of the chosen hours feeds the wind bracket chart.
+- **Altitude source** (Settings → Measurements and location): typed in, the terrain map (GUGiK's 1 m lidar
+  model in Poland, a 90 m model via Open-Meteo elsewhere) or GPS, converted to height above sea level. The
+  Garmin and altitude buttons sit side by side under their fields.
 
-### Table
+### Chronograph import
+The Chrono button on the Rifle tab opens a chronograph file, or the file can be shared or opened into the app
+from another app: Labradar and Labradar LX series reports, Garmin Xero C1 (ShotView CSV or FIT), Athlon
+Rangecraft (Excel), MagnetoSpeed V3 and Sporter, or any table with a velocity column. Velocities can also be
+typed shot by shot in m/s or fps. It shows the average, SD and ES, flags shots that look misread, lets each
+shot be ticked in or out, and saves the velocity for this rifle or for the load (all rifles), corrected to the
+load's reference powder temperature. Replacing a saved value asks first: Replace or Save as copy.
+
+### DOPE
 For each range: drop, elevation and clicks, wind drift and windage correction, velocity, energy, time of
-flight and Mach. The range column stays in place while the other columns scroll sideways. The table's
-range and step are set below it.
+flight and Mach. The cm columns say where the bullet goes (drop below the line of sight, drift with the
+wind); the MRAD or MOA and clicks columns are the correction, with no mark for up, ↓ for down and R or L for
+windage. The range column stays in place while the other columns scroll sideways; the details at the top fold
+with an arrow or a tap on the open tab. The DOPE range and step are set below it.
 
 ### Target
 Pick a distance to the metre with the slider, the arrows or by typing it (all in one row), and get the
@@ -87,29 +109,47 @@ or held. Dial corrections are whole clicks and holds are to 0.05; the reticle sh
   flight to where the target will be, and its hold point is drawn on the reticle in blue.
 - Impact points drawn on the scope's reticle, with a magnification slider; the same holds can be
   previewed on any other reticle.
-- Charts at that distance: windage correction by wind speed (one line per wind direction) and by wind
+- Charts at that distance: wind drift correction by wind speed (one line per wind direction) and by wind
   direction (one line per wind speed), each solved with the full model, so spin drift and aerodynamic
-  jump are included.
-- Spin drift correction by distance.
+  jump are included, with a callout for every series at the current wind.
+- Spin drift (gyroscopic drift) by distance, and the Coriolis effect (windage) and Eötvös effect
+  (elevation) by azimuth.
+- Reading the charts: a finger moves a point and its callout along the curve, and the x value shows on a chip
+  under the line; the reading stays when the finger lifts, a tap clears it, and on the charts by distance a
+  finger held still picks that distance. Each chart has its own switch in Settings → Layout → Charts, and
+  charts are worked out only for open cards.
 - Range card: targets saved as sub-tabs (distance, look angle, azimuth, motion and size). Changes made
   while a target is open are saved to it.
-- Wind bracket: corrections for the lightest and the strongest expected wind; the forecast fills both in.
-- Range error: vertical miss when the distance is off by up to ±50 m, and the error that still hits a
-  target of the given height.
+- Wind bracket: holds for the lightest and the strongest expected wind, drawn on a zoomed slice of the
+  reticle with the spread between them, and a chart of both by wind direction with the forecast's direction
+  swing as a band; the forecast fills both speeds in.
+- Range error: where the shot lands (rows like "−50 m ↑ 22 cm") when the distance is off by up to ±50 m,
+  a chart of it, and the error that still hits a target of the given height.
 - Temperature: muzzle velocity and elevation 10 °C colder and warmer.
 - Hit probability: chance of a first-round hit on the target (its width and height are set here) from the velocity SD (load), the 5-shot
   group (rifle) and how well the wind and the distance are known. Each source's spread comes from the
-  full solution; a 5-shot group is taken as three standard deviations.
+  full solution; a 5-shot group is taken as three standard deviations. A chart shows it by distance.
 - Ranging with the reticle: distance from the target size and its reading in the reticle.
+- BC from range data: the BC that matches a measured drop or downrange velocity, saved to the load or as a copy.
+
+### Stealth mode
+The aircraft icon on the Rifle tab, Settings → Stealth mode or a Quick Settings tile (Settings can add it;
+a long press on it opens the stealth window) stops every connection the app makes: forecast, terrain height,
+Firestore sync, bullet database, update and store checks, and the Garmin watch link unless allowed. Location
+comes from GPS alone, without network assistance (it can be turned off too). Android lets no app switch the
+phone's radios, so a bar over every tab turns red while they still transmit, and the stealth window lists
+airplane mode, Wi-Fi, Bluetooth, location, scanning and NFC/UWB with shortcuts to each. The setting stays on
+the phone and is never synced.
 
 ### Help
 The question mark on the Rifle tab, next to the gear: short answers on getting started, the zero, QNH or station pressure,
-muzzle velocity, wind, shot angle, the Target screen, moving targets, sync, updates and accuracy.
+muzzle velocity, the suppressor, wind, the forecast, altitude, the Garmin watch, shot angle, chronograph import, the Target
+screen, moving targets, the Target tools, charts, the DOPE, sync, stealth mode, updates (GitHub build only) and accuracy.
 
 ### Settings
 The gear on the Rifle tab: light, dark or system theme; keep the screen on; tabs and sub-tabs at the top
-or the bottom; QNH (default) or station pressure; external devices (Garmin watch for pressure); whether location sets the latitude and the altitude;
-dial or hold for elevation and windage, per reticle; sync and backup.
+or the bottom; chart switches; QNH (default) or station pressure; forecast direction as a clock or true bearings; external devices (Garmin watch for pressure); whether location sets the latitude, and where the altitude comes from;
+dial or hold for elevation and windage, per reticle; stealth mode (GPS and the watch allowed or not, the bar, the tile); sync and backup.
 
 ### Sync and backup
 - Google sign-in (the icon-only Sign in with Google button, the Google "G") with live sync through Cloud Firestore (newer change wins). Signed in, Settings shows a cloud icon (red on a sync error) and the same G button, which asks "Sign out <email>?".
@@ -142,12 +182,14 @@ sight height helper.
 
 ## Installing
 
+The Play build (flavor `play`) comes from [Google Play](https://play.google.com/store/apps/details?id=com.kgwlabs.ballistics) and updates through the store.
+
 Every build of `main` is published as the latest release with the signed APK attached. The newest APK
 is always at <https://github.com/krzysztofgw-pl/ballistics-calculator/releases/latest/download/ballistics.apk>:
 open it in the phone's browser (a home-screen shortcut makes it one tap) and install it, allowing installs
 from unknown sources when asked.
 
-After that the app updates itself: **Settings → About → Check for update** looks at the latest release and
+After that the APK build (flavor `github`) updates itself: **Settings → About → Check for update** looks at the latest release and
 offers to install a newer build, and **Check for update on start** (off by default) does the same at launch. Android asks once to allow installs
 from the app.
 
@@ -160,7 +202,7 @@ uninstall the old app, then import them.
 ### Web app (iPhone and other phones)
 
 Every build of `main` also publishes a web version to <https://krzysztofgw-pl.github.io/ballistics-calculator/>.
-It runs the same solver, compiled to JavaScript, and covers profiles, conditions, the table and the target
+It runs the same solver, compiled to JavaScript, and covers profiles, conditions, the DOPE and the target
 screen, with the shot angle measured through the camera. On an iPhone open the link in Safari and tap
 **Share → Add to Home Screen**: it then opens full screen like an app and works offline. Profiles are kept
 in the browser; **Settings → Export / Import** uses the same file as the Android app, so profiles move
@@ -176,7 +218,8 @@ GitHub Pages has to be enabled once: repository **Settings → Pages → Source:
 | `app/` | Android app in Jetpack Compose (Material 3) |
 | `app/.../data/` | Profiles, bullet library, local storage, Firebase sync |
 | `app/.../reticle/` | Reticle definitions |
-| `app/.../ui/` | Screens: Profiles, Conditions, Table, Target, editors |
+| `app/.../ui/` | Screens: Rifle, Profiles, Conditions, DOPE, Target, editors, chronograph, stealth |
+| `fastlane/metadata/android/` | Google Play listing texts and screenshots (framed with `tools/store-screenshots/frame.js`) |
 | `web/` | Web app (PWA): Kotlin/JS on the DOM, manifest and service worker in `src/jsMain/resources` |
 | `.github/workflows/build.yml` | CI: solver tests, signed release APK, web app on GitHub Pages |
 
