@@ -163,6 +163,23 @@ fun TargetTools(
                         ),
                     ),
                     fillBetween = BracketSpread,
+                    readout = { x ->
+                        val l = sw.light.valueAt(x)
+                        val st = sw.strong.valueAt(x)
+                        if (l == null || st == null) emptyList()
+                        else listOf(
+                            ChartPoint(x, l / unit.radians, BracketLight),
+                            ChartPoint(
+                                x, st / unit.radians, BracketStrong,
+                                buildAnnotatedString {
+                                    withStyle(SpanStyle(color = BracketLight)) { append(side(l)) }
+                                    append(" – ")
+                                    withStyle(SpanStyle(color = BracketStrong)) { append(side(st)) }
+                                },
+                                "${clockText(x)} · ↔ ${(abs(st - l) / unit.radians).f(digits)} ${unit.label}",
+                            ),
+                        )
+                    },
                     xBands = bands,
                     xBandLabel = if (lo != null && hi != null) stringResource(R.string.chart_forecast_direction, clockText(lo), clockText(hi)) else null,
                 )
@@ -202,6 +219,13 @@ fun TargetTools(
                         t.longM?.let { ChartPoint(it, -half, chartColors[1]) },
                     ),
                     yBand = -half..half,
+                    readout = { x ->
+                        val curve = analysis.rangeCurve.map { it.errorM to it.missM * 100 }
+                        listOfNotNull(curve.valueAt(x)?.let { v ->
+                            val signed = if (x > 0.5) "+" + x.roundToInt() else if (x < -0.5) "−" + abs(x).roundToInt() else "0"
+                            ChartPoint(x, v, chartColors[1], AnnotatedString((if (v >= 0) "↑" else "↓") + "${abs(v).roundToInt()} cm"), "$signed m")
+                        })
+                    },
                 )
             }
             Text(
@@ -282,6 +306,13 @@ fun TargetTools(
                             AnnotatedString("${(h.probability * 100).roundToInt()} %"), "${analysis.point.rangeM.roundToInt()} m",
                         ),
                     ),
+                    readout = { x ->
+                        val curve = listOf(0.0 to 100.0) + analysis.hitByRange.map { (r, p) -> r to p * 100 }
+                        listOfNotNull(curve.valueAt(x)?.let { v ->
+                            ChartPoint(x, v, chartColors[2], AnnotatedString("${v.roundToInt()} %"), "${x.roundToInt()} m")
+                        })
+                    },
+                    onLongPress = onUseDistance,
                 )
             }
         }

@@ -404,7 +404,7 @@ fun TargetScreen(
 
         TargetTools(result, conditions, update, analysis, inputs, reticle, scale, ui.charts, { setDistance(it) }, onSaveAmmo, onAddAmmoCopy)
         if (analysis != null && ui.charts.any { it in ChartKind.card }) {
-            Collapsible(stringResource(R.string.section_charts)) { TargetCharts(result, analysis, distance, ui.charts) }
+            Collapsible(stringResource(R.string.section_charts)) { TargetCharts(result, analysis, distance, ui.charts) { setDistance(it) } }
         }
     }
 }
@@ -530,7 +530,7 @@ private fun clock(deg: Double): String = clockText(deg)
 
 /** Spin drift by distance and the windage correction by wind speed and by wind direction at the chosen distance. */
 @Composable
-private fun TargetCharts(result: CalcResult.Ok, a: TargetAnalysis, distance: Double, charts: Set<ChartKind>) {
+private fun TargetCharts(result: CalcResult.Ok, a: TargetAnalysis, distance: Double, charts: Set<ChartKind>, onUseDistance: (Double) -> Unit) {
     val unit = result.angularUnit
     val digits = if (unit == AngularUnit.MOA) 1 else 2
     fun correction(v: Double): String = when {
@@ -580,9 +580,12 @@ private fun TargetCharts(result: CalcResult.Ok, a: TargetAnalysis, distance: Dou
         val side = if (drift.sumOf { corr(it) } >= 0) "R" else "L"
         fun held(v: Double) = if (abs(v) < 0.5 * 10.0.pow(-digits)) "0" else side + abs(v).fmt(digits)
         val p = a.point
+        val pointText = stringResource(R.string.spin_drift_point)
+        val driftCm = drift.map { it.rangeM to abs(it.spinDriftM) * 100 }
+        val series = drift.map { it.rangeM to abs(corr(it)) }
         LineChart(
             title = stringResource(R.string.chart_spin_drift, unit.label),
-            series = listOf(ChartSeries("", chartColors[0], drift.map { it.rangeM to abs(corr(it)) })),
+            series = listOf(ChartSeries("", chartColors[0], series)),
             xTicks = niceTicks(0.0, drift.last().rangeM).filter { it <= drift.last().rangeM },
             xLabel = { it.roundToInt().toString() },
             yLabel = ::held,
@@ -594,6 +597,15 @@ private fun TargetCharts(result: CalcResult.Ok, a: TargetAnalysis, distance: Dou
                     stringResource(R.string.spin_drift_point, (abs(p.spinDriftM) * 100).fmt(1), p.rangeM.roundToInt()),
                 ),
             ),
+            readout = { x ->
+                listOfNotNull(series.valueAt(x)?.let { v ->
+                    ChartPoint(
+                        x, v, chartColors[0], AnnotatedString("${held(v * sign(corr(p)))} ${unit.label}"),
+                        pointText.format((driftCm.valueAt(x) ?: 0.0).fmt(1), x.roundToInt()),
+                    )
+                })
+            },
+            onLongPress = onUseDistance,
         )
     } else {
         Text(
@@ -628,6 +640,10 @@ private fun TargetCharts(result: CalcResult.Ok, a: TargetAnalysis, distance: Dou
             yLabel = ::correction,
             markerX = az,
             points = listOf(ChartPoint(az, windage, chartColors[0], AnnotatedString("${correction(windage)} ${unit.label}"), where)),
+            readout = { x ->
+                val rows = a.byAzimuth.map { it.azimuthDeg to it.windageRad / unit.radians }
+                listOfNotNull(rows.valueAt(x)?.let { v -> ChartPoint(x, v, chartColors[0], AnnotatedString("${correction(v)} ${unit.label}"), "${x.roundToInt()}° · $range m") })
+            },
         )
         val change = at { it.elevationChangeRad } / unit.radians
         if (ChartKind.AZIMUTH_ELEVATION in charts) LineChart(
@@ -638,6 +654,10 @@ private fun TargetCharts(result: CalcResult.Ok, a: TargetAnalysis, distance: Dou
             yLabel = ::upDown,
             markerX = az,
             points = listOf(ChartPoint(az, change, chartColors[1], AnnotatedString("${upDown(change)} ${unit.label}"), where)),
+            readout = { x ->
+                val rows = a.byAzimuth.map { it.azimuthDeg to it.elevationChangeRad / unit.radians }
+                listOfNotNull(rows.valueAt(x)?.let { v -> ChartPoint(x, v, chartColors[1], AnnotatedString("${upDown(v)} ${unit.label}"), "${x.roundToInt()}° · $range m") })
+            },
         )
     } else {
         Text(stringResource(R.string.azimuth_charts_need_coriolis), style = MaterialTheme.typography.bodySmall)
