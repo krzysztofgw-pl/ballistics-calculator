@@ -16,7 +16,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -127,7 +127,7 @@ fun <T> Choice(
         Box(Modifier.weight(1f), contentAlignment = Alignment.CenterEnd) {
             // The menu shares a box with the button only, so it drops down from the button.
             Box {
-                OutlinedButton(onClick = { open = true }) { Text(name(selected), textAlign = TextAlign.Center) }
+                FilledTonalButton(onClick = { open = true }) { Text(name(selected), textAlign = TextAlign.Center) }
                 DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
                     options.forEach {
                         DropdownMenuItem(text = { Text(name(it)) }, onClick = { onSelect(it); open = false })

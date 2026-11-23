@@ -34,7 +34,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -44,7 +44,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.AlertDialog
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -125,7 +124,7 @@ fun SettingsScreen(
             Modifier.padding(padding).verticalScroll(rememberScrollState()).padding(12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            OutlinedButton(onClick = onOpenProfiles, modifier = Modifier.fillMaxWidth()) {
+            FilledTonalButton(onClick = onOpenProfiles, modifier = Modifier.fillMaxWidth()) {
                 Icon(Icons.Filled.Person, contentDescription = null, modifier = Modifier.size(ButtonDefaults.IconSize))
                 Spacer(Modifier.width(ButtonDefaults.IconSpacing))
                 Text(stringResource(R.string.action_profiles))
@@ -213,12 +212,12 @@ fun SettingsScreen(
                     }
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedButton(onClick = { exportLauncher.launch("ballistics-${LocalDate.now()}.json") }) {
+                    FilledTonalButton(onClick = { exportLauncher.launch("ballistics-${LocalDate.now()}.json") }) {
                         Icon(ImageVector.vectorResource(R.drawable.ic_export), null, Modifier.size(ButtonDefaults.IconSize))
                         Spacer(Modifier.width(ButtonDefaults.IconSpacing))
                         Text(stringResource(R.string.action_export))
                     }
-                    OutlinedButton(onClick = { importLauncher.launch(arrayOf("application/json", "text/plain", "*/*")) }) {
+                    FilledTonalButton(onClick = { importLauncher.launch(arrayOf("application/json", "text/plain", "*/*")) }) {
                         Icon(ImageVector.vectorResource(R.drawable.ic_import), null, Modifier.size(ButtonDefaults.IconSize))
                         Spacer(Modifier.width(ButtonDefaults.IconSpacing))
                         Text(stringResource(R.string.action_import))
@@ -232,22 +231,22 @@ fun SettingsScreen(
                     Text(stringResource(R.string.app_version, version), Modifier.weight(1f))
                     // Store builds are updated by the store.
                     if (BuildConfig.SELF_UPDATE) {
-                        OutlinedButton(onClick = onCheckUpdate) { Text(stringResource(R.string.action_check_update)) }
+                        FilledTonalButton(onClick = onCheckUpdate) { Text(stringResource(R.string.action_check_update)) }
                     }
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedButton(onClick = { context.findActivity()?.rateApp() }) {
+                    FilledTonalButton(onClick = { context.findActivity()?.rateApp() }) {
                         Icon(Icons.Filled.Star, null, Modifier.size(ButtonDefaults.IconSize))
                         Spacer(Modifier.width(ButtonDefaults.IconSpacing))
                         Text(stringResource(R.string.action_rate_app))
                     }
-                    OutlinedButton(onClick = { context.shareApp() }) {
+                    FilledTonalButton(onClick = { context.shareApp() }) {
                         Icon(Icons.Filled.Share, null, Modifier.size(ButtonDefaults.IconSize))
                         Spacer(Modifier.width(ButtonDefaults.IconSpacing))
                         Text(stringResource(R.string.action_share_app))
                     }
                 }
-                TextButton(onClick = { context.openUrl(PRIVACY_POLICY_URL) }) { Text(stringResource(R.string.action_privacy_policy)) }
+                FilledTonalButton(onClick = { context.openUrl(PRIVACY_POLICY_URL) }) { Text(stringResource(R.string.action_privacy_policy)) }
                 if (BuildConfig.SELF_UPDATE) {
                     SwitchRow(stringResource(R.string.label_check_update_on_start), ui.checkUpdateOnStart) { v ->
                         onUi { it.copy(checkUpdateOnStart = v) }
@@ -313,14 +312,14 @@ private fun SignedInRow(sync: SyncState.SignedIn, onSignOut: () -> Unit, onDelet
             text = { Text(stringResource(R.string.sign_out_prompt, account)) },
             // The dialog lays these out as Delete account · Cancel · Sign out, wrapping on narrow screens.
             dismissButton = {
-                TextButton(onClick = { confirm = false; confirmDelete = true }) {
+                FilledTonalButton(onClick = { confirm = false; confirmDelete = true }) {
                     Text(stringResource(R.string.action_delete_account), color = MaterialTheme.colorScheme.error)
                 }
             },
             confirmButton = {
                 Row {
-                    TextButton(onClick = { confirm = false }) { Text(stringResource(R.string.action_cancel)) }
-                    TextButton(onClick = { confirm = false; onSignOut() }) { Text(stringResource(R.string.action_sign_out)) }
+                    FilledTonalButton(onClick = { confirm = false }) { Text(stringResource(R.string.action_cancel)) }
+                    FilledTonalButton(onClick = { confirm = false; onSignOut() }) { Text(stringResource(R.string.action_sign_out)) }
                 }
             },
         )
@@ -331,11 +330,11 @@ private fun SignedInRow(sync: SyncState.SignedIn, onSignOut: () -> Unit, onDelet
             title = { Text(stringResource(R.string.action_delete_account)) },
             text = { Text(stringResource(R.string.delete_account_prompt, account)) },
             confirmButton = {
-                TextButton(onClick = { confirmDelete = false; onDelete() }) {
+                FilledTonalButton(onClick = { confirmDelete = false; onDelete() }) {
                     Text(stringResource(R.string.action_delete), color = MaterialTheme.colorScheme.error)
                 }
             },
-            dismissButton = { TextButton(onClick = { confirmDelete = false }) { Text(stringResource(R.string.action_cancel)) } },
+            dismissButton = { FilledTonalButton(onClick = { confirmDelete = false }) { Text(stringResource(R.string.action_cancel)) } },
         )
     }
 }

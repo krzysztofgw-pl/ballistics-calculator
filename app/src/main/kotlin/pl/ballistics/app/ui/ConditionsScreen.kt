@@ -24,7 +24,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Icon
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -197,7 +197,7 @@ private fun WindAndAzimuthDial(i: Conditions, ui: UiSettings, update: ((Conditio
     }
 
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        OutlinedButton(onClick = {
+        FilledTonalButton(onClick = {
             if (Stealth.blocksNetwork) Toast.makeText(context, context.getString(R.string.stealth_blocked), Toast.LENGTH_LONG).show()
             else withPermission { forecast = true }
         }, modifier = Modifier.weight(1f)) {
@@ -205,7 +205,7 @@ private fun WindAndAzimuthDial(i: Conditions, ui: UiSettings, update: ((Conditio
             Spacer(Modifier.width(ButtonDefaults.IconSpacing))
             Text(stringResource(R.string.action_forecast_short), maxLines = 1)
         }
-        OutlinedButton(modifier = Modifier.weight(1f), onClick = {
+        FilledTonalButton(modifier = Modifier.weight(1f), onClick = {
             withPermission {
                 scope.launch {
                     warning = null
@@ -317,10 +317,10 @@ private fun AltitudeButton(source: AltitudeSource, update: ((Conditions) -> Cond
 
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End), verticalAlignment = Alignment.CenterVertically) {
         note?.let { Text(it, style = MaterialTheme.typography.labelSmall) }
-        OutlinedButton(enabled = !reading, contentPadding = PaddingValues(horizontal = 12.dp), onClick = {
+        FilledTonalButton(enabled = !reading, contentPadding = PaddingValues(horizontal = 12.dp), onClick = {
             if (Stealth.blocksLocation && (source == AltitudeSource.GPS || Stealth.blocksNetwork)) {
                 toast(R.string.stealth_location_blocked)
-                return@OutlinedButton
+                return@FilledTonalButton
             }
             withPermission {
                 scope.launch {
@@ -376,10 +376,10 @@ private fun LatitudeInput(i: Conditions, update: ((Conditions) -> Conditions) ->
             if (v.startsWith("-")) store(v.removePrefix("-"), true) else store(v, south)
         }
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            OutlinedButton(enabled = !reading, contentPadding = PaddingValues(horizontal = 12.dp), onClick = {
+            FilledTonalButton(enabled = !reading, contentPadding = PaddingValues(horizontal = 12.dp), onClick = {
                 if (Stealth.blocksLocation) {
                     Toast.makeText(context, context.getString(R.string.stealth_location_blocked), Toast.LENGTH_LONG).show()
-                    return@OutlinedButton
+                    return@FilledTonalButton
                 }
                 withPermission {
                     scope.launch {

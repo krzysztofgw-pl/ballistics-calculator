@@ -8,7 +8,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.ScrollableTabRow
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -60,8 +60,8 @@ fun TargetTabs(
             text = {
                 OutlinedTextField(name, { name = it }, label = { Text(stringResource(R.string.label_name)) }, singleLine = true)
             },
-            confirmButton = { TextButton(onClick = { onRename(t.id, name.trim()); editing = null }) { Text(stringResource(R.string.action_save)) } },
-            dismissButton = { TextButton(onClick = { onDelete(t.id); editing = null }) { Text(stringResource(R.string.action_delete)) } },
+            confirmButton = { FilledTonalButton(onClick = { onRename(t.id, name.trim()); editing = null }) { Text(stringResource(R.string.action_save)) } },
+            dismissButton = { FilledTonalButton(onClick = { onDelete(t.id); editing = null }) { Text(stringResource(R.string.action_delete)) } },
         )
     }
 }

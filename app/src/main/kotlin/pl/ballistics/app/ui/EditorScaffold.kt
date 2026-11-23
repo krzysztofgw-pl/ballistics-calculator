@@ -19,7 +19,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -56,7 +56,7 @@ fun EditorScaffold(
                     if (canDelete) {
                         IconButton(onClick = { confirmDelete = true }) { Icon(Icons.Filled.Delete, contentDescription = stringResource(R.string.action_delete)) }
                     }
-                    TextButton(onClick = onSave) { Text(stringResource(R.string.action_save)) }
+                    FilledTonalButton(onClick = onSave) { Text(stringResource(R.string.action_save)) }
                 },
             )
         },
@@ -71,8 +71,8 @@ fun EditorScaffold(
         AlertDialog(
             onDismissRequest = { confirmDelete = false },
             title = { Text(stringResource(R.string.delete_profile_title)) },
-            confirmButton = { TextButton(onClick = onDelete) { Text(stringResource(R.string.action_delete)) } },
-            dismissButton = { TextButton(onClick = { confirmDelete = false }) { Text(stringResource(R.string.action_cancel)) } },
+            confirmButton = { FilledTonalButton(onClick = onDelete) { Text(stringResource(R.string.action_delete)) } },
+            dismissButton = { FilledTonalButton(onClick = { confirmDelete = false }) { Text(stringResource(R.string.action_cancel)) } },
         )
     }
 }

@@ -29,7 +29,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -81,7 +81,7 @@ fun ChronographDialog(
             onDismissRequest = onDismiss,
             title = { Text(stringResource(R.string.title_chronograph)) },
             text = { Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) { CircularProgressIndicator() } },
-            confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
+            confirmButton = { FilledTonalButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
         )
         is ChronographImportState.Failed -> AlertDialog(
             onDismissRequest = onDismiss,
@@ -97,7 +97,7 @@ fun ChronographDialog(
                     ),
                 )
             },
-            confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_close)) } },
+            confirmButton = { FilledTonalButton(onClick = onDismiss) { Text(stringResource(R.string.action_close)) } },
         )
         is ChronographImportState.Loaded -> SeriesDialog(state.series, data, onApply, onDismiss)
     }
@@ -242,8 +242,8 @@ private fun SeriesDialog(
             }
         },
         confirmButton = {
-            TextButton(enabled = canSave, onClick = {
-                val a = ammo ?: return@TextButton
+            FilledTonalButton(enabled = canSave, onClick = {
+                val a = ammo ?: return@FilledTonalButton
                 onApply(weaponId, a.id, f1(newVelocity!!), f1(stats!!.sd), forRifle && weapon != null, null)
                 Toast.makeText(context, context.getString(R.string.toast_chrono_saved, f1(newVelocity), a.name), Toast.LENGTH_SHORT).show()
                 onDismiss()
@@ -251,9 +251,9 @@ private fun SeriesDialog(
         },
         dismissButton = {
             Row {
-                TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) }
+                FilledTonalButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) }
                 val copyName = ammo?.let { stringResource(R.string.chrono_copy_name, it.name, f1(newVelocity ?: 0.0)) }
-                TextButton(enabled = canSave, onClick = {
+                FilledTonalButton(enabled = canSave, onClick = {
                     onApply(weaponId, ammo!!.id, f1(newVelocity!!), f1(stats!!.sd), forRifle && weapon != null, copyName)
                     Toast.makeText(context, context.getString(R.string.toast_bc_copy_saved, copyName), Toast.LENGTH_SHORT).show()
                     onDismiss()
@@ -350,10 +350,10 @@ fun ManualVelocityDialog(onDone: (ShotSeries) -> Unit, onDismiss: () -> Unit) {
         },
         confirmButton = {
             val all = values + numbers(input)
-            TextButton(enabled = all.isNotEmpty(), onClick = {
+            FilledTonalButton(enabled = all.isNotEmpty(), onClick = {
                 onDone(ShotSeries(Chronograph.OTHER, null, unit, all.mapIndexed { i, v -> Shot(i + 1, v * unit.mps) }))
             }) { Text(stringResource(R.string.action_next)) }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
+        dismissButton = { FilledTonalButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
     )
 }

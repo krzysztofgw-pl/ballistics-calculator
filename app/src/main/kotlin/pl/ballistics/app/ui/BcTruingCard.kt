@@ -9,9 +9,8 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -133,7 +132,7 @@ fun BcTruingCard(
                     Modifier.weight(1f),
                     style = MaterialTheme.typography.titleMedium,
                 )
-                OutlinedButton(onClick = { asking = true }) {
+                FilledTonalButton(onClick = { asking = true }) {
                     Icon(Icons.Filled.Check, contentDescription = null)
                     Text(stringResource(R.string.action_apply_to_load))
                 }
@@ -196,7 +195,7 @@ private fun SaveBcDialog(
             }
         },
         confirmButton = {
-            TextButton(onClick = {
+            FilledTonalButton(onClick = {
                 onSaveAmmo(ammo.copy(bc = newBc))
                 Toast.makeText(context, context.getString(R.string.toast_bc_saved, newBc, ammo.name), Toast.LENGTH_SHORT).show()
                 onDismiss()
@@ -204,8 +203,8 @@ private fun SaveBcDialog(
         },
         dismissButton = {
             Row {
-                TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) }
-                TextButton(onClick = {
+                FilledTonalButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) }
+                FilledTonalButton(onClick = {
                     onAddAmmoCopy(ammo, ammo.copy(id = newId(), name = copyName, bc = newBc))
                     Toast.makeText(context, context.getString(R.string.toast_bc_copy_saved, copyName), Toast.LENGTH_SHORT).show()
                     onDismiss()
