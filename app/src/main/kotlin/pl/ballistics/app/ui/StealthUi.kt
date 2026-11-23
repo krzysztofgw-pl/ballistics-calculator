@@ -35,6 +35,7 @@ import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -232,24 +233,25 @@ fun StealthDialog(garminWatch: Boolean, onDismiss: () -> Unit) {
 
 @Composable
 private fun RadioRow(icon: ImageVector, name: Int, on: Boolean?, loud: Boolean, onOpen: () -> Unit) {
-    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        Icon(
-            icon, contentDescription = null, modifier = Modifier.size(20.dp),
-            tint = if (loud) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Spacer(Modifier.width(10.dp))
-        Text(stringResource(name), Modifier.weight(1f))
+    // The whole button opens that radio's settings; the state stands beside it in capitals, red while it gives the phone away.
+    val color = if (loud) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        OutlinedButton(onClick = onOpen, modifier = Modifier.weight(1f), contentPadding = PaddingValues(horizontal = 12.dp)) {
+            Icon(icon, contentDescription = null, modifier = Modifier.size(ButtonDefaults.IconSize), tint = if (loud) color else LocalContentColor.current)
+            Spacer(Modifier.width(ButtonDefaults.IconSpacing))
+            Text(stringResource(name), Modifier.weight(1f), maxLines = 1)
+        }
         Text(
             when (on) {
                 null -> ""
-                true -> stringResource(R.string.stealth_state_on)
-                false -> stringResource(R.string.stealth_state_off)
+                true -> stringResource(R.string.stealth_state_on).uppercase()
+                false -> stringResource(R.string.stealth_state_off).uppercase()
             },
-            color = if (loud) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
-            fontWeight = if (loud) FontWeight.SemiBold else null,
+            Modifier.width(40.dp),
+            color = color,
+            fontWeight = FontWeight.Bold,
+            style = MaterialTheme.typography.labelLarge,
         )
-        Spacer(Modifier.width(8.dp))
-        OutlinedButton(onClick = onOpen, contentPadding = PaddingValues(horizontal = 12.dp)) { Text(stringResource(R.string.stealth_open_settings)) }
     }
 }
 
