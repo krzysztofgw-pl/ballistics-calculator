@@ -554,6 +554,7 @@ private fun TargetCharts(result: CalcResult.Ok, a: TargetAnalysis, distance: Dou
         xLabel = { it.roundToInt().toString() },
         yLabel = ::correction,
         markerX = windSpeed.takeIf { it > 0 },
+        markAllSeries = true,
     )
     LineChart(
         title = stringResource(R.string.chart_wind_direction, unit.label),
@@ -568,6 +569,7 @@ private fun TargetCharts(result: CalcResult.Ok, a: TargetAnalysis, distance: Dou
         xLabel = { clock(it) },
         yLabel = ::correction,
         markerX = windFrom,
+        markAllSeries = true,
     )
 
     val drift = result.solution.points.filter { it.rangeM > 0 }

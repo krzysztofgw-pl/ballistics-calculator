@@ -33,6 +33,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
@@ -69,6 +70,7 @@ val chartColors = listOf(
  * @param readout the points to show for the x a finger reads (dragged to, or tapped); by default each series'
  *   value there, the first with a callout of [yLabel] over [xLabel]. The marked [points] stay, faint. The reading
  *   stays after the finger lifts; a tap clears it.
+ * @param markAllSeries marks every series at [markerX] and while reading, each with a callout of its value.
  * @param onLongPress called with the x being read when a finger then rests still on its callout or line; null when
  *   holding does nothing.
  */
@@ -89,6 +91,7 @@ fun LineChart(
     yBand: ClosedFloatingPointRange<Double>? = null,
     readout: ((Double) -> List<ChartPoint>)? = null,
     onLongPress: ((Double) -> Unit)? = null,
+    markAllSeries: Boolean = false,
 ) {
     val text = rememberTextMeasurer()
     val haptic = LocalHapticFeedback.current
@@ -222,7 +225,11 @@ fun LineChart(
             val read = fingerX?.let { fx ->
                 readout?.invoke(fx) ?: series.mapIndexedNotNull { i, s ->
                     s.points.valueAt(fx)?.let { v ->
-                        ChartPoint(fx, v, s.color, if (i == 0) AnnotatedString(yLabel(v)) else null, if (i == 0) xLabel(fx) else null)
+                        ChartPoint(
+                            fx, v, s.color,
+                            if (i == 0 || markAllSeries) AnnotatedString(yLabel(v)) else null,
+                            if (i == 0 && !markAllSeries) xLabel(fx) else null,
+                        )
                     }
                 }
             }
@@ -230,7 +237,10 @@ fun LineChart(
                 target.fill(Float.NaN)
                 target[4] = x(fingerX!!)
             }
-            val fixed = points.filter { it.x in xMin..xMax && it.y.isFinite() }
+            val marked = if (markAllSeries && markerX != null) series.mapNotNull { s ->
+                s.points.valueAt(markerX)?.let { v -> ChartPoint(markerX, v, s.color, AnnotatedString(yLabel(v))) }
+            } else emptyList()
+            val fixed = (points + marked).filter { it.x in xMin..xMax && it.y.isFinite() }
             val shown = read ?: fixed
             if (read != null) fixed.forEach { p ->
                 val c = Offset(x(p.x), y(p.y.coerceIn(yMin, yMax)))
@@ -241,25 +251,70 @@ fun LineChart(
                 drawCircle(plate, 7.dp.toPx(), c)
                 drawCircle(p.color, 5.dp.toPx(), c)
             }
-            shown.firstOrNull { it.title != null }?.let { p ->
-                val c = Offset(x(p.x), y(p.y.coerceIn(yMin, yMax)))
-                val t = text.measure(p.title!!, TextStyle(fontSize = 13.sp, fontWeight = FontWeight.Bold, color = p.color))
-                val st = p.subtitle?.let { text.measure(it, TextStyle(fontSize = 11.sp, color = ink)) }
+            val titled = shown.filter { it.title != null }
+            if (titled.isNotEmpty()) {
                 val pad = 6.dp.toPx()
-                val bw = maxOf(t.size.width, st?.size?.width ?: 0) + 2 * pad
-                val bh = t.size.height + (st?.size?.height ?: 0) + pad
                 val gap = 12.dp.toPx()
-                // The callout sits beside the point, toward the roomier side, and above it when there is space.
-                val bx = (if (c.x + gap + bw <= left + w) c.x + gap else c.x - gap - bw).coerceIn(left, maxOf(left, left + w - bw))
-                val by = (if (c.y - gap - bh >= top) c.y - gap - bh else c.y + gap).coerceIn(top, maxOf(top, top + h - bh))
+                val space = 3.dp.toPx()
+                class Box(val p: ChartPoint, val t: TextLayoutResult, val st: TextLayoutResult?, val c: Offset) {
+                    val w = maxOf(t.size.width, st?.size?.width ?: 0) + 2 * pad
+                    val h = t.size.height + (st?.size?.height ?: 0) + pad
+                    var top = 0f
+                    var x = 0f
+                }
+                val all = titled.map { p ->
+                    Box(
+                        p,
+                        text.measure(p.title!!, TextStyle(fontSize = 13.sp, fontWeight = FontWeight.Bold, color = p.color)),
+                        p.subtitle?.let { text.measure(it, TextStyle(fontSize = 11.sp, color = ink)) },
+                        Offset(x(p.x), y(p.y.coerceIn(yMin, yMax))),
+                    )
+                }
+                val boxes = all.sortedBy { it.c.y }
+                val bw = boxes.maxOf { it.w }
+                val cx = boxes.first().c.x
+                val right = cx + gap
+                val leftSide = cx - gap - bw
+                val rightFits = right + bw <= left + w
+                val leftFits = leftSide >= left
+                if (boxes.size == 1) {
+                    // One callout sits beside its point, toward the roomier side, above it when there is space.
+                    val b = boxes.first()
+                    b.x = (if (rightFits) right else leftSide).coerceIn(left, maxOf(left, left + w - b.w))
+                    b.top = (if (b.c.y - gap - b.h >= top) b.c.y - gap - b.h else b.c.y + gap).coerceIn(top, maxOf(top, top + h - b.h))
+                } else {
+                    // Several sit level with their points, on either side of the line like a checkerboard:
+                    // one that would hit the callout above it on one side goes to the other, and only if both
+                    // are taken does it move down.
+                    val sides = listOfNotNull(right.takeIf { rightFits }, leftSide.takeIf { leftFits }).ifEmpty { listOf(left) }
+                    val bottom = FloatArray(sides.size) { top - space }
+                    boxes.forEach { b ->
+                        val want = (b.c.y - b.h / 2).coerceIn(top, maxOf(top, top + h - b.h))
+                        val free = sides.indices.firstOrNull { bottom[it] + space <= want }
+                        val i = free ?: sides.indices.minBy { bottom[it] }
+                        b.x = sides[i]
+                        b.top = maxOf(want, bottom[i] + space)
+                        bottom[i] = b.top + b.h
+                    }
+                    // A column that runs off the bottom moves up as far as the top allows.
+                    sides.forEach { sx ->
+                        val col = boxes.filter { it.x == sx }
+                        val over = (col.maxOfOrNull { it.top + it.h } ?: 0f) - (top + h)
+                        if (over > 0) col.forEach { it.top = maxOf(top, it.top - over) }
+                    }
+                }
                 if (read != null) {
-                    target[0] = bx; target[1] = by; target[2] = bx + bw; target[3] = by + bh
+                    target[0] = boxes.minOf { it.x }; target[1] = boxes.minOf { it.top }
+                    target[2] = boxes.maxOf { it.x + (if (boxes.size == 1) it.w else bw) }; target[3] = boxes.maxOf { it.top + it.h }
                 }
                 val corner = CornerRadius(7.dp.toPx())
-                drawRoundRect(plate, Offset(bx, by), Size(bw, bh), corner)
-                drawRoundRect(p.color, Offset(bx, by), Size(bw, bh), corner, style = Stroke(1.dp.toPx()))
-                drawText(t, topLeft = Offset(bx + (bw - t.size.width) / 2, by + pad / 2))
-                st?.let { drawText(it, topLeft = Offset(bx + (bw - it.size.width) / 2, by + pad / 2 + t.size.height)) }
+                boxes.forEach { b ->
+                    val w0 = if (boxes.size == 1) b.w else bw
+                    drawRoundRect(plate, Offset(b.x, b.top), Size(w0, b.h), corner)
+                    drawRoundRect(b.p.color, Offset(b.x, b.top), Size(w0, b.h), corner, style = Stroke(1.dp.toPx()))
+                    drawText(b.t, topLeft = Offset(b.x + (w0 - b.t.size.width) / 2, b.top + pad / 2))
+                    b.st?.let { drawText(it, topLeft = Offset(b.x + (w0 - it.size.width) / 2, b.top + pad / 2 + b.t.size.height)) }
+                }
             }
         }
         val named = series.filter { it.label.isNotEmpty() }
