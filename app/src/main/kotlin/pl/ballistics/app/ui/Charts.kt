@@ -261,14 +261,17 @@ fun LineChart(
                     val h = t.size.height + (st?.size?.height ?: 0) + pad
                     var top = 0f
                 }
-                val boxes = titled.map { p ->
+                val all = titled.map { p ->
                     Box(
                         p,
                         text.measure(p.title!!, TextStyle(fontSize = 13.sp, fontWeight = FontWeight.Bold, color = p.color)),
                         p.subtitle?.let { text.measure(it, TextStyle(fontSize = 11.sp, color = ink)) },
                         Offset(x(p.x), y(p.y.coerceIn(yMin, yMax))),
                     )
-                }.sortedBy { it.c.y }
+                }
+                // When not all fit beside the line, the biggest values (whichever way) keep their callouts.
+                val fit = maxOf(1, ((h + space) / (all.maxOf { it.h } + space)).toInt())
+                val boxes = all.sortedByDescending { abs(it.p.y) }.take(fit).sortedBy { it.c.y }
                 val bw = boxes.maxOf { it.w }
                 val cx = boxes.first().c.x
                 // Callouts sit beside the points, toward the roomier side; one sits above its point, several stack by height.
