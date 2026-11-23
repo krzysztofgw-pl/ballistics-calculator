@@ -34,7 +34,7 @@ import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -214,10 +214,10 @@ fun ForecastDialog(
             }
         },
         confirmButton = {
-            TextButton(
+            FilledTonalButton(
                 enabled = summary != null,
                 onClick = {
-                    val s = summary ?: return@TextButton
+                    val s = summary ?: return@FilledTonalButton
                     onApply { c ->
                         val az = c.azimuthDeg.toNumber() ?: 0.0
                         var next = c.copy(
@@ -241,7 +241,7 @@ fun ForecastDialog(
                 },
             ) { Text(stringResource(R.string.action_use)) }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
+        dismissButton = { FilledTonalButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
     )
 
     if (help) {
@@ -249,7 +249,7 @@ fun ForecastDialog(
             onDismissRequest = { help = false },
             title = { Text(stringResource(R.string.title_forecast)) },
             text = { Text(stringResource(R.string.forecast_help), Modifier.verticalScroll(rememberScrollState())) },
-            confirmButton = { TextButton(onClick = { help = false }) { Text(stringResource(R.string.action_ok)) } },
+            confirmButton = { FilledTonalButton(onClick = { help = false }) { Text(stringResource(R.string.action_ok)) } },
         )
     }
     if (unsteadyInfo) {
@@ -257,7 +257,7 @@ fun ForecastDialog(
             onDismissRequest = { unsteadyInfo = false },
             icon = { Icon(Icons.Filled.Warning, contentDescription = null) },
             text = { Text(stringResource(R.string.forecast_unsteady)) },
-            confirmButton = { TextButton(onClick = { unsteadyInfo = false }) { Text(stringResource(R.string.action_ok)) } },
+            confirmButton = { FilledTonalButton(onClick = { unsteadyInfo = false }) { Text(stringResource(R.string.action_ok)) } },
         )
     }
 }

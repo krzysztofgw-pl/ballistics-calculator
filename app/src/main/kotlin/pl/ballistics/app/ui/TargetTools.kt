@@ -14,7 +14,7 @@ import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -196,7 +196,7 @@ fun TargetTools(
         rangeFromSize(sizeCm / 100, (reading.toNumber() ?: 0.0) * reticleUnit.radians)?.let { d ->
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(stringResource(R.string.ranging_result, d.roundToInt()), Modifier.weight(1f), style = MaterialTheme.typography.titleMedium)
-                OutlinedButton(onClick = { onUseDistance(d) }) { Text(stringResource(R.string.action_use_distance)) }
+                FilledTonalButton(onClick = { onUseDistance(d) }) { Text(stringResource(R.string.action_use_distance)) }
             }
         }
     }
