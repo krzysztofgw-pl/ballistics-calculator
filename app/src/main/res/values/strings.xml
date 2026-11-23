@@ -248,7 +248,7 @@
     <string name="hemisphere_north">N</string>
     <string name="hemisphere_south">S</string>
 
-    <!-- Table -->
+    <!-- DOPE -->
     <string name="col_range">m</string>
     <string name="col_drop">Drop cm</string>
     <string name="col_elevation">Elev.</string>
@@ -328,8 +328,8 @@
     <string name="field_cant">cant</string>
     <string name="field_latitude">latitude</string>
     <string name="field_azimuth">azimuth</string>
-    <string name="field_table_range">table range</string>
-    <string name="field_table_step">table step</string>
+    <string name="field_table_range">DOPE range</string>
+    <string name="field_table_step">DOPE step</string>
     <string name="label_target_distance">Distance</string>
     <string name="action_closer">1 m closer</string>
     <string name="action_farther">1 m farther</string>
@@ -463,7 +463,7 @@
     <string name="help_suppressor_title">How does the suppressor work?</string>
     <string name="help_suppressor">Turn on Suppressor in the rifle section of the rifle profile. Then, in the zero section, say whether you zeroed with it on (Suppressed) or off (Bare), and enter where the impact goes in the other state, up and right from the zero in the turret unit (negative for down or left). Shoot a group in that state at your zero range to find it. Switching which state the zero was shot in flips the signs.\n\nOn the Rifle tab, switch the suppressor on or off. When it differs from the zero, every correction includes the shift and the rifle on the Rifle tab icon carries a suppressor while it is on.</string>
     <string name="help_zero_title">What goes into the zero?</string>
-    <string name="help_zero">The zero range and the temperature and pressure on the day you zeroed. The app computes the bore angle that hits at that range in those conditions, and keeps it for every other shot.\n\nIf you zeroed in very different weather, entering it moves the whole table by the difference.</string>
+    <string name="help_zero">The zero range and the temperature and pressure on the day you zeroed. The app computes the bore angle that hits at that range in those conditions, and keeps it for every other shot.\n\nIf you zeroed in very different weather, entering it moves the whole DOPE by the difference.</string>
     <string name="help_pressure_title">QNH or station pressure?</string>
     <string name="help_pressure">QNH is the pressure reduced to sea level: weather reports, forecasts and airports give it. With QNH the app also needs the altitude, to work out the pressure where you stand.\n\nStation pressure is what a barometer reads where you are: a Kestrel or a Garmin watch. It needs no altitude.\n\nPick the one you actually have; using QNH as station pressure at altitude is a large error.</string>
     <string name="help_velocity_title">Which muzzle velocity is used?</string>
@@ -476,14 +476,14 @@
     <string name="help_target">Set the distance with the field, the arrows or the slider. The corners of the reticle say what to dial and what to hold for elevation and windage; the red points are where the bullet goes at each distance.\n\nWhether each axis is dialed or held is set per reticle in Settings. Dial corrections are whole clicks, holds are to 0.05.</string>
     <string name="help_moving_title">How does the moving target work?</string>
     <string name="help_moving">Tick Moving target, enter its speed and set its course on the small dial in the reticle\'s corner (tap it first to unlock it): up is away from you, right is to the right.\n\nThe blue point is where to hold so the bullet meets the target, using the time of flight.</string>
-    <string name="help_table_title">What is in the table?</string>
+    <string name="help_table_title">What is in the DOPE?</string>
     <string name="help_table">For each range: drop, elevation and clicks, wind drift and windage, velocity, energy, time of flight and Mach. Its range and step are set below it.</string>
     <string name="help_sync_title">How are my profiles kept?</string>
     <string name="help_sync">Sign in with Google in Settings to sync between phones. Export writes all profiles to a file you can import again, here or in the web version.</string>
     <string name="help_update_title">How do I update the app?</string>
     <string name="help_update">Settings, About, Check for update downloads the newest build and opens the installer. Turn on the check at start to be told when there is one.</string>
     <string name="help_accuracy_title">How far can I trust it?</string>
-    <string name="help_accuracy">It is only as good as its inputs: muzzle velocity, BC, the zero and the wind matter most. Confirm the dope with live fire at the distances you use, and correct the velocity until the table matches your hits.</string>
+    <string name="help_accuracy">It is only as good as its inputs: muzzle velocity, BC, the zero and the wind matter most. Confirm the dope with live fire at the distances you use, and correct the velocity until the DOPE matches your hits.</string>
     <!-- Suggesting a bullet to the community database -->
     <string name="action_ok">OK</string>
     <string name="action_suggest_bullet">Suggest to database</string>
