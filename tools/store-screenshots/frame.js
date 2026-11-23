@@ -5,12 +5,12 @@ const path = require('path');
 const RAW = process.argv[2] || 'raw', OUT = process.argv[3] || 'out';
 const shots = [
   [6, 'Dial or hold,<br>right on your reticle', 'DLR-3, Mil-Dot, tree and more · FFP and SFP'],
-  [7, 'Lead moving<br>targets', 'Set speed and course, see the lead hold in blue'],
+  [2, 'Wind clock in a<br>compass ring', 'Crosswind and head or tailwind at a glance'],
+  [3, 'Pick your hours<br>from the forecast', '12-hour wind chart: mean, gusts and direction'],
+  [10, 'Chronograph files,<br>straight in', 'Labradar, Garmin Xero, Athlon, MagnetoSpeed · SD, ES'],
   [5, 'Your dope card,<br>to the click', 'Drop, elevation, clicks, wind drift, velocity, energy'],
-  [3, 'Wind and azimuth<br>on one dial', 'Clock or true bearing, with the phone compass'],
-  [2, 'Wind from the<br>local forecast', 'Hourly mean, gusts and steadiness for your spot'],
+  [7, 'Lead moving<br>targets', 'Set speed and course, see the lead hold in blue'],
   [4, 'Real atmosphere,<br>full physics', 'Garmin barometer, Coriolis, spin drift, aero jump'],
-  [9, 'See what the wind<br>does to your shot', 'Corrections by wind speed, direction and spin drift'],
   [8, 'Field tools for<br>the first-round hit', 'Hit probability, wind bracket, range error, ranging'],
 ];
 (async () => {
@@ -18,6 +18,7 @@ const shots = [
   const p = await b.newPage({ viewport: { width: 1080, height: 1920 }, deviceScaleFactor: 1 });
   let n = 1;
   for (const [i, title, sub] of shots) {
+    if (!require('fs').existsSync(path.join(RAW, i + '.png'))) { n++; continue; }
     const img = 'data:image/png;base64,' + require('fs').readFileSync(path.join(RAW, i + '.png')).toString('base64');
     await p.setContent(`<html><body style="margin:0;width:1080px;height:1920px;overflow:hidden;
       background:radial-gradient(ellipse at 30% 10%, #3a4c41 0%, #22302a 45%, #141B17 100%);font-family:Inter;">
