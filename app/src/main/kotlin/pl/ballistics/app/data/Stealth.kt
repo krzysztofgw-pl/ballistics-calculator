@@ -18,12 +18,14 @@ import java.io.IOException
  */
 object Stealth {
     /** [allowGps]: location from the satellites, which only receive; off blocks location altogether. */
-    data class Settings(val on: Boolean = false, val allowWatch: Boolean = false, val allowGps: Boolean = true)
+    /** [showBar]: the bar over every tab while stealth mode is on; off leaves the lit icon on the Rifle tab. */
+    data class Settings(val on: Boolean = false, val allowWatch: Boolean = false, val allowGps: Boolean = true, val showBar: Boolean = true)
 
     private const val PREFS = "stealth"
     private const val KEY_ON = "on"
     private const val KEY_WATCH = "allow_watch"
     private const val KEY_GPS = "allow_gps"
+    private const val KEY_BAR = "show_bar"
     private const val KEY_HIDE_NOTICE = "hide_notice"
     private const val KEY_TILE = "tile_added"
 
@@ -36,14 +38,15 @@ object Stealth {
         if (loaded) return
         loaded = true
         val prefs = context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-        _state.value = Settings(prefs.getBoolean(KEY_ON, false), prefs.getBoolean(KEY_WATCH, false), prefs.getBoolean(KEY_GPS, true))
+        _state.value = Settings(prefs.getBoolean(KEY_ON, false), prefs.getBoolean(KEY_WATCH, false), prefs.getBoolean(KEY_GPS, true), prefs.getBoolean(KEY_BAR, true))
     }
 
     fun set(context: Context, settings: Settings) {
         loaded = true
         _state.value = settings
         context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
-            .putBoolean(KEY_ON, settings.on).putBoolean(KEY_WATCH, settings.allowWatch).putBoolean(KEY_GPS, settings.allowGps).apply()
+            .putBoolean(KEY_ON, settings.on).putBoolean(KEY_WATCH, settings.allowWatch).putBoolean(KEY_GPS, settings.allowGps)
+            .putBoolean(KEY_BAR, settings.showBar).apply()
     }
 
     private fun prefs(context: Context) = context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)

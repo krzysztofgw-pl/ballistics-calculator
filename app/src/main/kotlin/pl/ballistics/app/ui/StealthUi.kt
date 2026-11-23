@@ -303,4 +303,5 @@ fun StealthSettings(garminWatch: Boolean, onOpenStealth: () -> Unit) {
     SwitchRow(stringResource(R.string.stealth_title), s.on) { onOpenStealth() }
     SwitchRow(stringResource(R.string.stealth_allow_gps), s.allowGps) { v -> Stealth.set(context, s.copy(allowGps = v)) }
     if (garminWatch) SwitchRow(stringResource(R.string.stealth_allow_watch), s.allowWatch) { v -> Stealth.set(context, s.copy(allowWatch = v)) }
+    SwitchRow(stringResource(R.string.stealth_show_bar), s.showBar) { v -> Stealth.set(context, s.copy(showBar = v)) }
 }

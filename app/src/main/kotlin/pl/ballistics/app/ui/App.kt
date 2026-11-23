@@ -203,7 +203,7 @@ fun App(vm: MainViewModel = viewModel()) {
             // No title bar: the tabs name the screen, and help and settings sit on the Rifle tab.
             Column(Modifier.windowInsetsPadding(WindowInsets.systemBars.union(WindowInsets.displayCutout).only(WindowInsetsSides.Horizontal))) {
                 Spacer(Modifier.windowInsetsTopHeight(WindowInsets.systemBars.union(WindowInsets.displayCutout)))
-                if (stealth.on) StealthBar { stealthDialog = true }
+                if (stealth.on && stealth.showBar) StealthBar { stealthDialog = true }
                 if (data.ui.tabsAtTop) {
                     TabRow(selectedTabIndex = tab) {
                         tabs.forEachIndexed { index, t ->

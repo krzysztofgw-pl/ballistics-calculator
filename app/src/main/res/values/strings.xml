@@ -560,6 +560,7 @@
     <string name="stealth_what">All connection requests from this app are blocked: no forecast, terrain height, sync, bullet database, store or update checks.</string>
     <string name="stealth_what_gps_on">Location comes from the satellites alone, without network help.</string>
     <string name="stealth_what_gps_off">Location is off.</string>
+    <string name="stealth_show_bar">Stealth bar at the top</string>
     <string name="stealth_allow_gps">GPS in stealth mode</string>
     <string name="stealth_location_blocked">Stealth mode is on with GPS off. Allow GPS in Settings → Stealth mode, or type the value.</string>
     <string name="stealth_notice_gps_on">GPS stays on, from the satellites alone: it only receives and gives nothing away.</string>
