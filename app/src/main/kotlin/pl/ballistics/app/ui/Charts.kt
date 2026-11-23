@@ -3,6 +3,7 @@ package pl.ballistics.app.ui
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -65,9 +66,11 @@ val chartColors = listOf(
  * @param xBands shaded vertical stretches, named [xBandLabel] in the legend.
  * @param yBand a shaded horizontal stretch, always in view.
  * @param points marked points; see [ChartPoint].
- * @param readout the points to show while a finger is on the chart at x; by default each series' value there,
- *   the first with a callout of [yLabel] over [xLabel]. The marked [points] stay, faint.
- * @param onLongPress called with x when a finger rests on the chart; null when holding does nothing.
+ * @param readout the points to show for the x a finger reads (dragged to, or tapped); by default each series'
+ *   value there, the first with a callout of [yLabel] over [xLabel]. The marked [points] stay, faint. The reading
+ *   stays after the finger lifts; a tap clears it.
+ * @param onLongPress called with the x being read when a finger then rests still anywhere on the chart; null when
+ *   holding does nothing.
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -90,8 +93,10 @@ fun LineChart(
     val text = rememberTextMeasurer()
     val haptic = LocalHapticFeedback.current
     val pick by rememberUpdatedState(onLongPress)
-    // Where the finger is, in pixels, and the plot's left edge and width from the last draw to turn it into x.
-    var finger by remember { mutableStateOf<Float?>(null) }
+    // The x being read, set by a finger and kept after it lifts until a tap clears it or the chart's marker moves;
+    // the plot's left edge and width from the last draw turn a finger position into x.
+    var reading by remember { mutableStateOf<Double?>(null) }
+    LaunchedEffect(markerX) { reading = null }
     val plot = remember { FloatArray(2) }
     val ink = MaterialTheme.colorScheme.onSurface
     val plate = MaterialTheme.colorScheme.surface
@@ -113,36 +118,46 @@ fun LineChart(
         Text(title, style = MaterialTheme.typography.titleSmall)
         fun xAt(px: Float): Double = xMin + ((px - plot[0]) / plot[1]).coerceIn(0f, 1f) * (xMax - xMin)
         Canvas(
-            Modifier.fillMaxWidth().aspectRatio(1.6f).pointerInput(Unit) {
+            Modifier.fillMaxWidth().aspectRatio(1.6f).pointerInput(xMin, xMax) {
                 val slop = viewConfiguration.touchSlop
                 val hold = viewConfiguration.longPressTimeoutMillis
                 awaitEachGesture {
                     val down = awaitFirstDown(requireUnconsumed = false)
-                    finger = down.position.x
+                    val shown = reading
                     var moved = false
                     var held = false
                     while (true) {
-                        val event = if (!moved && !held && pick != null) withTimeoutOrNull(hold) { awaitPointerEvent() } else awaitPointerEvent()
+                        val event = if (!moved && !held) withTimeoutOrNull(hold) { awaitPointerEvent() } else awaitPointerEvent()
                         if (event == null) {
-                            // Resting finger: use this x.
+                            // A finger resting still: picks the x being read, so the finger never hides it.
                             held = true
-                            finger?.let { f -> pick?.let { haptic.performHapticFeedback(HapticFeedbackType.LongPress); it(xAt(f)) } }
+                            val p = pick
+                            if (shown != null && p != null) {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                reading = null
+                                p(shown)
+                            } else {
+                                reading = xAt(down.position.x)
+                            }
                             continue
                         }
                         val c = event.changes.firstOrNull { it.id == down.id } ?: break
-                        if (!c.pressed) break
+                        if (!c.pressed) {
+                            // A tap clears the reading, or reads where it landed when nothing was read.
+                            if (!moved && !held) reading = if (shown != null) null else xAt(down.position.x)
+                            break
+                        }
                         val d = c.position - down.position
                         if (!moved && (abs(d.x) > slop || abs(d.y) > slop)) {
-                            moved = true
                             // A mostly vertical move scrolls the screen instead.
                             if (abs(d.y) > abs(d.x)) break
+                            moved = true
                         }
                         if (moved) {
                             c.consume()
-                            finger = c.position.x
+                            reading = xAt(c.position.x)
                         }
                     }
-                    finger = null
                 }
             },
         ) {
@@ -156,7 +171,7 @@ fun LineChart(
             fun y(v: Double) = top + ((yMax - v) / (yMax - yMin)).toFloat() * h
             plot[0] = left
             plot[1] = w
-            val fingerX = finger?.let { xAt(it) }
+            val fingerX = reading
 
             xBands.forEach { b ->
                 val l = x(b.start.coerceIn(xMin, xMax))
