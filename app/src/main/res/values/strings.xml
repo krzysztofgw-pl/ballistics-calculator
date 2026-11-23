@@ -19,7 +19,7 @@
     <string name="action_edit_load">Edit load</string>
     <string name="zero_short">zero %1$s m</string>
     <string name="tab_conditions">Conditions</string>
-    <string name="tab_table">Table</string>
+    <string name="tab_table">DOPE</string>
     <string name="tab_target">Target</string>
 
     <!-- Actions -->
@@ -230,7 +230,7 @@
     <string name="action_use_angle">Use %1$s°</string>
     <string name="camera_zoom">%1$s×</string>
     <string name="label_cant">Cant</string>
-    <string name="label_table_range">Table range</string>
+    <string name="label_table_range">DOPE range</string>
     <string name="label_table_step">Step</string>
     <string name="label_spin_drift">Spin drift</string>
     <string name="label_aero_jump">Aerodynamic jump from crosswind</string>
@@ -302,7 +302,7 @@
     <string name="error_cannot_solve">Cannot compute the trajectory</string>
     <string name="error_invalid_value">Invalid value: %1$s</string>
     <string name="error_must_be_positive">%1$s must be greater than zero</string>
-    <string name="error_step_too_small">Table step is too small</string>
+    <string name="error_step_too_small">DOPE step is too small</string>
     <string name="error_bad_curve_row">Invalid drag curve row: %1$s</string>
     <string name="error_curve_too_short">The Cd curve needs at least two points (Mach Cd)</string>
     <string name="field_bullet_mass">bullet weight</string>
@@ -443,7 +443,7 @@
     <!-- Help: each answer's paragraphs are separated by a blank line (\n\n). -->
     <string name="title_help">Help</string>
     <string name="help_start_title">Where do I start?</string>
-    <string name="help_start">Settings, Profiles: add your rifle with its scope and zero, and your load (from the library or your own data). The Rifle tab picks the rifle and load in use and whether the suppressor is on.\n\nConditions: set the wind, temperature, pressure and altitude, and the shot angle if you shoot up or down.\n\nTable gives the dope for every range; Target gives the correction for one distance, drawn on your reticle.</string>
+    <string name="help_start">Settings, Profiles: add your rifle with its scope and zero, and your load (from the library or your own data). The Rifle tab picks the rifle and load in use and whether the suppressor is on.\n\nConditions: set the wind, temperature, pressure and altitude, and the shot angle if you shoot up or down.\n\nDOPE gives the scope settings for every range; Target gives the correction for one distance, drawn on your reticle.</string>
     <string name="help_suppressor_title">How does the suppressor work?</string>
     <string name="help_suppressor">Turn on Suppressor in the rifle section of the rifle profile. Then, in the zero section, say whether you zeroed with it on (Suppressed) or off (Bare), and enter where the impact goes in the other state, up and right from the zero in the turret unit (negative for down or left). Shoot a group in that state at your zero range to find it. Switching which state the zero was shot in flips the signs.\n\nOn the Rifle tab, switch the suppressor on or off. When it differs from the zero, every correction includes the shift and the rifle on the Rifle tab icon carries a suppressor while it is on.</string>
     <string name="help_zero_title">What goes into the zero?</string>
