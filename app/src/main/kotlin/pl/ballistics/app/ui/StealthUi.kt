@@ -326,13 +326,13 @@ private fun StealthNoticeDialog(onDismiss: () -> Unit) {
     )
 }
 
-/** The Quick Settings tile: a button that asks the system to add it, or a note that it is there. */
+/** The Quick Settings tile: a button that asks the system to add it; once it is there, a note, or nothing if not [noteWhenAdded]. */
 @Composable
-fun StealthTile() {
+fun StealthTile(noteWhenAdded: Boolean = true) {
     val context = LocalContext.current
     var tileAdded by remember { mutableStateOf(Stealth.tileAdded(context)) }
     if (tileAdded) {
-        Text(stringResource(R.string.stealth_tile_added), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
+        if (noteWhenAdded) Text(stringResource(R.string.stealth_tile_added), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
     } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         FilledTonalButton(onClick = { requestStealthTile(context) { tileAdded = it } }, modifier = Modifier.fillMaxWidth()) {
             Icon(ImageVector.vectorResource(R.drawable.ic_stealth), null, Modifier.size(ButtonDefaults.IconSize))
@@ -383,5 +383,5 @@ fun StealthSettings(garminWatch: Boolean, onOpenStealth: () -> Unit) {
     SwitchRow(stringResource(R.string.stealth_allow_gps), s.allowGps) { v -> Stealth.set(context, s.copy(allowGps = v)) }
     if (garminWatch) SwitchRow(stringResource(R.string.stealth_allow_watch), s.allowWatch) { v -> Stealth.set(context, s.copy(allowWatch = v)) }
     SwitchRow(stringResource(R.string.stealth_show_bar), s.showBar) { v -> Stealth.set(context, s.copy(showBar = v)) }
-    StealthTile()
+    StealthTile(noteWhenAdded = false)
 }
