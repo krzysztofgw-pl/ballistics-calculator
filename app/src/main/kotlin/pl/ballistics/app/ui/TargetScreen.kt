@@ -351,13 +351,11 @@ fun TargetScreen(
                 NumberField(stringResource(R.string.label_target_speed), conditions.targetSpeedMps, "m/s", Modifier.width(FIELD_WIDTH)) { v ->
                     update { it.copy(targetSpeedMps = v) }
                 }
-                Text(
-                    advice?.moving?.let { stringResource(R.string.label_axis_advice, stringResource(R.string.label_moving), it) }.orEmpty(),
-                    Modifier.weight(1f).padding(start = 12.dp),
-                    color = MOVING_BLUE,
-                    style = MaterialTheme.typography.bodyMedium,
-                    textAlign = TextAlign.End,
-                )
+                Box(Modifier.weight(1f).padding(start = 12.dp), contentAlignment = Alignment.CenterEnd) {
+                    advice?.moving?.let {
+                        AdviceText(stringResource(R.string.label_axis_advice, stringResource(R.string.label_moving), it), MOVING_BLUE, TextAlign.End)
+                    }
+                }
             }
         }
 
@@ -437,12 +435,12 @@ fun TargetScreen(
         // What is held on the reticle for an axis not fully dialed, one line each under the lens.
         advice?.let { a ->
             if (!(correction.dialElevation && manualUp == null)) {
-                Text(stringResource(R.string.label_axis_advice, stringResource(R.string.label_elevation), a.elevation), style = MaterialTheme.typography.bodyMedium)
+                AdviceText(stringResource(R.string.label_axis_advice, stringResource(R.string.label_elevation), a.elevation))
             }
             if (!(correction.dialWindage && manualRight == null)) {
-                Text(stringResource(R.string.label_axis_advice, stringResource(R.string.label_windage), a.windage), style = MaterialTheme.typography.bodyMedium)
+                AdviceText(stringResource(R.string.label_axis_advice, stringResource(R.string.label_windage), a.windage))
             }
-            a.orDial?.let { Text(it, style = MaterialTheme.typography.bodyMedium) }
+            a.orDial?.let { AdviceText(it) }
             if (a.outside) Text(stringResource(R.string.hold_outside_reticle), color = MaterialTheme.colorScheme.error)
         }
         // Reticle, magnification and the lock past the scope's range share one row: they change least often.
@@ -491,6 +489,14 @@ fun TargetScreen(
         if (analysis != null && ui.charts.any { it in ChartKind.card }) {
             Collapsible(stringResource(R.string.section_charts)) { TargetCharts(result, analysis, distance, ui.charts) { setDistance(it) } }
         }
+    }
+}
+
+/** Hold advice on a faint plate, so it reads as advice and stands apart from the controls. */
+@Composable
+private fun AdviceText(text: String, color: Color = Color.Unspecified, align: TextAlign = TextAlign.Start) {
+    Surface(shape = MaterialTheme.shapes.small, color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)) {
+        Text(text, Modifier.padding(horizontal = 8.dp, vertical = 4.dp), color = color, style = MaterialTheme.typography.bodyMedium, textAlign = align)
     }
 }
 
