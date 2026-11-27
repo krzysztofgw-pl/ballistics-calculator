@@ -52,6 +52,7 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.ui.res.painterResource
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
@@ -421,15 +422,18 @@ fun TargetScreen(
             // Half see-through, in the lens's bottom right quarter: under the windage turret's column, so the turret stays clear.
             val course = (maxWidth - TURRET_BAND) / 2 * 0.75f
             if (conditions.targetMoving) {
-                CompassDial(
-                    markers = listOf(DialMarker(targetDirection, DialArrow.OUTWARD, MaterialTheme.colorScheme.primary, true)),
-                    onChange = { v -> update { it.copy(targetDirectionDeg = v.roundToInt().mod(360).toString()) } },
-                    centerText = "${targetDirection.roundToInt().mod(360)}°",
-                    outerLabel = null,
-                    stepDeg = 15.0,
-                    maxSize = course,
-                    modifier = Modifier.align(Alignment.BottomEnd).offset(x = -TURRET_BAND).size(course).graphicsLayer(alpha = 0.7f),
-                )
+                // Light colours in any theme, since it lies on the pale lens; a dark blue arrow stands out on it.
+                MaterialTheme(colorScheme = COMPASS_COLORS) {
+                    CompassDial(
+                        markers = listOf(DialMarker(targetDirection, DialArrow.OUTWARD, COURSE_BLUE, true)),
+                        onChange = { v -> update { it.copy(targetDirectionDeg = v.roundToInt().mod(360).toString()) } },
+                        centerText = "${targetDirection.roundToInt().mod(360)}°",
+                        outerLabel = null,
+                        stepDeg = 15.0,
+                        maxSize = course,
+                        modifier = Modifier.align(Alignment.BottomEnd).offset(x = -TURRET_BAND).size(course).graphicsLayer(alpha = 0.85f),
+                    )
+                }
             }
         }
         // What is held on the reticle for an axis not fully dialed, one line each under the lens.
@@ -562,6 +566,14 @@ private val TURRET_BAND = TURRET_DEPTH + 6.dp
 /** Distance and target speed fields share one width. */
 private val FIELD_WIDTH = 132.dp
 private val MOVING_BLUE = Color(0xFF1E88E5)
+private val COURSE_BLUE = Color(0xFF0D47A1)
+private val COMPASS_COLORS = lightColorScheme(
+    surface = Color.White,
+    surfaceVariant = Color(0xFFF1F3EF),
+    onSurface = Color(0xFF111111),
+    onSurfaceVariant = Color(0xFF424242),
+    primary = COURSE_BLUE,
+)
 
 /** The wind for the flag; [fromRad] as in core Wind: 0 from the target, π/2 from the right. */
 private class WindFlag(val speedMps: Double, val fromRad: Double, val label: String, val range: String?)
