@@ -189,8 +189,8 @@
     <string name="action_test_pressure">Test</string>
     <string name="label_pressure_source">Pressure measurement</string>
     <string name="pressure_source_none">Off</string>
-    <string name="pressure_source_garmin">Garmin watch</string>
-    <string name="pressure_source_phone">Phone barometer</string>
+    <string name="pressure_source_garmin">Garmin</string>
+    <string name="pressure_source_phone">Phone</string>
     <string name="phone_pressure_result">Station pressure %1$s hPa from the phone.</string>
     <string name="phone_pressure_none">The phone\'s barometer gave no reading.</string>
     <string name="watch_pressure_problem">No pressure from the watch</string>
@@ -496,7 +496,7 @@
     <string name="help_altitude_title">Where does the altitude come from?</string>
     <string name="help_altitude">Settings, Measurements and location, Altitude from: the terrain map or GPS. The button under the altitude on Conditions reads it; the field can always be typed in. The same location fix also sets the latitude for Coriolis (turn off with Location sets the latitude). The terrain map gives the ground height at your location (a 1 m lidar model in Poland, a 90 m model elsewhere) and needs the internet. GPS works anywhere under open sky, also in stealth mode; the height is converted to above sea level.\n\nThe altitude matters only with QNH: with station pressure the app does not need it.</string>
     <string name="help_garmin_title">How do I use a Garmin watch?</string>
-    <string name="help_garmin">Install the free Station Pressure app on the watch from the Connect IQ Store and in Settings, Measurements, set Pressure measurement to Garmin watch; the Test button there checks the connection. The Garmin button under the pressure on Conditions reads the watch\'s barometer as station pressure.</string>
+    <string name="help_garmin">Install the free Station Pressure app on the watch from the Connect IQ Store and in Settings, Measurements, set Pressure measurement to Garmin; the Test button there checks the connection. The Garmin button under the pressure on Conditions reads the watch\'s barometer as station pressure.</string>
     <string name="help_forecast_title">How does the wind forecast work?</string>
     <string name="help_forecast">Forecast under the wind dial gets the wind for your location from Open-Meteo. Pick the hours you will shoot on the chart and the shooting height, then Use fills in the wind, and the atmosphere too if you leave that on. The ? in the forecast window explains the chart.</string>
     <string name="help_chrono_title">How do I import chronograph data?</string>
