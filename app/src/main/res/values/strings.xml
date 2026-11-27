@@ -290,7 +290,7 @@
     <string name="action_unlock_magnification">Beyond scope range</string>
     <string name="magnification_outside_range">Outside the scope\'s %1$s–%2$s× range</string>
     <string name="advice_dial">dial %1$s %2$s %3$s</string>
-    <string name="advice_hold">hold %1$s\n%2$s %3$s</string>
+    <string name="advice_hold">hold %1$s %2$s %3$s</string>
     <string name="or_dial">Or dial %1$s %2$s %5$s, %3$s %4$s %5$s</string>
     <string name="hold_outside_reticle">Hold point is outside the reticle: dial the turrets.</string>
     <string name="above_center">above center</string>
@@ -339,7 +339,6 @@
     <string name="label_target_speed">Target speed</string>
     <string name="moving_hold">hold %1$s (lead %2$s %3$s m)</string>
     <string name="hold_part">%1$s %2$s %3$s</string>
-    <string name="label_moving">Moving</string>
     <string name="target_out_of_reach">The bullet does not reach %1$d m.</string>
     <string name="chart_wind_speed">Wind drift: correction (%1$s) by wind speed (m/s)</string>
     <string name="chart_wind_direction">Wind drift: correction (%1$s) by wind direction (o\'clock)</string>
@@ -433,9 +432,9 @@
     <string name="turret_elevation">Elevation turret: %1$s. Drag to turn.</string>
     <string name="turret_windage">Windage turret: %1$s. Drag to turn.</string>
     <string name="action_reset_turrets">Reset turrets</string>
+    <string name="label_axis_advice">%1$s: %2$s</string>
     <string name="label_velocity_sd">Velocity SD</string>
     <string name="label_group">5-shot group</string>
-    <string name="label_target_course">Course</string>
     <string name="label_north_up">North up</string>
     <string name="compass_uncalibrated">The phone reports its compass as poorly calibrated. Move the phone in a figure-eight a few times, away from the rifle and other steel, then read again.</string>
     <string name="compass_inaccurate">The phone estimates its heading only to ±%1$d°. Calibrate it with a figure-eight motion, away from steel, then read again.</string>
