@@ -223,7 +223,8 @@ fun ForecastDialog(
                         var next = c.copy(
                             windSpeed = one(s.speedMps * factor),
                             windMinMps = one(s.minSpeedMps * factor),
-                            windMaxMps = one(s.maxSpeedMps * factor),
+                            // Gusts count for the bracket: the strongest wind is the higher of the hourly speeds and gusts.
+                            windMaxMps = one(maxOf(s.maxSpeedMps, s.gustMps ?: 0.0) * factor),
                             windFromDeg = (s.fromDeg - az).mod(360.0).roundToInt().mod(360).toString(),
                             windFromMinDeg = (s.fromDeg + s.fromSpreadDeg.start - az).mod(360.0).roundToInt().mod(360).toString(),
                             windFromMaxDeg = (s.fromDeg + s.fromSpreadDeg.endInclusive - az).mod(360.0).roundToInt().mod(360).toString(),
