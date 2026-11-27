@@ -59,6 +59,8 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.res.stringResource
 import pl.ballistics.app.R
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.graphicsLayer
@@ -347,24 +349,22 @@ fun TargetScreen(
             Advice(elevation, windage, moving, orDial, abs(h.x) > reticle.extent || abs(h.y) > reticle.extent)
         }
 
-        // The row stays in place with the moving target off (speed greyed out, no advice), so the lens never jumps.
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            NumberField(
-                stringResource(R.string.label_target_speed), conditions.targetSpeedMps, "m/s", Modifier.width(FIELD_WIDTH),
-                enabled = conditions.targetMoving,
-            ) { v ->
-                update { it.copy(targetSpeedMps = v) }
-            }
-            Box(Modifier.weight(1f).padding(start = 12.dp), contentAlignment = Alignment.CenterEnd) {
-                if (conditions.targetMoving) advice?.moving?.let {
-                    AdviceText(stringResource(R.string.label_axis_advice, stringResource(R.string.label_moving), it), MOVING_BLUE, TextAlign.End)
-                }
-            }
+        val leadText = advice?.moving?.takeIf { conditions.targetMoving }
+            ?.let { stringResource(R.string.label_axis_advice, stringResource(R.string.label_moving), it) }
+        BoxWithConstraints(Modifier.fillMaxWidth()) {
+        val outerWidth = maxWidth
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        // The row stays in place with the moving target off (speed greyed out), so the lens never jumps.
+        NumberField(
+            stringResource(R.string.label_target_speed), conditions.targetSpeedMps, "m/s", Modifier.width(FIELD_WIDTH),
+            enabled = conditions.targetMoving,
+        ) { v ->
+            update { it.copy(targetSpeedMps = v) }
         }
 
         BoxWithConstraints(Modifier.fillMaxWidth().aspectRatio(1f)) {
             ReticleView(
-                reticle, holds, selected, leadHold, gusts, flag, field,
+                reticle, holds, selected, leadHold, leadText, gusts, flag, field,
                 // The lens keeps clear of the turrets: they stand above it and to its right, as on the scope.
                 Modifier.fillMaxSize().padding(top = TURRET_BAND, end = TURRET_BAND).pointerInput(weapon.id) {
                     // Two-finger pinch only, so a one-finger drag still scrolls the screen.
@@ -409,36 +409,39 @@ fun TargetScreen(
                     onChange = { manualRight = it },
                     modifier = Modifier.align(Alignment.CenterEnd).offset(y = TURRET_BAND / 2).size(TURRET_DEPTH, TURRET_LENGTH),
                 )
-                // Turned by hand: a round button in the corner between the turrets puts both back to the computed corrections
-                // (the bottom right corner holds the moving target's course).
+                // Turned by hand: a round button in the free bottom right corner puts both back to the computed corrections
+                // (the top right corner holds the moving target's course).
                 if (manualUp != null || manualRight != null) {
                     FilledTonalIconButton(
                         onClick = { manualUp = null; manualRight = null },
-                        modifier = Modifier.align(Alignment.TopEnd).size(TURRET_DEPTH),
+                        modifier = Modifier.align(Alignment.BottomEnd).size(TURRET_DEPTH),
                     ) {
                         Icon(Icons.Default.Refresh, stringResource(R.string.action_reset_turrets))
                     }
                 }
             }
-            // The course is set on a small dial in the free corner: up is away from the shooter, right is to the right.
-            // Half see-through, in the lens's bottom right quarter: under the windage turret's column, so the turret stays clear.
-            val course = (maxWidth - TURRET_BAND) / 2 * 0.75f
-            if (conditions.targetMoving) {
-                // Light colours in any theme, since it lies on the pale lens; a dark blue arrow stands out on it.
-                MaterialTheme(colorScheme = COMPASS_COLORS) {
-                    CompassDial(
-                        markers = listOf(DialMarker(targetDirection, DialArrow.OUTWARD, COURSE_BLUE, true)),
-                        onChange = { v -> update { it.copy(targetDirectionDeg = v.roundToInt().mod(360).toString()) } },
-                        centerText = "${targetDirection.roundToInt().mod(360)}°",
-                        outerLabel = null,
-                        stepDeg = 15.0,
-                        maxSize = course,
-                        hub = 0.26f,
-                        arrowScale = 1.4f,
-                        modifier = Modifier.align(Alignment.BottomEnd).offset(x = -TURRET_BAND).size(course).graphicsLayer(alpha = 0.85f),
-                    )
-                }
+        }
+        }
+        // The course is set on a small dial above the lens, right of the elevation turret: up is away from the shooter,
+        // right is to the right. It spans the speed row and the turret band, clear of the lens.
+        if (conditions.targetMoving) {
+            val free = (outerWidth + TURRET_BAND) / 2 - TURRET_LENGTH / 2 - 8.dp
+            val course = minOf(free, 128.dp)
+            // Light colours in any theme; a dark blue arrow stands out on it.
+            MaterialTheme(colorScheme = COMPASS_COLORS) {
+                CompassDial(
+                    markers = listOf(DialMarker(targetDirection, DialArrow.OUTWARD, COURSE_BLUE, true)),
+                    onChange = { v -> update { it.copy(targetDirectionDeg = v.roundToInt().mod(360).toString()) } },
+                    centerText = "${targetDirection.roundToInt().mod(360)}°",
+                    outerLabel = null,
+                    stepDeg = 15.0,
+                    maxSize = course,
+                    hub = 0.26f,
+                    arrowScale = 1.4f,
+                    modifier = Modifier.align(Alignment.TopEnd).size(course),
+                )
             }
+        }
         }
         // What is held on the reticle for an axis not fully dialed, one line each under the lens.
         advice?.let { a ->
@@ -647,6 +650,7 @@ private fun ReticleView(
     holds: List<Hold>,
     selected: TrajectoryPoint?,
     lead: Hold?,
+    leadText: String?,
     gusts: List<Gust>,
     flag: WindFlag,
     field: Double,
@@ -724,6 +728,19 @@ private fun ReticleView(
                 val p = at(h.x, h.y)
                 drawCircle(moving, 5.dp.toPx(), p)
                 drawCircle(moving, 9.dp.toPx(), p, style = Stroke(1.5.dp.toPx()))
+                // Its hold floats beside it on a faint plate, kept inside the lens's square.
+                leadText?.let { t ->
+                    val layout = text.measure(t, TextStyle(fontSize = 11.sp, color = Color(0xFF1565C0)))
+                    val pad = 4.dp.toPx()
+                    val w = layout.size.width + 2 * pad
+                    val hgt = layout.size.height + 2 * pad
+                    val gap = 12.dp.toPx()
+                    var x = p.x + gap
+                    if (x + w > size.width) x = p.x - gap - w
+                    val y = (p.y + gap).coerceAtMost(size.height - hgt)
+                    drawRoundRect(Color.White.copy(alpha = 0.6f), Offset(x, y), Size(w, hgt), CornerRadius(4.dp.toPx()))
+                    drawText(layout, topLeft = Offset(x + pad, y + pad))
+                }
             }
         }
         // Upper left of the lens: clear of the corner texts, the moving-target hold in the bottom left and most reticle marks.
