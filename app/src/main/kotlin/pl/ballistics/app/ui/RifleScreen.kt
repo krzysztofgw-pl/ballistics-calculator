@@ -155,7 +155,7 @@ fun RifleScreen(
                                 R.string.suppressor_correction,
                                 stringResource(if (up >= 0) R.string.up else R.string.down), abs(up).fmt2(),
                                 stringResource(if (right >= 0) R.string.right else R.string.left), abs(right).fmt2(),
-                                w.angularUnit.label,
+                                w.turretUnit.label,
                             ),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.primary,

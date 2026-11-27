@@ -2,6 +2,7 @@ package pl.ballistics.web
 
 import org.w3c.dom.HTMLElement
 import pl.ballistics.core.TrajectoryPoint
+import pl.ballistics.core.Turret
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
@@ -40,7 +41,7 @@ object TableScreen {
                     s.stabilityFactor?.let {
                         if (it < 1.0) el("p", "error", S.warningUnstable) else if (it < 1.4) el("p", "error", S.warningMarginal)
                     }
-                    el("p", "hint", S.tableLegend(result.unit.label, result.weapon.clickValue))
+                    el("p", "hint", S.tableLegend(result.unit.label, result.weapon.clickValue) + turretNote(result))
                 }
                 root.el("div", "table-wrap") {
                     el("table", "range-table") {
@@ -48,7 +49,7 @@ object TableScreen {
                             el("tr") { S.columns.forEach { el("th", text = it) } }
                         }
                         el("tbody") {
-                            s.points.forEach { p -> el("tr") { cells(p, result.unit.radians, result.clickValue).forEach { el("td", text = it) } } }
+                            s.points.forEach { p -> el("tr") { cells(p, result.elevationTurret, result.windageTurret).forEach { el("td", text = it) } } }
                         }
                     }
                 }
@@ -56,11 +57,25 @@ object TableScreen {
         }
     }
 
-    private fun cells(p: TrajectoryPoint, unitRad: Double, click: Double?): List<String> {
+    /** The windage click and turret corrections, when they change the table. */
+    private fun turretNote(result: CalcResult.Ok): String {
+        val w = result.weapon
+        val e = result.elevationTurret
+        val x = result.windageTurret
+        return listOfNotNull(
+            S.windageClickLegend(w.windageClickValue.ifBlank { w.clickValue }, result.unit.label).takeIf { x.click != e.click },
+            S.factorLegend(fmt(e.factor, 3), fmt(x.factor, 3)).takeIf { e.factor != 1.0 || x.factor != 1.0 },
+        ).joinToString("") { " $it" }
+    }
+
+    private fun cells(p: TrajectoryPoint, elevation: Turret, windage: Turret): List<String> {
         // The cm columns are where the bullet goes: drop below the line of sight (negative only above it,
-        // between the near and far zero) and drift, unsigned: the wind tells which way. The angle and clicks columns are the corrections.
-        val up = -p.dropRad / unitRad
-        val right = -p.windageRad / unitRad
+        // between the near and far zero) and drift, unsigned: the wind tells which way. The angle and clicks
+        // columns are the corrections to dial, after the turret correction.
+        val up = elevation.units(-p.dropRad)
+        val right = windage.units(-p.windageRad)
+        val click = elevation.click
+        val windClick = windage.click
         val dropCm = -p.dropM * 100
         val driftCm = p.windageM * 100
         val shown = p.rangeM > 0
@@ -71,7 +86,7 @@ object TableScreen {
             if (shown && click != null) vertical(up / click, 0.5) + abs(up / click).roundToInt() else "",
             grouped(fmt(abs(driftCm), 1)),
             if (shown) side(right, 0.005) + fmt(abs(right), 2) else "",
-            if (shown && click != null) side(right / click, 0.5) + (abs(right) / click).roundToInt() else "",
+            if (shown && windClick != null) side(right / windClick, 0.5) + (abs(right) / windClick).roundToInt() else "",
             p.velocityMps.roundToInt().toString(),
             p.energyJ.roundToInt().toString(),
             fmt(p.timeS, 3),

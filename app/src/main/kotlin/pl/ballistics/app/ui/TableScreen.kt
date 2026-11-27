@@ -33,6 +33,7 @@ import pl.ballistics.app.R
 import pl.ballistics.app.asString
 import pl.ballistics.app.data.Conditions
 import pl.ballistics.core.TrajectoryPoint
+import pl.ballistics.core.Turret
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
@@ -75,8 +76,7 @@ private fun Table(
     onToggleDetails: () -> Unit,
 ) {
     val s = result.solution
-    val unit = result.angularUnit
-    val click = result.clickValue
+    val unit = result.turretUnit
 
     Column(modifier.fillMaxSize()) {
         Column(Modifier.padding(horizontal = 12.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -103,7 +103,12 @@ private fun Table(
                 else if (it < 1.4) Warning(stringResource(R.string.warning_marginal))
             }
             if (details) Text(
-                stringResource(R.string.table_legend, unit.label, result.weapon.clickValue),
+                listOfNotNull(
+                    stringResource(R.string.table_legend, unit.label, result.weapon.clickValue),
+                    stringResource(R.string.table_legend_windage_click, result.weapon.windageClickValue.ifBlank { result.weapon.clickValue }, unit.label)
+                        .takeIf { result.weapon.separateWindage && result.windageTurret.click != result.elevationTurret.click },
+                    turretCorrectionNote(result),
+                ).joinToString(" "),
                 style = MaterialTheme.typography.bodySmall,
             )
         }
@@ -122,7 +127,7 @@ private fun Table(
                     s.points.forEach { p -> Cell(p.rangeM.roundToInt().toString(), rangeColumn.second, bold = true) }
                 }
                 Column(Modifier.horizontalScroll(sideways)) {
-                    s.points.forEach { p -> PointRow(p, unit.radians, click) }
+                    s.points.forEach { p -> PointRow(p, result.elevationTurret, result.windageTurret) }
                 }
             }
             // The table's extent sits under it, where its effect shows.
@@ -145,20 +150,21 @@ private fun Warning(text: String) {
 }
 
 @Composable
-private fun PointRow(p: TrajectoryPoint, unitRad: Double, click: Double?) {
+private fun PointRow(p: TrajectoryPoint, elevation: Turret, windage: Turret) {
     // The cm columns are where the bullet goes: drop below the line of sight (negative only above it,
-    // between the near and far zero) and drift, unsigned: the wind tells which way. The angle and clicks columns are the corrections.
-    val up = -p.dropRad / unitRad
-    val right = -p.windageRad / unitRad
+    // between the near and far zero) and drift, unsigned: the wind tells which way. The angle and clicks
+    // columns are the corrections to dial, after the turret correction.
+    val up = elevation.units(-p.dropRad)
+    val right = windage.units(-p.windageRad)
     val dropCm = -p.dropM * 100
     val driftCm = p.windageM * 100
     val cells = listOf(
         (if (dropCm < -0.05) "-" else "") + grouped("%.1f".format(abs(dropCm))),
         if (p.rangeM > 0) vertical(up, 0.005) + "%.2f".format(abs(up)) else "",
-        if (p.rangeM > 0 && click != null) vertical(up / click, 0.5) + abs(up / click).roundToInt() else "",
+        elevation.click?.takeIf { p.rangeM > 0 }?.let { c -> vertical(up / c, 0.5) + abs(up / c).roundToInt() } ?: "",
         grouped("%.1f".format(abs(driftCm))),
         if (p.rangeM > 0) side(right, 0.005) + "%.2f".format(abs(right)) else "",
-        if (p.rangeM > 0 && click != null) side(right / click, 0.5) + (abs(right) / click).roundToInt() else "",
+        windage.click?.takeIf { p.rangeM > 0 }?.let { c -> side(right / c, 0.5) + (abs(right) / c).roundToInt() } ?: "",
         p.velocityMps.roundToInt().toString(),
         p.energyJ.roundToInt().toString(),
         "%.3f".format(p.timeS),
@@ -169,6 +175,18 @@ private fun PointRow(p: TrajectoryPoint, unitRad: Double, click: Double?) {
             val (title, width) = columns[index + 1]
             Cell(text, width, bold = title == R.string.col_clicks, highlight = title == R.string.col_clicks)
         }
+    }
+}
+
+/** Which turret corrections the table includes, or null when both turrets track true. */
+@Composable
+private fun turretCorrectionNote(result: CalcResult.Ok): String? {
+    val e = result.elevationTurret.factor
+    val w = result.windageTurret.factor
+    return when {
+        e == 1.0 && w == 1.0 -> null
+        e == w -> stringResource(R.string.table_legend_factor, "%.3f".format(e))
+        else -> stringResource(R.string.table_legend_factors, "%.3f".format(e), "%.3f".format(w))
     }
 }
 

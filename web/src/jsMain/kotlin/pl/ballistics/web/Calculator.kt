@@ -27,8 +27,9 @@ fun String.toNumber(): Double? = trim().replace(',', '.').toDoubleOrNull()
 
 sealed interface CalcResult {
     data class Ok(val solution: Solution, val weapon: WeaponProfile, val ammo: AmmoProfile, val setup: Setup) : CalcResult {
-        val unit: AngularUnit get() = weapon.angularUnit
-        val clickValue: Double? get() = weapon.clickValue.toNumber()?.takeIf { it > 0 }
+        val unit: TurretUnit get() = weapon.turretUnit
+        val elevationTurret: Turret get() = weapon.elevationTurret
+        val windageTurret: Turret get() = weapon.windageTurret
     }
 
     data class Error(val message: String) : CalcResult
@@ -163,8 +164,8 @@ object Calculator {
         val shift = w.suppressorShift()
         return Setup(
             rifle, ammo, conditions, zeroAtmosphere, options,
-            shiftUpRad = (shift?.first ?: 0.0) * w.angularUnit.radians,
-            shiftRightRad = (shift?.second ?: 0.0) * w.angularUnit.radians,
+            shiftUpRad = (shift?.first ?: 0.0) * w.turretUnit.radians,
+            shiftRightRad = (shift?.second ?: 0.0) * w.turretUnit.radians,
         )
     }
 

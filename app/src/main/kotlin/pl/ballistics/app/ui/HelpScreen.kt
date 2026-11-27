@@ -32,6 +32,7 @@ private class Topic(@StringRes val title: Int, @StringRes val body: Int)
 private val topics = listOf(
     Topic(R.string.help_start_title, R.string.help_start),
     Topic(R.string.help_zero_title, R.string.help_zero),
+    Topic(R.string.help_turret_title, R.string.help_turret),
     Topic(R.string.help_pressure_title, R.string.help_pressure),
     Topic(R.string.help_velocity_title, R.string.help_velocity),
     Topic(R.string.help_suppressor_title, R.string.help_suppressor),
@@ -53,10 +54,10 @@ private val topics = listOf(
     Topic(R.string.help_accuracy_title, R.string.help_accuracy),
 ).filterNotNull()
 
-/** How to use the app, as questions that open to their answers. */
+/** How to use the app, as questions that open to their answers; [openTopic] (its title) starts open. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HelpScreen(onClose: () -> Unit) {
+fun HelpScreen(onClose: () -> Unit, @StringRes openTopic: Int? = null) {
     Scaffold(
         // Keep content clear of system bars, display cutouts and the keyboard (edge-to-edge).
         contentWindowInsets = WindowInsets.safeDrawing,
@@ -75,7 +76,7 @@ fun HelpScreen(onClose: () -> Unit) {
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             topics.forEach { t ->
-                Collapsible(stringResource(t.title)) {
+                Collapsible(stringResource(t.title), initiallyOpen = t.title == openTopic) {
                     stringResource(t.body).split("\n\n").forEach { Text(it, style = MaterialTheme.typography.bodyMedium) }
                 }
             }

@@ -36,7 +36,6 @@ import pl.ballistics.app.TruedBc
 import pl.ballistics.app.bcFromDrop
 import pl.ballistics.app.bcFromVelocities
 import pl.ballistics.app.data.AmmoProfile
-import pl.ballistics.app.data.AngularUnit
 import pl.ballistics.app.data.DragType
 import pl.ballistics.app.data.newId
 import pl.ballistics.app.toNumber
@@ -65,7 +64,8 @@ fun BcTruingCard(
             return@Collapsible
         }
         val function = DragFunction.valueOf(ammo.dragType.name)
-        val unit = result.angularUnit
+        val unit = result.turretUnit
+        val turret = result.elevationTurret
         var byVelocity by rememberSaveable { mutableStateOf(false) }
         var nearRange by rememberSaveable { mutableStateOf("") }
         var nearVelocity by rememberSaveable { mutableStateOf("") }
@@ -101,7 +101,8 @@ fun BcTruingCard(
         }
 
         val setup = result.setup
-        val step = if (unit == AngularUnit.MOA) 0.25 else 0.1
+        // The uncertainty of the dialled elevation: one click.
+        val step = turret.click ?: unit.defaultClick.toDouble()
         val velocityError = 3.0
         val inputs = if (byVelocity) {
             listOf(nearRange.toNumber() ?: 0.0, nearVelocity.toNumber() ?: muzzle.toDouble(), farRange.toNumber(), farVelocity.toNumber())
@@ -115,7 +116,7 @@ fun BcTruingCard(
             value = withContext(Dispatchers.Default) {
                 runCatching {
                     if (byVelocity) setup.bcFromVelocities(function, v[0], v[1], v[2], v[3], velocityError)
-                    else setup.bcFromDrop(function, v[0], v[1] * unit.radians, step * unit.radians)
+                    else setup.bcFromDrop(function, v[0], turret.angle(v[1]), turret.angle(step))
                 }
             }
         }

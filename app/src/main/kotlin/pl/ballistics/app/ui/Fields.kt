@@ -19,6 +19,7 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.OutlinedTextField
@@ -33,6 +34,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -61,6 +63,8 @@ fun NumberField(
     placeholder: String? = null,
     /** Given, the unit becomes a button that switches it. */
     onUnitClick: (() -> Unit)? = null,
+    /** Given, a ? at the end of the field opens an explanation. */
+    onHelp: (() -> Unit)? = null,
     onChange: (String) -> Unit,
 ) {
     OutlinedTextField(
@@ -69,7 +73,13 @@ fun NumberField(
         label = { Text(label) },
         placeholder = placeholder?.let { { Text(it) } },
         suffix = { if (onUnitClick == null) Text(unit) },
-        trailingIcon = if (onUnitClick == null) null else {
+        trailingIcon = if (onHelp != null) {
+            {
+                IconButton(onClick = onHelp) {
+                    Icon(ImageVector.vectorResource(R.drawable.ic_help), stringResource(R.string.title_help))
+                }
+            }
+        } else if (onUnitClick == null) null else {
             {
                 Text(
                     unit,

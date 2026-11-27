@@ -1,6 +1,7 @@
 package pl.ballistics.web
 
 import org.w3c.dom.HTMLElement
+import pl.ballistics.core.Turret
 import org.w3c.dom.HTMLInputElement
 import kotlin.math.abs
 import kotlin.math.roundToInt
@@ -75,15 +76,14 @@ object TargetScreen {
             return
         }
         val unit = result.unit
-        val click = result.clickValue
         val correction = Store.data.ui.correction(result.weapon.reticleId)
         val up = -point.dropRad / unit.radians
         val right = (-point.windageRad + (lead?.leadRad ?: 0.0)) / unit.radians
 
         root.card {
             el("div", "advice") {
-                adviceRow(S.labelElevation, if (up >= 0) "↑" else "↓", abs(up), unit, click, correction.dialElevation)
-                adviceRow(S.labelWindage, TableScreen.side(right).ifEmpty { "" }, abs(right), unit, click, correction.dialWindage)
+                adviceRow(S.labelElevation, if (up >= 0) "↑" else "↓", abs(up), unit, result.elevationTurret, correction.dialElevation)
+                adviceRow(S.labelWindage, TableScreen.side(right).ifEmpty { "" }, abs(right), unit, result.windageTurret, correction.dialWindage)
             }
             if (lead != null) {
                 el("p", "hint", S.leadHint(fmt(abs(lead.leadM), 2), if (lead.leadM >= 0) S.right else S.left))
@@ -99,11 +99,13 @@ object TargetScreen {
         }
     }
 
-    private fun HTMLElement.adviceRow(label: String, direction: String, value: Double, unit: AngularUnit, click: Double?, dial: Boolean) {
+    private fun HTMLElement.adviceRow(label: String, direction: String, value: Double, unit: TurretUnit, turret: Turret, dial: Boolean) {
         el("div", "advice-row") {
             el("span", "advice-label", label)
+            val click = turret.click
             if (dial && click != null) {
-                val clicks = (value / click).roundToInt()
+                // What to dial, after the turret correction; value is the true angle in the unit.
+                val clicks = turret.clicks(value * unit.radians)!!
                 el("span", "advice-value", "$direction${fmt(clicks * click, 2)} ${unit.label}")
                 el("span", "advice-sub", S.dialClicks(clicks))
             } else {

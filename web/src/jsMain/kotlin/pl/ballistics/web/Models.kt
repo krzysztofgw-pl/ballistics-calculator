@@ -1,6 +1,7 @@
 package pl.ballistics.web
 
 import kotlinx.serialization.Serializable
+import pl.ballistics.core.Turret
 import pl.ballistics.core.Units
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
@@ -17,6 +18,16 @@ enum class AngularUnit(val label: String, val radians: Double) {
     MRAD("MRAD", Units.MRAD),
     MOA("MOA", Units.MOA),
 }
+
+/** The unit marked on the turrets; SMOA is stored as MOA plus [WeaponProfile.inchMoa], as on Android. */
+enum class TurretUnit(val label: String, val radians: Double, val stored: AngularUnit, val defaultClick: String) {
+    MRAD("MRAD", Units.MRAD, AngularUnit.MRAD, "0.1"),
+    MOA("MOA", Units.MOA, AngularUnit.MOA, "0.25"),
+    SMOA("SMOA", Units.SMOA, AngularUnit.MOA, "0.25"),
+}
+
+/** A turret correction as typed; blank, unreadable or not positive is 1. */
+private fun factor(text: String): Double = text.toNumber()?.takeIf { it > 0 } ?: 1.0
 
 /** G1…RA4 map to the standard drag functions; CUSTOM uses a pasted Cd(Mach) curve. */
 enum class DragType { G1, G7, G2, G5, G6, G8, GI, GS, RA4, CUSTOM }
@@ -38,7 +49,14 @@ data class WeaponProfile(
     val barrelInches: Boolean = true,
     val scopeName: String = "",
     val angularUnit: AngularUnit = AngularUnit.MRAD,
+    /** With [angularUnit] MOA: the turrets are in shooter's MOA (1 in at 100 yd). */
+    val inchMoa: Boolean = false,
     val clickValue: String = "0.1",
+    /** Turret correction: measured ÷ dialled; blank is 1. */
+    val elevationFactor: String = "",
+    val separateWindage: Boolean = false,
+    val windageClickValue: String = "",
+    val windageFactor: String = "",
     val sightHeightCm: String = "4.5",
     val reticleId: String = "mrad-hash",
     val reticleGraduation: String = "",
@@ -61,7 +79,26 @@ data class WeaponProfile(
     val groupMoa: String = "",
     val muzzleVelocities: Map<String, String> = emptyMap(),
 ) {
-    /** Impact shift (up, right) in [angularUnit] against the zero while the suppressor is not as zeroed; null when it is. */
+    val turretUnit: TurretUnit
+        get() = when {
+            angularUnit == AngularUnit.MRAD -> TurretUnit.MRAD
+            inchMoa -> TurretUnit.SMOA
+            else -> TurretUnit.MOA
+        }
+
+    fun withTurretUnit(unit: TurretUnit): WeaponProfile = copy(angularUnit = unit.stored, inchMoa = unit == TurretUnit.SMOA)
+
+    val elevationTurret: Turret
+        get() = Turret(turretUnit.radians, clickValue.toNumber()?.takeIf { it > 0 }, factor(elevationFactor))
+
+    val windageTurret: Turret
+        get() = if (!separateWindage) elevationTurret else Turret(
+            turretUnit.radians,
+            (windageClickValue.toNumber() ?: clickValue.toNumber())?.takeIf { it > 0 },
+            factor(windageFactor),
+        )
+
+    /** Impact shift (up, right) in [turretUnit] against the zero while the suppressor is not as zeroed; null when it is. */
     fun suppressorShift(): Pair<Double, Double>? {
         if (!suppressor || suppressorMounted == zeroSuppressed) return null
         val up = suppressorShiftUp.toNumber() ?: 0.0

@@ -57,8 +57,8 @@ object OpenCards {
 
 /** A card whose content opens and closes with its title; it remembers its state across screens. */
 @Composable
-fun Collapsible(title: String, content: @Composable ColumnScope.() -> Unit) {
-    var open by rememberSaveable(title) { mutableStateOf(false) }
+fun Collapsible(title: String, initiallyOpen: Boolean = false, content: @Composable ColumnScope.() -> Unit) {
+    var open by rememberSaveable(title) { mutableStateOf(initiallyOpen) }
     LaunchedEffect(title, open) { OpenCards.set(title, open) }
     Card(Modifier.fillMaxWidth()) {
         Row(
@@ -103,8 +103,8 @@ fun TargetTools(
     onSaveAmmo: (AmmoProfile) -> Unit,
     onAddAmmoCopy: (from: AmmoProfile, copy: AmmoProfile) -> Unit,
 ) {
-    val unit = result.angularUnit
-    val digits = if (unit == AngularUnit.MOA) 1 else 2
+    val unit = result.turretUnit
+    val digits = unit.decimals
     val right = stringResource(R.string.right_short)
     val left = stringResource(R.string.left_short)
     fun side(rad: Double): String {
@@ -247,7 +247,7 @@ fun TargetTools(
             Text(
                 stringResource(
                     R.string.temperature_row, row.temperatureC.roundToInt(), row.muzzleVelocityMps.roundToInt(),
-                    (-row.point.dropRad / unit.radians).f(digits), unit.label,
+                    result.elevationTurret.units(-row.point.dropRad).f(digits), unit.label,
                 ),
                 style = if (row.deltaC == 0.0) MaterialTheme.typography.titleSmall else MaterialTheme.typography.bodyMedium,
             )

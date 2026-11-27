@@ -188,16 +188,16 @@ fun TargetScreen(
     // In an FFP scope reticle and target scale together, so only the field of view changes.
     val scale = if (sfp) magnification / calMag else 1.0
     val field = if (sfp) reticle.extent else reticle.extent * maxMag / magnification
-    // Turret corrections for the chosen distance, in whole clicks (in the turret unit).
-    val turret = result.angularUnit
-    val click = result.clickValue
-    fun clicks(v: Double) = click?.let { (v / it).roundToInt() * it } ?: v
-    val upDial = clicks(-(selected?.dropRad ?: 0.0) / turret.radians)
-    val rightDial = clicks(-(selected?.windageRad ?: 0.0) / turret.radians)
-    // What is dialed moves every hold point by the same amount.
+    // Turret corrections for the chosen distance, in whole clicks of the turret unit, after the turret correction.
+    val turret = result.turretUnit
+    val elevationTurret = result.elevationTurret
+    val windageTurret = result.windageTurret
+    val upDial = elevationTurret.dial(-(selected?.dropRad ?: 0.0))
+    val rightDial = windageTurret.dial(-(selected?.windageRad ?: 0.0))
+    // What is dialed moves every hold point by the same amount: the angle the turret really moves.
     val correction = ui.correction(Reticles.designKey(reticle))
-    val dialX = if (correction.dialWindage) -rightDial * turret.radians / reticle.unit.radians * scale else 0.0
-    val dialY = if (correction.dialElevation) -upDial * turret.radians / reticle.unit.radians * scale else 0.0
+    val dialX = if (correction.dialWindage) -windageTurret.angle(rightDial) / reticle.unit.radians * scale else 0.0
+    val dialY = if (correction.dialElevation) -elevationTurret.angle(upDial) / reticle.unit.radians * scale else 0.0
     val holds = (points + listOfNotNull(selected?.takeIf { it !in points })).map { p ->
         Hold(p, p.windageRad / reticle.unit.radians * scale - dialX, p.dropRad / reticle.unit.radians * scale - dialY)
     }
@@ -278,12 +278,12 @@ fun TargetScreen(
             val horizontal = stringResource(if (h.x >= 0) R.string.right else R.string.left)
             // Each axis: dial whole clicks or hold on the reticle; what the clicks leave over is under half a click.
             val elevation = if (correction.dialElevation) {
-                stringResource(R.string.advice_dial, up, upDial.dialFmt(click), turret.label)
+                stringResource(R.string.advice_dial, up, upDial.dialFmt(elevationTurret.click), turret.label)
             } else {
                 stringResource(R.string.advice_hold, h.y.holdFmt(), reticle.unit.label, vertical)
             }
             val windage = if (correction.dialWindage) {
-                stringResource(R.string.advice_dial, right, rightDial.dialFmt(click), turret.label)
+                stringResource(R.string.advice_dial, right, rightDial.dialFmt(windageTurret.click), turret.label)
             } else {
                 stringResource(R.string.advice_hold, h.x.holdFmt(), reticle.unit.label, horizontal)
             }
@@ -306,7 +306,7 @@ fun TargetScreen(
                 )
             }
             val orDial = if (!correction.dialElevation && !correction.dialWindage) {
-                stringResource(R.string.or_dial, up, upDial.dialFmt(click), right, rightDial.dialFmt(click), turret.label)
+                stringResource(R.string.or_dial, up, upDial.dialFmt(elevationTurret.click), right, rightDial.dialFmt(windageTurret.click), turret.label)
             } else null
             Advice(elevation, windage, moving, orDial, abs(h.x) > reticle.extent || abs(h.y) > reticle.extent)
         }
@@ -531,8 +531,8 @@ private fun clock(deg: Double): String = clockText(deg)
 /** Spin drift by distance and the windage correction by wind speed and by wind direction at the chosen distance. */
 @Composable
 private fun TargetCharts(result: CalcResult.Ok, a: TargetAnalysis, distance: Double, charts: Set<ChartKind>, onUseDistance: (Double) -> Unit) {
-    val unit = result.angularUnit
-    val digits = if (unit == AngularUnit.MOA) 1 else 2
+    val unit = result.turretUnit
+    val digits = unit.decimals
     fun correction(v: Double): String = when {
         abs(v) < 0.5 * 10.0.pow(-digits) -> "0"
         v > 0 -> "R" + abs(v).fmt(digits)
