@@ -111,6 +111,7 @@ import kotlin.math.atan2
 import kotlin.math.pow
 import kotlin.math.sign
 import kotlin.math.roundToInt
+import kotlin.math.sqrt
 
 /** The shot at [distance]; [point] is null when the bullet does not get there. */
 private data class Solved(val distance: Double, val point: TrajectoryPoint?, val lead: Lead?, val analysis: TargetAnalysis?)
@@ -763,16 +764,34 @@ private fun ReticleView(
                 val p = at(h.x, h.y)
                 drawCircle(moving, 5.dp.toPx(), p)
                 drawCircle(moving, 9.dp.toPx(), p, style = Stroke(1.5.dp.toPx()))
-                // Its hold floats beside it on a faint plate, kept inside the lens's square.
+                // Its hold floats beside it on a faint plate, in the free corner around the dot: of the four
+                // (above or below, left or right), inside the lens, the one covering fewest trajectory dots and
+                // figures and crossing fewest reticle lines.
                 leadText?.let { t ->
                     val layout = text.measure(t, TextStyle(fontSize = 11.sp, color = Color(0xFF1565C0)))
                     val pad = 4.dp.toPx()
                     val w = layout.size.width + 2 * pad
                     val hgt = layout.size.height + 2 * pad
                     val gap = 12.dp.toPx()
-                    var x = p.x + gap
-                    if (x + w > size.width) x = p.x - gap - w
-                    val y = (p.y + gap).coerceAtMost(size.height - hgt)
+                    val figure = 26.dp.toPx()
+                    val dots = holds.map { at(it.x, it.y) }
+                    fun halfChord(y: Float) = sqrt(maxOf(0f, radius * radius - (y - c.y) * (y - c.y)))
+                    val best = listOf(true, false).flatMap { right -> listOf(true, false).map { above -> right to above } }
+                        .map { (right, above) ->
+                            val y = if (above) p.y - gap - hgt else p.y + gap
+                            // Shifted toward the middle as far as needed to stay inside the round lens.
+                            val inner = minOf(halfChord(y), halfChord(y + hgt)) - 4.dp.toPx()
+                            val x = (if (right) p.x + gap else p.x - gap - w).coerceIn(c.x - inner, maxOf(c.x - inner, c.x + inner - w))
+                            val covered = dots.count { d ->
+                                d.x > x - figure && d.x < x + w + figure && d.y > y - 4.dp.toPx() && d.y < y + hgt + 4.dp.toPx()
+                            }
+                            val lines = (if (c.x > x && c.x < x + w) 1 else 0) + (if (c.y > y && c.y < y + hgt) 1 else 0)
+                            val outside = if (w > 2 * inner) 1 else 0
+                            Triple(Offset(x, y), covered * 10 + lines * 3 + outside * 100, right)
+                        }
+                        .minBy { it.second }
+                    val x = best.first.x
+                    val y = best.first.y
                     drawRoundRect(Color.White.copy(alpha = 0.6f), Offset(x, y), Size(w, hgt), CornerRadius(4.dp.toPx()))
                     drawText(layout, topLeft = Offset(x + pad, y + pad))
                 }
