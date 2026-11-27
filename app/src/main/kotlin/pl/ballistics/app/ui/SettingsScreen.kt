@@ -11,6 +11,11 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.Switch
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -63,6 +68,7 @@ import pl.ballistics.app.BuildConfig
 import pl.ballistics.app.R
 import pl.ballistics.app.data.AltitudeSource
 import pl.ballistics.app.data.Conditions
+import pl.ballistics.app.data.PressureSource
 import pl.ballistics.app.data.Correction
 import pl.ballistics.app.data.SyncState
 import pl.ballistics.app.data.ThemeMode
@@ -95,6 +101,7 @@ fun SettingsScreen(
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    val hasBarometer = remember { DeviceSensors.hasBarometer(context) }
     val exportLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
         if (uri == null) return@rememberLauncherForActivityResult
         val ok = runCatching {
@@ -134,38 +141,6 @@ fun SettingsScreen(
                 Text(stringResource(R.string.action_profiles))
             }
 
-            Section(stringResource(R.string.stealth_title), ImageVector.vectorResource(R.drawable.ic_stealth)) {
-                StealthSettings(ui.garminWatch, onOpenStealth)
-            }
-
-            Section(stringResource(R.string.section_appearance)) {
-                ThemeMode.entries.forEach { mode ->
-                    Row(
-                        Modifier.fillMaxWidth().clickable { onUi { it.copy(theme = mode) } },
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        RadioButton(selected = ui.theme == mode, onClick = { onUi { it.copy(theme = mode) } })
-                        Text(stringResource(mode.label))
-                    }
-                }
-                SwitchRow(stringResource(R.string.label_keep_screen_on), ui.keepScreenOn) { v -> onUi { it.copy(keepScreenOn = v) } }
-            }
-
-            Section(stringResource(R.string.section_layout)) {
-                Placement(stringResource(R.string.label_tabs), ui.tabsAtTop) { v -> onUi { it.copy(tabsAtTop = v) } }
-                Placement(stringResource(R.string.label_sub_tabs), ui.subTabsAtTop) { v -> onUi { it.copy(subTabsAtTop = v) } }
-                SwitchRow(stringResource(R.string.label_show_charts), ui.showCharts) { v -> onUi { it.copy(showCharts = v) } }
-                if (ui.showCharts) {
-                    Column(Modifier.padding(start = 16.dp)) {
-                        ChartKind.entries.forEach { kind ->
-                            SwitchRow(stringResource(kind.label), kind !in ui.hiddenCharts) { on ->
-                                onUi { it.copy(hiddenCharts = if (on) it.hiddenCharts - kind else it.hiddenCharts + kind) }
-                            }
-                        }
-                    }
-                }
-            }
-
             Section(stringResource(R.string.section_ballistic_model)) {
                 SwitchRow(stringResource(R.string.label_spin_drift), conditions.spinDrift) { v -> onConditions { it.copy(spinDrift = v) } }
                 SwitchRow(stringResource(R.string.label_aero_jump), conditions.aerodynamicJump) { v -> onConditions { it.copy(aerodynamicJump = v) } }
@@ -178,13 +153,29 @@ fun SettingsScreen(
                     stringResource(R.string.option_qnh), stringResource(R.string.option_station),
                     pressureIsQnh, onPressureIsQnh,
                 )
-                SwitchRow(stringResource(R.string.label_location_latitude), ui.locationSetsLatitude) { v ->
-                    onUi { it.copy(locationSetsLatitude = v) }
+                // Pressure source with a Test button that reads it without touching the conditions.
+                val sources = PressureSource.entries.filter { it != PressureSource.PHONE || hasBarometer || ui.pressureFrom == it }
+                Choice(
+                    stringResource(R.string.label_pressure_source), ui.pressureFrom, sources,
+                    name = { stringResource(it.label) },
+                ) { source -> onUi { it.withPressureFrom(source) } }
+                when (ui.pressureFrom) {
+                    PressureSource.GARMIN -> WatchPressureButton({ }, Modifier.fillMaxWidth(), stringResource(R.string.action_test_pressure))
+                    PressureSource.PHONE -> PhonePressureButton({ }, Modifier.fillMaxWidth(), stringResource(R.string.action_test_pressure))
+                    PressureSource.NONE -> Unit
                 }
                 Choice(
                     stringResource(R.string.label_altitude_source), ui.altitudeFrom, AltitudeSource.entries - AltitudeSource.MANUAL,
                     name = { stringResource(it.label) },
                 ) { source -> onUi { it.copy(altitudeSource = source) } }
+                // Same order as on Conditions: pressure, altitude, then the latitude below them.
+                Row(
+                    Modifier.fillMaxWidth().clickable { onUi { it.copy(locationSetsLatitude = !it.locationSetsLatitude) } },
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(stringResource(R.string.label_latitude_from_location), Modifier.weight(1f))
+                    Checkbox(checked = ui.locationSetsLatitude, onCheckedChange = { v -> onUi { it.copy(locationSetsLatitude = v) } })
+                }
                 TwoOptions(
                     stringResource(R.string.label_forecast_direction),
                     stringResource(R.string.option_clock), stringResource(R.string.option_true),
@@ -192,8 +183,55 @@ fun SettingsScreen(
                 ) { clock -> onUi { it.copy(forecastTrueBearing = !clock) } }
             }
 
-            Section(stringResource(R.string.section_devices)) {
-                SwitchRow(stringResource(R.string.label_garmin_watch), ui.garminWatch) { v -> onUi { it.copy(garminWatch = v) } }
+            Section(stringResource(R.string.stealth_title), ImageVector.vectorResource(R.drawable.ic_stealth)) {
+                StealthSettings(ui.garminWatch, onOpenStealth)
+            }
+
+            Section(stringResource(R.string.section_display)) {
+                ThemeMode.entries.forEach { mode ->
+                    Row(
+                        Modifier.fillMaxWidth().clickable { onUi { it.copy(theme = mode) } },
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        RadioButton(selected = ui.theme == mode, onClick = { onUi { it.copy(theme = mode) } })
+                        Text(stringResource(mode.label))
+                    }
+                }
+                SwitchRow(stringResource(R.string.label_keep_screen_on), ui.keepScreenOn) { v -> onUi { it.copy(keepScreenOn = v) } }
+                Placement(stringResource(R.string.label_tabs), ui.tabsAtTop) { v -> onUi { it.copy(tabsAtTop = v) } }
+                Placement(stringResource(R.string.label_sub_tabs), ui.subTabsAtTop) { v -> onUi { it.copy(subTabsAtTop = v) } }
+                // The switch turns all charts on or off; the arrow opens the list of single charts.
+                var chartsOpen by rememberSaveable { mutableStateOf(false) }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Row(
+                        Modifier.weight(1f).clickable(enabled = ui.showCharts) { chartsOpen = !chartsOpen },
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(stringResource(R.string.label_show_charts), Modifier.weight(1f))
+                        if (ui.showCharts) {
+                            Text(
+                                "${ChartKind.entries.count { it !in ui.hiddenCharts }}/${ChartKind.entries.size}",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                            Icon(
+                                if (chartsOpen) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
+                                stringResource(if (chartsOpen) R.string.action_collapse else R.string.action_expand),
+                            )
+                        }
+                    }
+                    Spacer(Modifier.width(8.dp))
+                    Switch(checked = ui.showCharts, onCheckedChange = { v -> onUi { it.copy(showCharts = v) } })
+                }
+                if (ui.showCharts && chartsOpen) {
+                    Column(Modifier.padding(start = 16.dp)) {
+                        ChartKind.entries.forEach { kind ->
+                            SwitchRow(stringResource(kind.label), kind !in ui.hiddenCharts) { on ->
+                                onUi { it.copy(hiddenCharts = if (on) it.hiddenCharts - kind else it.hiddenCharts + kind) }
+                            }
+                        }
+                    }
+                }
             }
 
             Collapsible(stringResource(R.string.section_corrections)) {

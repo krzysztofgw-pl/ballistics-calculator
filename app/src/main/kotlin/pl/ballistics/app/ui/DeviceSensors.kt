@@ -256,6 +256,38 @@ object DeviceSensors {
         }
     }
 
+    /** Whether the phone has a barometer. */
+    fun hasBarometer(context: Context): Boolean =
+        context.getSystemService(SensorManager::class.java)?.getDefaultSensor(Sensor.TYPE_PRESSURE) != null
+
+    /**
+     * Station pressure from the phone's own barometer in hPa, averaged over a few readings; null without a
+     * barometer or when it gives nothing within three seconds. Passive, so allowed in stealth mode.
+     */
+    suspend fun barometerHpa(context: Context): Double? {
+        val sm = context.getSystemService(SensorManager::class.java) ?: return null
+        val sensor = sm.getDefaultSensor(Sensor.TYPE_PRESSURE) ?: return null
+        return withTimeoutOrNull(3_000) {
+            suspendCancellableCoroutine { cont ->
+                var sum = 0.0
+                var count = 0
+                val listener = object : SensorEventListener {
+                    override fun onSensorChanged(event: SensorEvent) {
+                        sum += event.values[0]; count++
+                        if (count >= 10) {
+                            sm.unregisterListener(this)
+                            if (cont.isActive) cont.resume(sum / count)
+                        }
+                    }
+
+                    override fun onAccuracyChanged(sensor: Sensor, accuracy: Int) = Unit
+                }
+                cont.invokeOnCancellation { sm.unregisterListener(listener) }
+                sm.registerListener(listener, sensor, SensorManager.SENSOR_DELAY_UI)
+            }
+        }
+    }
+
     /** Strength of the Earth's magnetic field at [location], in microtesla. */
     fun expectedFieldMicroTesla(location: Location): Double =
         GeomagneticField(

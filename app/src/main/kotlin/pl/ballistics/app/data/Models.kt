@@ -289,6 +289,8 @@ data class UiSettings(
     val forecastTrueBearing: Boolean = false,
     /** Offer reading the station pressure from a Garmin watch on the conditions screen. */
     val garminWatch: Boolean = false,
+    /** Offer reading the station pressure from the phone's own barometer; [garminWatch] wins if both are set. Not an enum, so older apps still decode. */
+    val phoneBarometer: Boolean = false,
     /** Look for a newer release each time the app starts. */
     val checkUpdateOnStart: Boolean = false,
     /** Per reticle design (Reticles.designKey): which corrections the target screen advises dialing; the rest are held. */
@@ -298,6 +300,16 @@ data class UiSettings(
     val charts: Set<ChartKind> get() = if (showCharts) ChartKind.entries.toSet() - hiddenCharts else emptySet()
 
     fun correction(reticleId: String): Correction = corrections[reticleId] ?: Correction.defaultFor(reticleId)
+
+    val pressureFrom: PressureSource
+        get() = when {
+            garminWatch -> PressureSource.GARMIN
+            phoneBarometer -> PressureSource.PHONE
+            else -> PressureSource.NONE
+        }
+
+    fun withPressureFrom(source: PressureSource) =
+        copy(garminWatch = source == PressureSource.GARMIN, phoneBarometer = source == PressureSource.PHONE)
 
     /** The altitude can always be typed, so the old "typed in" choice (MANUAL) now means the terrain map, the default. */
     val altitudeFrom: AltitudeSource
@@ -320,6 +332,13 @@ enum class ChartKind(@StringRes val label: Int) {
         /** The charts on the Charts card; the others sit in their tools. */
         val card = setOf(WIND_SPEED, WIND_DIRECTION, SPIN_DRIFT, AZIMUTH_WINDAGE, AZIMUTH_ELEVATION)
     }
+}
+
+/** Where the button under the pressure reads the station pressure from. Not stored: see [UiSettings.pressureFrom]. */
+enum class PressureSource(@StringRes val label: Int) {
+    NONE(R.string.pressure_source_none),
+    GARMIN(R.string.pressure_source_garmin),
+    PHONE(R.string.pressure_source_phone),
 }
 
 /** Where the altitude of the firing point comes from. */
