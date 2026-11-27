@@ -684,7 +684,8 @@ private fun ReticleView(
                 drawCircle(moving, 9.dp.toPx(), p, style = Stroke(1.5.dp.toPx()))
             }
         }
-        clipPath(lens) { windFlag(flag, c + Offset(-radius * 0.62f, radius * 0.30f), text) }
+        // Upper left of the lens: clear of the corner texts, the moving-target hold in the bottom left and most reticle marks.
+        clipPath(lens) { windFlag(flag, c + Offset(-radius * 0.70f, -radius * 0.42f), text) }
         drawCircle(Color(0xFF263238), radius, c, style = Stroke(4.dp.toPx()))
     }
 }
