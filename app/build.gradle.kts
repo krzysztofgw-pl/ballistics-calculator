@@ -77,6 +77,14 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
+    testOptions {
+        unitTests.isIncludeAndroidResources = true
+        // Robolectric fetches its Android jar itself; Google's Maven Central mirror is not rate-limited.
+        unitTests.all {
+            it.systemProperty("robolectric.dependency.repo.url", "https://maven-central.storage-download.googleapis.com/maven2")
+        }
+    }
+
     buildFeatures {
         compose = true
         buildConfig = true
@@ -119,4 +127,9 @@ dependencies {
 
     // With built-in Kotlin the JUnit flavour of kotlin-test is no longer picked automatically.
     testImplementation(kotlin("test-junit"))
+    // Compose UI tests on the JVM (Robolectric), e.g. how a number field behaves on focus.
+    testImplementation(composeBom)
+    testImplementation("androidx.compose.ui:ui-test-junit4")
+    testImplementation("org.robolectric:robolectric:4.16")
+    debugImplementation("androidx.compose.ui:ui-test-manifest")
 }
