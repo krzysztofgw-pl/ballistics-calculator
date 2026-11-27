@@ -61,7 +61,7 @@ object S {
     const val labelTurretCorrection = "Turret correction"
     const val labelSeparateWindage = "Separate windage turret"
     const val labelWindageClick = "Windage click"
-    const val labelWindageCorrection = "Windage correction"
+    const val labelWindageTurretCorrection = "Windage correction"
     const val turretCorrectionHint = "What the turret really moves per marked unit, from a tall-target test: measured ÷ dialled (dialled 10 MRAD, moved 9.8: 0.98). Blank is 1. SMOA is 1 in at 100 yd; an MOA turret that tests at about 0.955 is SMOA."
     fun windageClickLegend(click: String, unit: String) = "Windage click = $click $unit."
     fun factorLegend(elevation: String, windage: String) = if (elevation == windage) "Turret correction ×$elevation included." else "Turret corrections included: elevation ×$elevation, windage ×$windage."

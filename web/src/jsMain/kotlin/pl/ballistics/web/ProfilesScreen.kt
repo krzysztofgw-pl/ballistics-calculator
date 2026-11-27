@@ -65,7 +65,7 @@ object ProfilesScreen {
             switch(S.labelSeparateWindage, w.separateWindage) { w = w.copy(separateWindage = it); windage.style.display = if (it) "" else "none" }
             windage = row {
                 numberField(S.labelWindageClick, w.windageClickValue) { w = w.copy(windageClickValue = it) }
-                numberField(S.labelWindageCorrection, w.windageFactor) { w = w.copy(windageFactor = it) }
+                numberField(S.labelWindageTurretCorrection, w.windageFactor) { w = w.copy(windageFactor = it) }
             }
             windage.style.display = if (w.separateWindage) "" else "none"
             numberField(S.labelSightHeight, w.sightHeightCm, "cm") { w = w.copy(sightHeightCm = it) }

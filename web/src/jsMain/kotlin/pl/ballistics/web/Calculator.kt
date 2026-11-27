@@ -5,6 +5,7 @@ import pl.ballistics.core.Atmosphere
 import pl.ballistics.core.BallisticCoefficient
 import pl.ballistics.core.CustomDragCurve
 import pl.ballistics.core.DragFunction
+import pl.ballistics.core.Turret
 import pl.ballistics.core.DragModel
 import pl.ballistics.core.Projectile
 import pl.ballistics.core.Rifle
