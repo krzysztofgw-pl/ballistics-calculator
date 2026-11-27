@@ -60,6 +60,7 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.Dispatchers
@@ -210,6 +211,14 @@ fun TargetScreen(
         )
     }
 
+    // With the mean wind dialed, the lightest and strongest forecast wind are marks to hold beside the aim point.
+    val gusts = analysis?.bracket?.takeIf { correction.dialWindage && selected != null }?.let { b ->
+        listOf(b.minMps to b.minRad, b.maxMps to b.maxRad)
+            .filter { !it.second.isNaN() }
+            .distinctBy { it.first }
+            .map { (mps, rad) -> Gust(-rad / reticle.unit.radians * scale - dialX, mps.fmt(if (mps % 1.0 == 0.0) 0 else 1)) }
+    }.orEmpty()
+
     Column(
         modifier.verticalScroll(rememberScrollState()).padding(12.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -313,7 +322,7 @@ fun TargetScreen(
 
         Box(Modifier.fillMaxWidth().aspectRatio(1f)) {
             ReticleView(
-                reticle, holds, selected, leadHold, field,
+                reticle, holds, selected, leadHold, gusts, field,
                 Modifier.fillMaxSize().pointerInput(weapon.id) {
                     // Two-finger pinch only, so a one-finger drag still scrolls the screen.
                     awaitEachGesture {
@@ -332,8 +341,40 @@ fun TargetScreen(
                 },
             )
             advice?.let { a ->
-                CornerLabel(stringResource(R.string.label_elevation), a.elevation, Color.Unspecified, Modifier.align(Alignment.TopStart))
-                CornerLabel(stringResource(R.string.label_windage), a.windage, Color.Unspecified, Modifier.align(Alignment.TopEnd), TextAlign.End)
+                // A dialed axis shows its turret instead of the text, the way it looks on the scope.
+                val topTurret = correction.dialElevation
+                if (topTurret) {
+                    TurretView(
+                        vertical = false,
+                        value = upDial,
+                        step = elevationTurret.click ?: (1.0 / 10),
+                        figure = (if (upDial < 0) "↓" else "") + upDial.dialFmt(elevationTurret.click),
+                        positiveLetter = "← " + stringResource(R.string.up_short),
+                        negativeLetter = stringResource(R.string.down_short) + " →",
+                        description = a.elevation,
+                        modifier = Modifier.align(Alignment.TopCenter).size(TURRET_LENGTH, TURRET_DEPTH),
+                    )
+                } else {
+                    CornerLabel(stringResource(R.string.label_elevation), a.elevation, Color.Unspecified, Modifier.align(Alignment.TopStart))
+                }
+                if (correction.dialWindage) {
+                    val side = stringResource(if (rightDial >= 0) R.string.right_short else R.string.left_short)
+                    TurretView(
+                        vertical = true,
+                        value = rightDial,
+                        step = windageTurret.click ?: (1.0 / 10),
+                        figure = if (abs(rightDial) < 1e-9) "0" else side + rightDial.dialFmt(windageTurret.click),
+                        positiveLetter = stringResource(R.string.right_short) + " ↑",
+                        negativeLetter = stringResource(R.string.left_short) + " ↓",
+                        description = a.windage,
+                        modifier = Modifier.align(Alignment.CenterEnd).size(TURRET_DEPTH + 8.dp, TURRET_LENGTH),
+                    )
+                } else {
+                    CornerLabel(
+                        stringResource(R.string.label_windage), a.windage, Color.Unspecified, Modifier.align(Alignment.TopEnd), TextAlign.End,
+                        maxWidth = if (topTurret) 104.dp else 168.dp,
+                    )
+                }
                 a.moving?.let { CornerLabel(stringResource(R.string.label_moving), it, Color(0xFF1E88E5), Modifier.align(Alignment.BottomStart)) }
             }
             // The course is set on a small dial in the free corner: up is away from the shooter, right is to the right.
@@ -444,12 +485,25 @@ private fun Double.dialFmt(click: Double?): String {
     return abs(this).fmt(decimals)
 }
 
+private val TURRET_LENGTH = 136.dp
+private val TURRET_DEPTH = 44.dp
+
+/** A wind speed's hold beside the aim point, [x] in reticle units like [Hold.x]. */
+private class Gust(val x: Double, val label: String)
+
 private class Advice(val elevation: String, val windage: String, val moving: String?, val orDial: String?, val outside: Boolean)
 
 /** A short title over its value, on a pale plate so it reads over the lens edge. */
 @Composable
-private fun CornerLabel(title: String, value: String, color: Color, modifier: Modifier, align: TextAlign = TextAlign.Start) {
-    Surface(modifier.widthIn(max = 168.dp), shape = MaterialTheme.shapes.small, color = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f)) {
+private fun CornerLabel(
+    title: String,
+    value: String,
+    color: Color,
+    modifier: Modifier,
+    align: TextAlign = TextAlign.Start,
+    maxWidth: Dp = 168.dp,
+) {
+    Surface(modifier.widthIn(max = maxWidth), shape = MaterialTheme.shapes.small, color = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f)) {
         Column(Modifier.padding(horizontal = 6.dp, vertical = 3.dp)) {
             Text(title, Modifier.fillMaxWidth(), style = MaterialTheme.typography.labelSmall, textAlign = align, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Text(value, Modifier.fillMaxWidth(), style = MaterialTheme.typography.labelLarge, textAlign = align, color = color)
@@ -463,6 +517,7 @@ private fun ReticleView(
     holds: List<Hold>,
     selected: TrajectoryPoint?,
     lead: Hold?,
+    gusts: List<Gust>,
     field: Double,
     modifier: Modifier,
 ) {
@@ -509,6 +564,16 @@ private fun ReticleView(
                 if (isSelected) drawCircle(hold, 9.dp.toPx(), p, style = Stroke(1.5.dp.toPx()))
                 if (isSelected || h.point.rangeM.roundToInt() % 100 == 0) {
                     label(text, "${h.point.rangeM.roundToInt()}", p + Offset(14.dp.toPx(), 0f), hold)
+                }
+            }
+            // Lightest and strongest wind: orange bars across the aim point's row, speed under each.
+            holds.firstOrNull { it.point == selected }?.let { aim ->
+                val orange = Color(0xFFFB8C00)
+                val bar = 10.dp.toPx()
+                gusts.forEach { g ->
+                    val p = at(g.x, aim.y)
+                    drawLine(orange, p - Offset(0f, bar), p + Offset(0f, bar), 3.dp.toPx())
+                    label(text, g.label, p + Offset(0f, bar + 8.dp.toPx()), orange)
                 }
             }
             lead?.let { h ->
