@@ -28,8 +28,6 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.outlined.Info
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.FilledTonalIconButton
@@ -348,13 +346,8 @@ fun TargetScreen(
                 Modifier.weight(1f),
                 style = MaterialTheme.typography.bodyMedium,
             )
-            IconButton(onClick = { turretHelp = true }) {
+            IconButton(onClick = { turretHelp = !turretHelp }) {
                 Icon(Icons.Outlined.Info, stringResource(R.string.help_turrets_title))
-            }
-        }
-        if (turretHelp) {
-            Dialog(onDismissRequest = { turretHelp = false }, properties = DialogProperties(usePlatformDefaultWidth = false)) {
-                HelpScreen(onClose = { turretHelp = false }, openTopic = R.string.help_turrets_title)
             }
         }
 
@@ -449,6 +442,8 @@ fun TargetScreen(
                 }
             }
         }
+        // The "i" shows how the turrets work under the reticle; a second tap hides it.
+        if (turretHelp) Text(stringResource(R.string.help_turrets), style = MaterialTheme.typography.bodySmall)
         advice?.let { a ->
             a.orDial?.let { Text(it, style = MaterialTheme.typography.bodyMedium) }
             if (a.outside) Text(stringResource(R.string.hold_outside_reticle), color = MaterialTheme.colorScheme.error)
