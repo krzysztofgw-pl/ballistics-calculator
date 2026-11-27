@@ -53,10 +53,7 @@ data class WeaponProfile(
     val inchMoa: Boolean = false,
     val clickValue: String = "0.1",
     /** Turret correction: measured ÷ dialled; blank is 1. */
-    val elevationFactor: String = "",
-    val separateWindage: Boolean = false,
-    val windageClickValue: String = "",
-    val windageFactor: String = "",
+    val turretFactor: String = "",
     val sightHeightCm: String = "4.5",
     val reticleId: String = "mrad-hash",
     val reticleGraduation: String = "",
@@ -89,14 +86,10 @@ data class WeaponProfile(
     fun withTurretUnit(unit: TurretUnit): WeaponProfile = copy(angularUnit = unit.stored, inchMoa = unit == TurretUnit.SMOA)
 
     val elevationTurret: Turret
-        get() = Turret(turretUnit.radians, clickValue.toNumber()?.takeIf { it > 0 }, factor(elevationFactor))
+        get() = Turret(turretUnit.radians, clickValue.toNumber()?.takeIf { it > 0 }, factor(turretFactor))
 
-    val windageTurret: Turret
-        get() = if (!separateWindage) elevationTurret else Turret(
-            turretUnit.radians,
-            (windageClickValue.toNumber() ?: clickValue.toNumber())?.takeIf { it > 0 },
-            factor(windageFactor),
-        )
+    /** The same click and correction as elevation. */
+    val windageTurret: Turret get() = elevationTurret
 
     /** Impact shift (up, right) in [turretUnit] against the zero while the suppressor is not as zeroed; null when it is. */
     fun suppressorShift(): Pair<Double, Double>? {

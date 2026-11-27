@@ -59,15 +59,8 @@ object ProfilesScreen {
                 select(S.labelTurretUnits, TurretUnit.entries.map { it to it.label }, w.turretUnit) { w = w.withTurretUnit(it) }
                 numberField(S.labelClickValue, w.clickValue) { w = w.copy(clickValue = it) }
             }
-            numberField(S.labelTurretCorrection, w.elevationFactor) { w = w.copy(elevationFactor = it) }
+            numberField(S.labelTurretCorrection, w.turretFactor) { w = w.copy(turretFactor = it) }
             el("p", "hint", S.turretCorrectionHint)
-            lateinit var windage: HTMLElement
-            switch(S.labelSeparateWindage, w.separateWindage) { w = w.copy(separateWindage = it); windage.style.display = if (it) "" else "none" }
-            windage = row {
-                numberField(S.labelWindageClick, w.windageClickValue) { w = w.copy(windageClickValue = it) }
-                numberField(S.labelWindageTurretCorrection, w.windageFactor) { w = w.copy(windageFactor = it) }
-            }
-            windage.style.display = if (w.separateWindage) "" else "none"
             numberField(S.labelSightHeight, w.sightHeightCm, "cm") { w = w.copy(sightHeightCm = it) }
         }
         root.card(S.sectionZero) {
