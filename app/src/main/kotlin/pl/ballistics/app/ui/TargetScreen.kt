@@ -431,6 +431,8 @@ fun TargetScreen(
                         outerLabel = null,
                         stepDeg = 15.0,
                         maxSize = course,
+                        hub = 0.26f,
+                        arrowScale = 1.4f,
                         modifier = Modifier.align(Alignment.BottomEnd).offset(x = -TURRET_BAND).size(course).graphicsLayer(alpha = 0.85f),
                     )
                 }
