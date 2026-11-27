@@ -69,6 +69,10 @@ fun CompassDial(
     innerLabel: (Int) -> String? = { null },
     stepDeg: Double = 1.0,
     maxSize: Dp = 360.dp,
+    /** The centre disc as a share of the radius; null keeps the usual size. A small one leaves a long arrow. */
+    hub: Float? = null,
+    /** Thickens the marker arrows, e.g. on a small dial over a busy background. */
+    arrowScale: Float = 1f,
 ) {
     val current by rememberUpdatedState(onChange)
     // A dial takes touches only after a tap unlocks it, so a swipe over it scrolls the screen.
@@ -135,14 +139,14 @@ fun CompassDial(
                 val dir = unit(m.deg)
                 val rim = c + dir * (r - 6.dp.toPx())
                 val color = if (m.active) m.color else m.color.copy(alpha = 0.55f)
-                val width = if (m.active) 1f else 0.6f
+                val width = (if (m.active) 1f else 0.6f) * arrowScale
                 when (m.arrow) {
                     DialArrow.INWARD -> drawArrow(rim, c + dir * (r * 0.3f), color, width)
                     DialArrow.OUTWARD -> drawArrow(c, rim - dir * (if (m.label != null) 14.dp.toPx() else 0f), color, width)
                 }
                 m.label?.let { label(measurer.measure(it, markerStyle.copy(color = color)), c + dir * (r - 8.dp.toPx())) }
             }
-            drawCircle(colors.surface, r * (if (outerLabel == null) 0.42f else 0.26f), c)
+            drawCircle(colors.surface, r * (hub ?: if (outerLabel == null) 0.42f else 0.26f), c)
             label(measurer.measure(centerText, centerStyle), c)
         }
     }

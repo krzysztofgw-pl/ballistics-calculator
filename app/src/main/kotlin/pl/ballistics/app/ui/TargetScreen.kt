@@ -7,6 +7,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
@@ -51,6 +52,7 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.ui.res.painterResource
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
@@ -59,6 +61,7 @@ import pl.ballistics.app.R
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
@@ -349,17 +352,15 @@ fun TargetScreen(
                 NumberField(stringResource(R.string.label_target_speed), conditions.targetSpeedMps, "m/s", Modifier.width(FIELD_WIDTH)) { v ->
                     update { it.copy(targetSpeedMps = v) }
                 }
-                Text(
-                    advice?.moving.orEmpty(),
-                    Modifier.weight(1f).padding(start = 12.dp),
-                    color = MOVING_BLUE,
-                    style = MaterialTheme.typography.bodyMedium,
-                    textAlign = TextAlign.End,
-                )
+                Box(Modifier.weight(1f).padding(start = 12.dp), contentAlignment = Alignment.CenterEnd) {
+                    advice?.moving?.let {
+                        AdviceText(stringResource(R.string.label_axis_advice, stringResource(R.string.label_moving), it), MOVING_BLUE, TextAlign.End)
+                    }
+                }
             }
         }
 
-        Box(Modifier.fillMaxWidth().aspectRatio(1f)) {
+        BoxWithConstraints(Modifier.fillMaxWidth().aspectRatio(1f)) {
             ReticleView(
                 reticle, holds, selected, leadHold, gusts, flag, field,
                 // The lens keeps clear of the turrets: they stand above it and to its right, as on the scope.
@@ -418,28 +419,34 @@ fun TargetScreen(
                 }
             }
             // The course is set on a small dial in the free corner: up is away from the shooter, right is to the right.
-            // Bottom right, shifted left so it clears the windage turret above it.
+            // Half see-through, in the lens's bottom right quarter: under the windage turret's column, so the turret stays clear.
+            val course = (maxWidth - TURRET_BAND) / 2 * 0.75f
             if (conditions.targetMoving) {
-                CompassDial(
-                    markers = listOf(DialMarker(targetDirection, DialArrow.OUTWARD, MaterialTheme.colorScheme.primary, true)),
-                    onChange = { v -> update { it.copy(targetDirectionDeg = v.roundToInt().mod(360).toString()) } },
-                    centerText = "${targetDirection.roundToInt().mod(360)}°",
-                    outerLabel = null,
-                    stepDeg = 15.0,
-                    maxSize = COURSE_SIZE,
-                    modifier = Modifier.align(Alignment.BottomEnd).offset(x = -(TURRET_DEPTH - 6.dp)).size(COURSE_SIZE),
-                )
+                // Light colours in any theme, since it lies on the pale lens; a dark blue arrow stands out on it.
+                MaterialTheme(colorScheme = COMPASS_COLORS) {
+                    CompassDial(
+                        markers = listOf(DialMarker(targetDirection, DialArrow.OUTWARD, COURSE_BLUE, true)),
+                        onChange = { v -> update { it.copy(targetDirectionDeg = v.roundToInt().mod(360).toString()) } },
+                        centerText = "${targetDirection.roundToInt().mod(360)}°",
+                        outerLabel = null,
+                        stepDeg = 15.0,
+                        maxSize = course,
+                        hub = 0.26f,
+                        arrowScale = 1.4f,
+                        modifier = Modifier.align(Alignment.BottomEnd).offset(x = -TURRET_BAND).size(course).graphicsLayer(alpha = 0.85f),
+                    )
+                }
             }
         }
         // What is held on the reticle for an axis not fully dialed, one line each under the lens.
         advice?.let { a ->
             if (!(correction.dialElevation && manualUp == null)) {
-                Text(stringResource(R.string.label_axis_advice, stringResource(R.string.label_elevation), a.elevation), style = MaterialTheme.typography.bodyMedium)
+                AdviceText(stringResource(R.string.label_axis_advice, stringResource(R.string.label_elevation), a.elevation))
             }
             if (!(correction.dialWindage && manualRight == null)) {
-                Text(stringResource(R.string.label_axis_advice, stringResource(R.string.label_windage), a.windage), style = MaterialTheme.typography.bodyMedium)
+                AdviceText(stringResource(R.string.label_axis_advice, stringResource(R.string.label_windage), a.windage))
             }
-            a.orDial?.let { Text(it, style = MaterialTheme.typography.bodyMedium) }
+            a.orDial?.let { AdviceText(it) }
             if (a.outside) Text(stringResource(R.string.hold_outside_reticle), color = MaterialTheme.colorScheme.error)
         }
         // Reticle, magnification and the lock past the scope's range share one row: they change least often.
@@ -488,6 +495,14 @@ fun TargetScreen(
         if (analysis != null && ui.charts.any { it in ChartKind.card }) {
             Collapsible(stringResource(R.string.section_charts)) { TargetCharts(result, analysis, distance, ui.charts) { setDistance(it) } }
         }
+    }
+}
+
+/** Hold advice on a faint plate, so it reads as advice and stands apart from the controls. */
+@Composable
+private fun AdviceText(text: String, color: Color = Color.Unspecified, align: TextAlign = TextAlign.Start) {
+    Surface(shape = MaterialTheme.shapes.small, color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)) {
+        Text(text, Modifier.padding(horizontal = 8.dp, vertical = 4.dp), color = color, style = MaterialTheme.typography.bodyMedium, textAlign = align)
     }
 }
 
@@ -550,11 +565,17 @@ private val TURRET_LENGTH = 136.dp
 private val TURRET_DEPTH = 46.dp
 /** The strip above and right of the lens: a turret and the same gap to the lens on both sides. */
 private val TURRET_BAND = TURRET_DEPTH + 6.dp
-/** The course dial in the bottom right corner. */
-private val COURSE_SIZE = 88.dp
 /** Distance and target speed fields share one width. */
-private val FIELD_WIDTH = 104.dp
+private val FIELD_WIDTH = 132.dp
 private val MOVING_BLUE = Color(0xFF1E88E5)
+private val COURSE_BLUE = Color(0xFF0D47A1)
+private val COMPASS_COLORS = lightColorScheme(
+    surface = Color.White,
+    surfaceVariant = Color(0xFFF1F3EF),
+    onSurface = Color(0xFF111111),
+    onSurfaceVariant = Color(0xFF424242),
+    primary = COURSE_BLUE,
+)
 
 /** The wind for the flag; [fromRad] as in core Wind: 0 from the target, π/2 from the right. */
 private class WindFlag(val speedMps: Double, val fromRad: Double, val label: String, val range: String?)
@@ -678,10 +699,18 @@ private fun ReticleView(
             holds.firstOrNull { it.point == selected }?.let { aim ->
                 val orange = Color(0xFFFB8C00)
                 val bar = 10.dp.toPx()
-                gusts.forEach { g ->
+                // The left mark's speed ends at its bar and the right one's starts at it, so close marks never merge.
+                val sorted = gusts.sortedBy { it.x }
+                sorted.forEachIndexed { i, g ->
                     val p = at(g.x, aim.y)
                     drawLine(orange, p - Offset(0f, bar), p + Offset(0f, bar), 3.dp.toPx())
-                    label(text, g.label, p + Offset(0f, bar + 8.dp.toPx()), orange)
+                    val layout = text.measure(g.label, TextStyle(fontSize = 10.sp, color = orange))
+                    val x = when {
+                        sorted.size < 2 -> p.x - layout.size.width / 2f
+                        i == 0 -> p.x - 2.dp.toPx() - layout.size.width
+                        else -> p.x + 2.dp.toPx()
+                    }
+                    drawText(layout, topLeft = Offset(x, p.y + bar + 2.dp.toPx()))
                 }
             }
             lead?.let { h ->

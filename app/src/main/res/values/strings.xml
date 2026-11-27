@@ -337,7 +337,7 @@
     <string name="action_farther">1 m farther</string>
     <string name="label_moving_target">Moving target</string>
     <string name="label_target_speed">Target speed</string>
-    <string name="moving_hold">hold %1$s (lead %2$s %3$s m)</string>
+    <string name="moving_hold">hold %1$s\n(lead %2$s %3$s m)</string>
     <string name="hold_part">%1$s %2$s %3$s</string>
     <string name="target_out_of_reach">The bullet does not reach %1$d m.</string>
     <string name="chart_wind_speed">Wind drift: correction (%1$s) by wind speed (m/s)</string>
@@ -433,6 +433,7 @@
     <string name="turret_windage">Windage turret: %1$s. Drag to turn.</string>
     <string name="action_reset_turrets">Reset turrets</string>
     <string name="label_axis_advice">%1$s: %2$s</string>
+    <string name="label_moving">Moving</string>
     <string name="label_velocity_sd">Velocity SD</string>
     <string name="label_group">5-shot group</string>
     <string name="label_north_up">North up</string>
