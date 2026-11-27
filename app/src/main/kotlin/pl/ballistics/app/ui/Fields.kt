@@ -109,8 +109,13 @@ fun NumberField(
         },
         enabled = enabled,
         label = { Text(label) },
-        placeholder = (if (replaceOnFocus && typed != null) value.takeIf { it.isNotBlank() } ?: placeholder else placeholder)
-            ?.let { { Text(it) } },
+        // The slot is always given when replacing: Material3 does not show a placeholder that only
+        // appears after the field gains focus.
+        placeholder = if (replaceOnFocus) {
+            { (if (typed != null) value.takeIf { it.isNotBlank() } ?: placeholder else placeholder)?.let { Text(it) } }
+        } else {
+            placeholder?.let { { Text(it) } }
+        },
         suffix = { if (onUnitClick == null) Text(unit) },
         trailingIcon = if (onHelp != null) {
             {
