@@ -789,32 +789,41 @@ private fun ReticleView(
                 val p = at(h.x, h.y)
                 drawCircle(moving, 5.dp.toPx(), p)
                 drawCircle(moving, 9.dp.toPx(), p, style = Stroke(1.5.dp.toPx()))
-                // Its hold floats beside it on a faint plate, in the free corner around the dot: of the four
-                // (above or below, left or right), inside the lens, the one covering fewest trajectory dots and
-                // figures and crossing fewest reticle lines.
+                // Its hold sits on a faint plate in a corner of the lens: bottom left or top right (Krzysiek's
+                // preferred spots; the upper left holds the wind flag), whichever covers fewer trajectory dots
+                // and their figures, bottom left on a tie. The plate is pushed as deep into the corner as the
+                // round lens lets it, so it stays clear of the middle.
                 leadText?.let { t ->
                     val layout = text.measure(t, TextStyle(fontSize = 11.sp, color = Color(0xFF1565C0)))
                     val pad = 4.dp.toPx()
                     val w = layout.size.width + 2 * pad
                     val hgt = layout.size.height + 2 * pad
-                    val gap = 12.dp.toPx()
+                    val margin = 6.dp.toPx()
                     val figure = 26.dp.toPx()
                     val dots = holds.map { at(it.x, it.y) }
-                    fun halfChord(y: Float) = sqrt(maxOf(0f, radius * radius - (y - c.y) * (y - c.y)))
-                    val best = listOf(true, false).flatMap { right -> listOf(true, false).map { above -> right to above } }
-                        .map { (right, above) ->
-                            val y = if (above) p.y - gap - hgt else p.y + gap
-                            // Shifted toward the middle as far as needed to stay inside the round lens.
-                            val inner = minOf(halfChord(y), halfChord(y + hgt)) - 4.dp.toPx()
-                            val x = (if (right) p.x + gap else p.x - gap - w).coerceIn(c.x - inner, maxOf(c.x - inner, c.x + inner - w))
-                            val covered = dots.count { d ->
-                                d.x > x - figure && d.x < x + w + figure && d.y > y - 4.dp.toPx() && d.y < y + hgt + 4.dp.toPx()
-                            }
-                            val lines = (if (c.x > x && c.x < x + w) 1 else 0) + (if (c.y > y && c.y < y + hgt) 1 else 0)
-                            val outside = if (w > 2 * inner) 1 else 0
-                            Triple(Offset(x, y), covered * 10 + lines * 3 + outside * 100, right)
-                        }
-                        .minBy { it.second }
+                    val rim = radius - margin
+                    // The outer corner on the rim at the angle (from the horizontal) that takes the plate deepest
+                    // into its corner along the diagonal.
+                    fun corner(bottomLeft: Boolean): Offset = (5..85).map { deg ->
+                        val a = Math.toRadians(deg.toDouble())
+                        val dx = (rim * cos(a)).toFloat()
+                        val dy = (rim * sin(a)).toFloat()
+                        if (bottomLeft) Offset(c.x - dx, c.y + dy - hgt) else Offset(c.x + dx - w, c.y - dy)
+                    }.filter { o ->
+                        // All four corners inside the lens.
+                        listOf(o, o + Offset(w, 0f), o + Offset(0f, hgt), o + Offset(w, hgt))
+                            .all { (it - c).getDistance() <= rim + 0.5f }
+                    }.maxByOrNull { o ->
+                        val mid = o + Offset(w / 2, hgt / 2) - c
+                        if (bottomLeft) mid.y - mid.x else mid.x - mid.y
+                    } ?: if (bottomLeft) Offset(c.x - rim * 0.7f, c.y + rim * 0.7f - hgt) else Offset(c.x + rim * 0.7f - w, c.y - rim * 0.7f)
+                    val best = listOf(true, false).map { bottomLeft ->
+                        val o = corner(bottomLeft)
+                        val covered = dots.count { d ->
+                            d.x > o.x - figure && d.x < o.x + w + figure && d.y > o.y - 4.dp.toPx() && d.y < o.y + hgt + 4.dp.toPx()
+                        } + (if (abs(p.x - (o.x + w / 2)) < w / 2 + 9.dp.toPx() && abs(p.y - (o.y + hgt / 2)) < hgt / 2 + 9.dp.toPx()) 5 else 0)
+                        o to covered
+                    }.minBy { it.second }
                     val x = best.first.x
                     val y = best.first.y
                     drawRoundRect(Color.White.copy(alpha = 0.6f), Offset(x, y), Size(w, hgt), CornerRadius(4.dp.toPx()))
@@ -822,7 +831,7 @@ private fun ReticleView(
                 }
             }
         }
-        // Upper left of the lens: clear of the corner texts, the moving-target hold in the bottom left and most reticle marks.
+        // Upper left of the lens: clear of the corner texts, the moving-target hold (bottom left or top right) and most reticle marks.
         clipPath(lens) { windFlag(flag, c + Offset(-radius * 0.70f, -radius * 0.56f), text) }
         drawCircle(Color(0xFF263238), radius, c, style = Stroke(4.dp.toPx()))
     }
