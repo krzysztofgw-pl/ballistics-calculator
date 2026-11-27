@@ -62,6 +62,7 @@ import kotlinx.coroutines.launch
 import pl.ballistics.app.BuildConfig
 import pl.ballistics.app.R
 import pl.ballistics.app.data.AltitudeSource
+import pl.ballistics.app.data.Conditions
 import pl.ballistics.app.data.Correction
 import pl.ballistics.app.data.SyncState
 import pl.ballistics.app.data.ThemeMode
@@ -78,6 +79,8 @@ fun SettingsScreen(
     onUi: ((UiSettings) -> UiSettings) -> Unit,
     pressureIsQnh: Boolean,
     onPressureIsQnh: (Boolean) -> Unit,
+    conditions: Conditions,
+    onConditions: ((Conditions) -> Conditions) -> Unit,
     sync: SyncState,
     onSignIn: suspend (Context) -> String?,
     onSignOut: () -> Unit,
@@ -161,6 +164,12 @@ fun SettingsScreen(
                         }
                     }
                 }
+            }
+
+            Section(stringResource(R.string.section_ballistic_model)) {
+                SwitchRow(stringResource(R.string.label_spin_drift), conditions.spinDrift) { v -> onConditions { it.copy(spinDrift = v) } }
+                SwitchRow(stringResource(R.string.label_aero_jump), conditions.aerodynamicJump) { v -> onConditions { it.copy(aerodynamicJump = v) } }
+                SwitchRow(stringResource(R.string.label_coriolis), conditions.coriolis) { v -> onConditions { it.copy(coriolis = v) } }
             }
 
             Section(stringResource(R.string.section_measurements)) {

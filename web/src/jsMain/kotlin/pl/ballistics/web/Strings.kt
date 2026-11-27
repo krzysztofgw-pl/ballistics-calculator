@@ -43,7 +43,7 @@ object S {
     const val sectionAtmosphere = "Atmosphere"
     const val sectionWind = "Wind"
     const val sectionShot = "Shot"
-    const val sectionAdvanced = "Advanced effects"
+    const val sectionBallisticModel = "Ballistic model"
     const val sectionTarget = "Target"
     const val sectionInstall = "Install on the home screen"
     const val sectionAppearance = "Appearance"

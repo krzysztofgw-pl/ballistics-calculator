@@ -27,17 +27,10 @@ object ConditionsScreen {
             }
             el("p", "hint", S.hintWindFrom)
         }
-        root.card(S.sectionShot) { shotAngle(this) }
-        root.card(S.sectionAdvanced) {
-            switch(S.labelSpinDrift, c.spinDrift) { v -> Store.updateConditions { it.copy(spinDrift = v) } }
-            switch(S.labelAeroJump, c.aerodynamicJump) { v -> Store.updateConditions { it.copy(aerodynamicJump = v) } }
-            lateinit var coriolisFields: HTMLElement
-            switch(S.labelCoriolis, c.coriolis) { v ->
-                Store.updateConditions { it.copy(coriolis = v) }
-                coriolisFields.style.display = if (v) "" else "none"
-            }
-            coriolisFields = el("div") {
-                style.display = if (c.coriolis) "" else "none"
+        root.card(S.sectionShot) {
+            shotAngle(this)
+            // The effect switches live in Settings → Ballistic model; the latitude changes with the place, so it stays here.
+            if (c.coriolis) {
                 lateinit var latitude: HTMLInputElement
                 row {
                     latitude = numberField(S.labelLatitude, c.latitudeDeg, "°") { v -> Store.updateConditions { it.copy(latitudeDeg = v) } }

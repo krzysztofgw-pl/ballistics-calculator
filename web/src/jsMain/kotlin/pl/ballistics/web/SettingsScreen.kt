@@ -23,6 +23,12 @@ object SettingsScreen {
                 App.applyTheme()
             }
         }
+        val c = Store.data.conditions
+        root.card(S.sectionBallisticModel) {
+            switch(S.labelSpinDrift, c.spinDrift) { v -> Store.updateConditions { it.copy(spinDrift = v) } }
+            switch(S.labelAeroJump, c.aerodynamicJump) { v -> Store.updateConditions { it.copy(aerodynamicJump = v) } }
+            switch(S.labelCoriolis, c.coriolis) { v -> Store.updateConditions { it.copy(coriolis = v) } }
+        }
         Store.data.activeWeapon?.let { w ->
             root.card(S.sectionCorrections) {
                 el("p", "hint", w.name)

@@ -102,12 +102,7 @@ fun ConditionsScreen(
                 ShotAngleButton { deg -> update { it.copy(lookAngleDeg = String.format(Locale.US, "%.1f", deg)) } }
                 NumberField(stringResource(R.string.label_cant), i.cantDeg, "°", Modifier.weight(1f)) { v -> update { it.copy(cantDeg = v) } }
             }
-        }
-
-        Section(stringResource(R.string.section_advanced)) {
-            SwitchRow(stringResource(R.string.label_spin_drift), i.spinDrift) { v -> update { it.copy(spinDrift = v) } }
-            SwitchRow(stringResource(R.string.label_aero_jump), i.aerodynamicJump) { v -> update { it.copy(aerodynamicJump = v) } }
-            SwitchRow(stringResource(R.string.label_coriolis), i.coriolis) { v -> update { it.copy(coriolis = v) } }
+            // The effect switches live in Settings → Ballistic model; the latitude changes with the place, so it stays here.
             if (i.coriolis) LatitudeInput(i, update)
         }
     }

@@ -164,6 +164,8 @@ fun App(vm: MainViewModel = viewModel()) {
                 onUi = vm::updateUi,
                 pressureIsQnh = data.conditions.pressureIsQnh,
                 onPressureIsQnh = { v -> vm.updateConditions { it.copy(pressureIsQnh = v) } },
+                conditions = data.conditions,
+                onConditions = vm::updateConditions,
                 sync = sync,
                 onSignIn = vm::signIn,
                 onSignOut = vm::signOut,
