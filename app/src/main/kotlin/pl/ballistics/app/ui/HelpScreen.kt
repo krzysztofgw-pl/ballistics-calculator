@@ -43,6 +43,7 @@ private val topics = listOf(
     Topic(R.string.help_angle_title, R.string.help_angle),
     Topic(R.string.help_chrono_title, R.string.help_chrono),
     Topic(R.string.help_target_title, R.string.help_target),
+    Topic(R.string.help_turrets_title, R.string.help_turrets),
     Topic(R.string.help_moving_title, R.string.help_moving),
     Topic(R.string.help_tools_title, R.string.help_tools),
     Topic(R.string.help_charts_title, R.string.help_charts),

@@ -27,6 +27,9 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.outlined.Info
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.FilledTonalIconButton
@@ -131,6 +134,7 @@ fun TargetScreen(
     // Turrets turned by hand stay where they are, at any distance, until reset to the computed corrections.
     var manualUp by remember(weapon.id) { mutableStateOf<Double?>(null) }
     var manualRight by remember(weapon.id) { mutableStateOf<Double?>(null) }
+    var turretHelp by remember { mutableStateOf(false) }
     // Unlocked, the zoom goes past the scope's range: down to 1× and up to twice its top power.
     val range = if (unlocked) minOf(1.0, minMag).toFloat()..(maxMag * 2).toFloat() else minMag.toFloat()..maxMag.toFloat()
     val currentRange by rememberUpdatedState(range)
@@ -327,6 +331,31 @@ fun TargetScreen(
                 stringResource(R.string.or_dial, up, upDial.dialFmt(elevationTurret.click), right, rightDial.dialFmt(windageTurret.click), turret.label)
             } else null
             Advice(elevation, windage, moving, orDial, abs(h.x) > reticle.extent || abs(h.y) > reticle.extent)
+        }
+
+        // The wind the turrets and marks are worked out for; the "i" explains the turrets.
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            val mean = conditions.windSpeed.toNumber() ?: 0.0
+            val lo = conditions.windMinMps.toNumber()?.takeIf { it >= 0 }
+            val hi = conditions.windMaxMps.toNumber()?.takeIf { it >= 0 }
+            fun one(v: Double) = if (v % 1.0 == 0.0) v.fmt(0) else v.fmt(1)
+            Text(
+                if (lo != null || hi != null) {
+                    stringResource(R.string.target_wind_range, one(mean), one(lo ?: mean), one(hi ?: mean))
+                } else {
+                    stringResource(R.string.target_wind, one(mean))
+                },
+                Modifier.weight(1f),
+                style = MaterialTheme.typography.bodyMedium,
+            )
+            IconButton(onClick = { turretHelp = true }) {
+                Icon(Icons.Outlined.Info, stringResource(R.string.help_turrets_title))
+            }
+        }
+        if (turretHelp) {
+            Dialog(onDismissRequest = { turretHelp = false }, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+                HelpScreen(onClose = { turretHelp = false }, openTopic = R.string.help_turrets_title)
+            }
         }
 
         Box(Modifier.fillMaxWidth().aspectRatio(1f)) {
