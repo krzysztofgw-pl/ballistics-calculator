@@ -25,8 +25,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -125,6 +127,9 @@ fun TargetScreen(
     val startMag = if (sfp) calMag.coerceIn(minMag, maxMag) else maxMag
     var magnification by remember(weapon.id, sfp, startMag, minMag) { mutableFloatStateOf(startMag.toFloat()) }
     var unlocked by remember(weapon.id) { mutableStateOf(false) }
+    // Turrets turned by hand stay where they are, at any distance, until reset to the computed corrections.
+    var manualUp by remember(weapon.id) { mutableStateOf<Double?>(null) }
+    var manualRight by remember(weapon.id) { mutableStateOf<Double?>(null) }
     // Unlocked, the zoom goes past the scope's range: down to 1× and up to twice its top power.
     val range = if (unlocked) minOf(1.0, minMag).toFloat()..(maxMag * 2).toFloat() else minMag.toFloat()..maxMag.toFloat()
     val currentRange by rememberUpdatedState(range)
@@ -197,8 +202,11 @@ fun TargetScreen(
     val rightDial = windageTurret.dial(-(selected?.windageRad ?: 0.0))
     // What is dialed moves every hold point by the same amount: the angle the turret really moves.
     val correction = ui.correction(Reticles.designKey(reticle))
-    val dialX = if (correction.dialWindage) -windageTurret.angle(rightDial) / reticle.unit.radians * scale else 0.0
-    val dialY = if (correction.dialElevation) -elevationTurret.angle(upDial) / reticle.unit.radians * scale else 0.0
+    // What the turrets are set to: the computed figure on a dialed axis, zero on a held one, unless turned by hand.
+    val setUp = manualUp ?: if (correction.dialElevation) upDial else 0.0
+    val setRight = manualRight ?: if (correction.dialWindage) rightDial else 0.0
+    val dialX = -windageTurret.angle(setRight) / reticle.unit.radians * scale
+    val dialY = -elevationTurret.angle(setUp) / reticle.unit.radians * scale
     val holds = (points + listOfNotNull(selected?.takeIf { it !in points })).map { p ->
         Hold(p, p.windageRad / reticle.unit.radians * scale - dialX, p.dropRad / reticle.unit.radians * scale - dialY)
     }
@@ -212,7 +220,7 @@ fun TargetScreen(
     }
 
     // With the mean wind dialed, the lightest and strongest forecast wind are marks to hold beside the aim point.
-    val gusts = analysis?.bracket?.takeIf { correction.dialWindage && selected != null }?.let { b ->
+    val gusts = analysis?.bracket?.takeIf { (correction.dialWindage || manualRight != null) && selected != null }?.let { b ->
         listOf(b.minMps to b.minRad, b.maxMps to b.maxRad)
             .filter { !it.second.isNaN() }
             .distinctBy { it.first }
@@ -286,12 +294,12 @@ fun TargetScreen(
             val vertical = stringResource(if (h.y <= 0) R.string.below_center else R.string.above_center)
             val horizontal = stringResource(if (h.x >= 0) R.string.right else R.string.left)
             // Each axis: dial whole clicks or hold on the reticle; what the clicks leave over is under half a click.
-            val elevation = if (correction.dialElevation) {
+            val elevation = if (correction.dialElevation && manualUp == null) {
                 stringResource(R.string.advice_dial, up, upDial.dialFmt(elevationTurret.click), turret.label)
             } else {
                 stringResource(R.string.advice_hold, h.y.holdFmt(), reticle.unit.label, vertical)
             }
-            val windage = if (correction.dialWindage) {
+            val windage = if (correction.dialWindage && manualRight == null) {
                 stringResource(R.string.advice_dial, right, rightDial.dialFmt(windageTurret.click), turret.label)
             } else {
                 stringResource(R.string.advice_hold, h.x.holdFmt(), reticle.unit.label, horizontal)
@@ -300,7 +308,7 @@ fun TargetScreen(
             val moving = leadHold?.let { m ->
                 val l = current?.lead ?: return@let null
                 val parts = listOfNotNull(
-                    if (correction.dialElevation) null else stringResource(
+                    if (correction.dialElevation && manualUp == null) null else stringResource(
                         R.string.hold_part, m.y.holdFmt(), reticle.unit.label,
                         stringResource(if (m.y <= 0) R.string.below_center else R.string.above_center),
                     ),
@@ -314,7 +322,7 @@ fun TargetScreen(
                     stringResource(if (l.leadM >= 0) R.string.right else R.string.left), abs(l.leadM).fmt(2),
                 )
             }
-            val orDial = if (!correction.dialElevation && !correction.dialWindage) {
+            val orDial = if (!correction.dialElevation && !correction.dialWindage && manualUp == null && manualRight == null) {
                 stringResource(R.string.or_dial, up, upDial.dialFmt(elevationTurret.click), right, rightDial.dialFmt(windageTurret.click), turret.label)
             } else null
             Advice(elevation, windage, moving, orDial, abs(h.x) > reticle.extent || abs(h.y) > reticle.extent)
@@ -341,38 +349,38 @@ fun TargetScreen(
                 },
             )
             advice?.let { a ->
-                // A dialed axis shows its turret instead of the text, the way it looks on the scope.
-                val topTurret = correction.dialElevation
-                if (topTurret) {
-                    TurretView(
-                        vertical = false,
-                        value = upDial,
-                        step = elevationTurret.click ?: (1.0 / 10),
-                        figure = (if (upDial < 0) "↓" else "") + upDial.dialFmt(elevationTurret.click),
-                        positiveLetter = "← " + stringResource(R.string.up_short),
-                        negativeLetter = stringResource(R.string.down_short) + " →",
-                        description = a.elevation,
-                        modifier = Modifier.align(Alignment.TopCenter).size(TURRET_LENGTH, TURRET_DEPTH),
-                    )
-                } else {
-                    CornerLabel(stringResource(R.string.label_elevation), a.elevation, Color.Unspecified, Modifier.align(Alignment.TopStart))
+                // Both turrets, set as the settings say (computed figure dialed, or zero to hold); dragging a drum turns it.
+                // The corner text gives the hold on the reticle for an axis not fully dialed.
+                TurretView(
+                    vertical = false,
+                    value = setUp,
+                    step = elevationTurret.click ?: (1.0 / 10),
+                    figure = (if (setUp < 0) "↓" else "") + setUp.dialFmt(elevationTurret.click),
+                    positiveLetter = "← " + stringResource(R.string.up_short),
+                    negativeLetter = stringResource(R.string.down_short) + " →",
+                    description = stringResource(R.string.turret_elevation, a.elevation),
+                    onChange = { manualUp = it },
+                    modifier = Modifier.align(Alignment.TopCenter).size(TURRET_LENGTH, TURRET_DEPTH),
+                )
+                val side = stringResource(if (setRight >= 0) R.string.right_short else R.string.left_short)
+                TurretView(
+                    vertical = true,
+                    value = setRight,
+                    step = windageTurret.click ?: (1.0 / 10),
+                    figure = if (abs(setRight) < 1e-9) "0" else side + setRight.dialFmt(windageTurret.click),
+                    positiveLetter = stringResource(R.string.right_short) + " ↑",
+                    negativeLetter = stringResource(R.string.left_short) + " ↓",
+                    description = stringResource(R.string.turret_windage, a.windage),
+                    onChange = { manualRight = it },
+                    modifier = Modifier.align(Alignment.CenterEnd).size(TURRET_DEPTH + 8.dp, TURRET_LENGTH),
+                )
+                if (!(correction.dialElevation && manualUp == null)) {
+                    CornerLabel(stringResource(R.string.label_elevation), a.elevation, Color.Unspecified, Modifier.align(Alignment.TopStart), maxWidth = CORNER_WIDTH)
                 }
-                if (correction.dialWindage) {
-                    val side = stringResource(if (rightDial >= 0) R.string.right_short else R.string.left_short)
-                    TurretView(
-                        vertical = true,
-                        value = rightDial,
-                        step = windageTurret.click ?: (1.0 / 10),
-                        figure = if (abs(rightDial) < 1e-9) "0" else side + rightDial.dialFmt(windageTurret.click),
-                        positiveLetter = stringResource(R.string.right_short) + " ↑",
-                        negativeLetter = stringResource(R.string.left_short) + " ↓",
-                        description = a.windage,
-                        modifier = Modifier.align(Alignment.CenterEnd).size(TURRET_DEPTH + 8.dp, TURRET_LENGTH),
-                    )
-                } else {
+                if (!(correction.dialWindage && manualRight == null)) {
                     CornerLabel(
                         stringResource(R.string.label_windage), a.windage, Color.Unspecified, Modifier.align(Alignment.TopEnd), TextAlign.End,
-                        maxWidth = if (topTurret) 104.dp else 168.dp,
+                        maxWidth = CORNER_WIDTH,
                     )
                 }
                 a.moving?.let { CornerLabel(stringResource(R.string.label_moving), it, Color(0xFF1E88E5), Modifier.align(Alignment.BottomStart)) }
@@ -397,6 +405,13 @@ fun TargetScreen(
                         Text(stringResource(R.string.label_target_course), style = MaterialTheme.typography.labelSmall)
                     }
                 }
+            }
+        }
+        if (manualUp != null || manualRight != null) {
+            FilledTonalButton(onClick = { manualUp = null; manualRight = null }) {
+                Icon(Icons.Default.Refresh, null, Modifier.size(18.dp))
+                Spacer(Modifier.width(6.dp))
+                Text(stringResource(R.string.action_reset_turrets))
             }
         }
         advice?.let { a ->
@@ -487,6 +502,8 @@ private fun Double.dialFmt(click: Double?): String {
 
 private val TURRET_LENGTH = 136.dp
 private val TURRET_DEPTH = 44.dp
+/** Room for a corner text beside the top turret. */
+private val CORNER_WIDTH = 96.dp
 
 /** A wind speed's hold beside the aim point, [x] in reticle units like [Hold.x]. */
 private class Gust(val x: Double, val label: String)

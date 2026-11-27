@@ -435,6 +435,9 @@
     <string name="left_short">L</string>
     <string name="up_short">U</string>
     <string name="down_short">D</string>
+    <string name="turret_elevation">Elevation turret: %1$s. Drag to turn.</string>
+    <string name="turret_windage">Windage turret: %1$s. Drag to turn.</string>
+    <string name="action_reset_turrets">Reset turrets</string>
     <string name="label_velocity_sd">Velocity SD</string>
     <string name="label_group">5-shot group</string>
     <string name="label_target_course">Course</string>

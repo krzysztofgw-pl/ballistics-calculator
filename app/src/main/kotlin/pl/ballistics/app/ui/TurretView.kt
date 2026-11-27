@@ -1,7 +1,12 @@
 package pl.ballistics.app.ui
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
@@ -19,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlin.math.ceil
 import kotlin.math.floor
+import kotlin.math.roundToInt
 
 /**
  * A scope turret seen from the side, as a drum turning under a fixed red pointer.
@@ -36,10 +42,26 @@ fun TurretView(
     positiveLetter: String,
     negativeLetter: String,
     description: String,
+    onChange: (Double) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val text = rememberTextMeasurer()
-    Canvas(modifier.semantics { contentDescription = description }) {
+    val current by rememberUpdatedState(value)
+    val change by rememberUpdatedState(onChange)
+    val dragging = Modifier.pointerInput(vertical, step) {
+        // The drum follows the finger, in whole clicks: toward U (left) or R (up) turns it that way.
+        val spacing = SPACING.toPx()
+        var start = 0.0
+        var moved = 0f
+        val onStart = { _: Offset -> start = current; moved = 0f }
+        val onDrag = { d: Float ->
+            moved += d
+            change(start + (-moved / spacing).roundToInt() * step)
+        }
+        if (vertical) detectVerticalDragGestures(onDragStart = onStart) { c, d -> c.consume(); onDrag(d) }
+        else detectHorizontalDragGestures(onDragStart = onStart) { c, d -> c.consume(); onDrag(d) }
+    }
+    Canvas(modifier.then(dragging).semantics { contentDescription = description }) {
         val along = if (vertical) size.height else size.width
         val across = if (vertical) size.width else size.height
         val body = Brush.linearGradient(
@@ -51,7 +73,7 @@ fun TurretView(
         drawRoundRect(Color.Black, cornerRadius = CornerRadius(8.dp.toPx()), style = androidx.compose.ui.graphics.drawscope.Stroke(1.dp.toPx()))
 
         // The marks sit on the edge nearest the lens: bottom of the top turret, left of the side one.
-        val spacing = 7.dp.toPx()
+        val spacing = SPACING.toPx()
         val mid = along / 2
         val inset = 6.dp.toPx()
         clipRect(
@@ -62,8 +84,8 @@ fun TurretView(
             val first = floor(clicks - mid / spacing).toInt()
             val last = ceil(clicks + mid / spacing).toInt()
             for (k in first..last) {
-                // Higher figures come in from the U (left) side on top and from the R (upper) side on the right.
-                val pos = mid - ((k - clicks) * spacing).toFloat()
+                // Turning toward U (left) or R (up) moves the marks that way.
+                val pos = mid + ((k - clicks) * spacing).toFloat()
                 val major = k % 10 == 0
                 val half = k % 5 == 0
                 val len = when { major -> 14.dp; half -> 10.dp; else -> 6.dp }.toPx()
@@ -95,6 +117,8 @@ fun TurretView(
         pointer(vertical, mid)
     }
 }
+
+private val SPACING = 7.dp
 
 /** The fixed red index on the lens side of the drum. */
 private fun DrawScope.pointer(vertical: Boolean, mid: Float) {
