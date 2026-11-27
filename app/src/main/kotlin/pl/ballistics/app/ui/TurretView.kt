@@ -88,8 +88,7 @@ fun TurretView(
                 val pos = mid + ((k - clicks) * spacing).toFloat()
                 val major = k % 10 == 0
                 val half = k % 5 == 0
-                // Short marks on the side turret, so the figure beside them keeps its room.
-                val len = (when { major -> 14.dp; half -> 10.dp; else -> 6.dp } * (if (vertical) 0.6f else 1f)).toPx()
+                val len = when { major -> 14.dp; half -> 10.dp; else -> 6.dp }.toPx()
                 val w = (if (major) 2.dp else 1.2.dp).toPx()
                 if (vertical) {
                     drawLine(Color(0xFFDDDDDD), Offset(0f, pos), Offset(len, pos), w)
@@ -100,7 +99,7 @@ fun TurretView(
         }
 
         // The dialed figure, large, and which way each end turns.
-        val big = text.measure(figure, TextStyle(fontSize = if (vertical) 14.sp else 16.sp, fontWeight = FontWeight.Bold, color = Color.White))
+        val big = text.measure(figure, TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White))
         val small = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color(0xFFEEEEEE))
         val pos = text.measure(positiveLetter, small)
         val neg = text.measure(negativeLetter, small)

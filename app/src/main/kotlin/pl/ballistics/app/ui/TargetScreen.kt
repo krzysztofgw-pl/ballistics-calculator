@@ -60,6 +60,7 @@ import pl.ballistics.app.R
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
@@ -419,8 +420,8 @@ fun TargetScreen(
                 }
             }
             // The course is set on a small dial in the free corner: up is away from the shooter, right is to the right.
-            // Bottom right corner, as large as fits clear of the lens and of the windage turret above it.
-            val course = courseSize(maxWidth)
+            // Half see-through, in the lens's bottom right quarter: under the windage turret's column, so the turret stays clear.
+            val course = (maxWidth - TURRET_BAND) / 2 * 0.75f
             if (conditions.targetMoving) {
                 CompassDial(
                     markers = listOf(DialMarker(targetDirection, DialArrow.OUTWARD, MaterialTheme.colorScheme.primary, true)),
@@ -429,7 +430,7 @@ fun TargetScreen(
                     outerLabel = null,
                     stepDeg = 15.0,
                     maxSize = course,
-                    modifier = Modifier.align(Alignment.BottomEnd).size(course),
+                    modifier = Modifier.align(Alignment.BottomEnd).offset(x = -TURRET_BAND).size(course).graphicsLayer(alpha = 0.7f),
                 )
             }
         }
@@ -552,28 +553,6 @@ private val TURRET_LENGTH = 136.dp
 private val TURRET_DEPTH = 46.dp
 /** The strip above and right of the lens: a turret and the same gap to the lens on both sides. */
 private val TURRET_BAND = TURRET_DEPTH + 6.dp
-/**
- * The course dial in the bottom right corner of a reticle box [width] wide: the largest size up to 88 dp
- * that keeps a 4 dp gap to the lens and to the windage turret; never under 56 dp.
- */
-private fun courseSize(width: Dp): Dp {
-    val w = width.value
-    val band = TURRET_BAND.value
-    val r = (w - band) / 2
-    val lensX = r
-    val lensY = band + r
-    val turretBottom = lensY + TURRET_LENGTH.value / 2
-    val gap = 4f
-    var size = 88f
-    while (size > 56f) {
-        val c = w - size / 2
-        val clearLens = kotlin.math.hypot(c - lensX, c - lensY) >= r + size / 2 + gap
-        val clearTurret = w - size >= turretBottom + gap
-        if (clearLens && clearTurret) break
-        size -= 2f
-    }
-    return size.dp
-}
 /** Distance and target speed fields share one width. */
 private val FIELD_WIDTH = 132.dp
 private val MOVING_BLUE = Color(0xFF1E88E5)
