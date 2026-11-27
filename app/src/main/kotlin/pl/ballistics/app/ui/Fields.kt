@@ -65,11 +65,14 @@ fun NumberField(
     onUnitClick: (() -> Unit)? = null,
     /** Given, a ? at the end of the field opens an explanation. */
     onHelp: (() -> Unit)? = null,
+    /** False greys the field out and leaves it in place, so the layout does not move. */
+    enabled: Boolean = true,
     onChange: (String) -> Unit,
 ) {
     OutlinedTextField(
         value = value,
         onValueChange = onChange,
+        enabled = enabled,
         label = { Text(label) },
         placeholder = placeholder?.let { { Text(it) } },
         suffix = { if (onUnitClick == null) Text(unit) },
@@ -92,7 +95,7 @@ fun NumberField(
             }
         },
         singleLine = true,
-        isError = !(optional && value.isBlank()) && value.toNumber() == null,
+        isError = enabled && !(optional && value.isBlank()) && value.toNumber() == null,
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Next),
         keyboardActions = nextFieldActions(),
         modifier = modifier.fillMaxWidth(),

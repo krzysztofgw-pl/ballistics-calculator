@@ -347,15 +347,17 @@ fun TargetScreen(
             Advice(elevation, windage, moving, orDial, abs(h.x) > reticle.extent || abs(h.y) > reticle.extent)
         }
 
-        if (conditions.targetMoving) {
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                NumberField(stringResource(R.string.label_target_speed), conditions.targetSpeedMps, "m/s", Modifier.width(FIELD_WIDTH)) { v ->
-                    update { it.copy(targetSpeedMps = v) }
-                }
-                Box(Modifier.weight(1f).padding(start = 12.dp), contentAlignment = Alignment.CenterEnd) {
-                    advice?.moving?.let {
-                        AdviceText(stringResource(R.string.label_axis_advice, stringResource(R.string.label_moving), it), MOVING_BLUE, TextAlign.End)
-                    }
+        // The row stays in place with the moving target off (speed greyed out, no advice), so the lens never jumps.
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            NumberField(
+                stringResource(R.string.label_target_speed), conditions.targetSpeedMps, "m/s", Modifier.width(FIELD_WIDTH),
+                enabled = conditions.targetMoving,
+            ) { v ->
+                update { it.copy(targetSpeedMps = v) }
+            }
+            Box(Modifier.weight(1f).padding(start = 12.dp), contentAlignment = Alignment.CenterEnd) {
+                if (conditions.targetMoving) advice?.moving?.let {
+                    AdviceText(stringResource(R.string.label_axis_advice, stringResource(R.string.label_moving), it), MOVING_BLUE, TextAlign.End)
                 }
             }
         }
