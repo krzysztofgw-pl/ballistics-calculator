@@ -433,6 +433,7 @@
     <string name="turret_windage">Windage turret: %1$s. Drag to turn.</string>
     <string name="action_reset_turrets">Reset turrets</string>
     <string name="label_axis_advice">%1$s: %2$s</string>
+    <string name="label_moving">Moving</string>
     <string name="label_velocity_sd">Velocity SD</string>
     <string name="label_group">5-shot group</string>
     <string name="label_north_up">North up</string>

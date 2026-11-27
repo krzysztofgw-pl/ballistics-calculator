@@ -352,7 +352,7 @@ fun TargetScreen(
                     update { it.copy(targetSpeedMps = v) }
                 }
                 Text(
-                    advice?.moving.orEmpty(),
+                    advice?.moving?.let { stringResource(R.string.label_axis_advice, stringResource(R.string.label_moving), it) }.orEmpty(),
                     Modifier.weight(1f).padding(start = 12.dp),
                     color = MOVING_BLUE,
                     style = MaterialTheme.typography.bodyMedium,
