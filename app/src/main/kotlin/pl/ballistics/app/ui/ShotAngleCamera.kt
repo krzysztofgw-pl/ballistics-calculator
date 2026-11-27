@@ -17,6 +17,7 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -26,7 +27,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Info
@@ -50,12 +53,16 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
@@ -195,77 +202,100 @@ private fun ShotAngleCamera(onDismiss: () -> Unit, onAngle: (Double) -> Unit) {
                         }
                     }
                 }
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                    IconButton(onClick = { showHelp = true }) {
+                // Calibrate on the left, the shutter in the middle under the thumb, help on the right.
+                Box(Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
+                    Column(Modifier.align(Alignment.CenterStart), horizontalAlignment = Alignment.CenterHorizontally) {
+                        FilledTonalButton(onClick = {
+                            val now = axis ?: return@FilledTonalButton
+                            val first = firstAim
+                            if (first == null) {
+                                // The first aim is kept at once; the first time, how to go on is explained.
+                                firstAim = now
+                                if (!prefs.getBoolean(KEY_HIDE_HELP, false)) showHelp = true
+                            } else {
+                                // Same point, so the true angles are equal: e1 + tilt(r1) = e2 + tilt(r2). A portrait
+                                // pair (upright, upside down) gives the upright tilt, a landscape pair the sideways one.
+                                val c = cos(Math.toRadians(first.rollDeg)) - cos(Math.toRadians(now.rollDeg))
+                                val sn = sin(Math.toRadians(first.rollDeg)) - sin(Math.toRadians(now.rollDeg))
+                                val result = when {
+                                    abs(c) >= 1.5 -> {
+                                        tiltUpright = (now.elevationDeg - first.elevationDeg - tiltSideways * sn) / c
+                                        prefs.edit().putFloat(KEY_TILT_UPRIGHT, tiltUpright.toFloat()).apply()
+                                        context.getString(R.string.camera_calibrated_portrait, String.format(Locale.US, "%+.2f", tiltUpright))
+                                    }
+                                    abs(sn) >= 1.5 -> {
+                                        tiltSideways = (now.elevationDeg - first.elevationDeg - tiltUpright * c) / sn
+                                        prefs.edit().putFloat(KEY_TILT_SIDEWAYS, tiltSideways.toFloat()).apply()
+                                        context.getString(R.string.camera_calibrated_landscape, String.format(Locale.US, "%+.2f", tiltSideways))
+                                    }
+                                    else -> context.getString(R.string.camera_calibrate_failed)
+                                }
+                                Toast.makeText(context, result, Toast.LENGTH_LONG).show()
+                                firstAim = null
+                            }
+                        }) {
+                            Text(stringResource(if (firstAim == null) R.string.action_calibrate else R.string.camera_calibrate_flip), color = Color.White)
+                        }
+                        if (firstAim != null) {
+                            // Marks that the first of the two aims is kept.
+                            Text(stringResource(R.string.camera_calibrate_first_kept), color = Color(0xFF81C784), style = MaterialTheme.typography.labelLarge)
+                        }
+                    }
+                    ShutterButton(
+                        enabled = angle != null,
+                        description = stringResource(R.string.action_use_angle, angle?.let { String.format(Locale.US, "%.1f", it) } ?: "—"),
+                        onClick = { angle?.let(onAngle) },
+                        modifier = Modifier.align(Alignment.Center),
+                    )
+                    IconButton(onClick = { showHelp = true }, modifier = Modifier.align(Alignment.CenterEnd)) {
                         Icon(Icons.Filled.Info, stringResource(R.string.camera_calibration_title), tint = Color.White)
                     }
-                    FilledTonalButton(onClick = {
-                        val now = axis ?: return@FilledTonalButton
-                        val first = firstAim
-                        if (first == null) {
-                            // The first aim is kept at once; the first time, how to go on is explained.
-                            firstAim = now
-                            if (!prefs.getBoolean(KEY_HIDE_HELP, false)) showHelp = true
-                        } else {
-                            // Same point, so the true angles are equal: e1 + tilt(r1) = e2 + tilt(r2). A portrait
-                            // pair (upright, upside down) gives the upright tilt, a landscape pair the sideways one.
-                            val c = cos(Math.toRadians(first.rollDeg)) - cos(Math.toRadians(now.rollDeg))
-                            val sn = sin(Math.toRadians(first.rollDeg)) - sin(Math.toRadians(now.rollDeg))
-                            val result = when {
-                                abs(c) >= 1.5 -> {
-                                    tiltUpright = (now.elevationDeg - first.elevationDeg - tiltSideways * sn) / c
-                                    prefs.edit().putFloat(KEY_TILT_UPRIGHT, tiltUpright.toFloat()).apply()
-                                    context.getString(R.string.camera_calibrated_portrait, String.format(Locale.US, "%+.2f", tiltUpright))
-                                }
-                                abs(sn) >= 1.5 -> {
-                                    tiltSideways = (now.elevationDeg - first.elevationDeg - tiltUpright * c) / sn
-                                    prefs.edit().putFloat(KEY_TILT_SIDEWAYS, tiltSideways.toFloat()).apply()
-                                    context.getString(R.string.camera_calibrated_landscape, String.format(Locale.US, "%+.2f", tiltSideways))
-                                }
-                                else -> context.getString(R.string.camera_calibrate_failed)
-                            }
-                            Toast.makeText(context, result, Toast.LENGTH_LONG).show()
-                            firstAim = null
-                        }
-                    }) {
-                        Text(stringResource(if (firstAim == null) R.string.action_calibrate else R.string.camera_calibrate_flip), color = Color.White)
-                    }
-                    if (firstAim != null) {
-                        // Marks that the first of the two aims is kept.
-                        Text(stringResource(R.string.camera_calibrate_first_kept), color = Color(0xFF81C784), style = MaterialTheme.typography.labelLarge)
-                    }
-                    FilledTonalButton(enabled = angle != null, onClick = { angle?.let(onAngle) }) {
-                        Text(stringResource(R.string.action_use_angle, angle?.let { String.format(Locale.US, "%.1f", it) } ?: "—"))
-                    }
                 }
-                Text(
-                    stringResource(R.string.camera_angle_note) + " " +
-                        stringResource(
-                            R.string.camera_angle_calibration,
-                            String.format(Locale.US, "%+.2f", tiltUpright), String.format(Locale.US, "%+.2f", tiltSideways),
-                        ),
-                    color = Color(0xFFBDBDBD),
-                    style = MaterialTheme.typography.bodySmall,
-                )
             }
         }
-        if (showHelp) CalibrationHelp(prefs.getBoolean(KEY_HIDE_HELP, false)) { hide ->
+        if (showHelp) CalibrationHelp(
+            stringResource(
+                R.string.camera_angle_calibration,
+                String.format(Locale.US, "%+.2f", tiltUpright), String.format(Locale.US, "%+.2f", tiltSideways),
+            ),
+            prefs.getBoolean(KEY_HIDE_HELP, false),
+        ) { hide ->
             prefs.edit().putBoolean(KEY_HIDE_HELP, hide).apply()
             showHelp = false
         }
     }
 }
 
-/** How the two-aim calibration works, with a choice not to show it before calibrating again. */
+/** A round camera-style shutter: a white ring around a white disc. */
 @Composable
-private fun CalibrationHelp(hidden: Boolean, onClose: (hide: Boolean) -> Unit) {
+private fun ShutterButton(enabled: Boolean, description: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val alpha = if (enabled) 1f else 0.4f
+    Box(
+        modifier.size(72.dp).clip(CircleShape)
+            .border(4.dp, Color.White.copy(alpha = alpha), CircleShape)
+            .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
+            .semantics { contentDescription = description },
+        contentAlignment = Alignment.Center,
+    ) {
+        Box(Modifier.size(56.dp).background(Color.White.copy(alpha = alpha), CircleShape))
+    }
+}
+
+/**
+ * How the two-aim calibration works and how accurate the angle is, with the current calibration and a
+ * choice not to show it before calibrating again.
+ */
+@Composable
+private fun CalibrationHelp(calibration: String, hidden: Boolean, onClose: (hide: Boolean) -> Unit) {
     var hide by remember { mutableStateOf(hidden) }
     AlertDialog(
         onDismissRequest = { onClose(hide) },
         title = { Text(stringResource(R.string.camera_calibration_title)) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(stringResource(R.string.camera_calibration_help))
+                Text(stringResource(R.string.camera_angle_note))
+                Text(calibration, style = MaterialTheme.typography.labelLarge)
                 Row(Modifier.clickable { hide = !hide }, verticalAlignment = Alignment.CenterVertically) {
                     Checkbox(hide, onCheckedChange = { hide = it })
                     Text(stringResource(R.string.action_dont_show_again))
