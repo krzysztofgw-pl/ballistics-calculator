@@ -435,8 +435,6 @@
     <string name="action_reset_turrets">Reset turrets</string>
     <string name="target_wind">Wind %1$s m/s</string>
     <string name="target_wind_range">Wind %1$s m/s (%2$s–%3$s m/s)</string>
-    <string name="help_turrets_title">Turrets on the Target tab</string>
-    <string name="help_turrets">The turrets above and to the right of the reticle show what to dial. They start as Settings → Reticles says: a dialed axis at the computed correction, a held axis at zero.\n\nDrag a turret to turn it, one click at a time. The red points on the reticle then show what is left to hold, and the turret stays where you put it at every distance. The round button in the top right corner puts both turrets back to the computed corrections.\n\nWith windage dialed, e.g. for the mean wind, the orange marks beside the aim point show where to hold for the lightest and strongest wind from the forecast or Conditions.</string>
     <string name="label_velocity_sd">Velocity SD</string>
     <string name="label_group">5-shot group</string>
     <string name="label_target_course">Course</string>

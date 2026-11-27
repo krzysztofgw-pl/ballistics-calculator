@@ -27,7 +27,6 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.FilledTonalIconButton
@@ -132,7 +131,6 @@ fun TargetScreen(
     // Turrets turned by hand stay where they are, at any distance, until reset to the computed corrections.
     var manualUp by remember(weapon.id) { mutableStateOf<Double?>(null) }
     var manualRight by remember(weapon.id) { mutableStateOf<Double?>(null) }
-    var turretHelp by remember { mutableStateOf(false) }
     // Unlocked, the zoom goes past the scope's range: down to 1× and up to twice its top power.
     val range = if (unlocked) minOf(1.0, minMag).toFloat()..(maxMag * 2).toFloat() else minMag.toFloat()..maxMag.toFloat()
     val currentRange by rememberUpdatedState(range)
@@ -331,7 +329,7 @@ fun TargetScreen(
             Advice(elevation, windage, moving, orDial, abs(h.x) > reticle.extent || abs(h.y) > reticle.extent)
         }
 
-        // The wind the turrets and marks are worked out for; the "i" explains the turrets.
+        // The wind the turrets and marks are worked out for.
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             val mean = conditions.windSpeed.toNumber() ?: 0.0
             val lo = conditions.windMinMps.toNumber()?.takeIf { it >= 0 }
@@ -346,9 +344,6 @@ fun TargetScreen(
                 Modifier.weight(1f),
                 style = MaterialTheme.typography.bodyMedium,
             )
-            IconButton(onClick = { turretHelp = !turretHelp }) {
-                Icon(Icons.Outlined.Info, stringResource(R.string.help_turrets_title))
-            }
         }
 
         Box(Modifier.fillMaxWidth().aspectRatio(1f)) {
@@ -442,8 +437,6 @@ fun TargetScreen(
                 }
             }
         }
-        // The "i" shows how the turrets work under the reticle; a second tap hides it.
-        if (turretHelp) Text(stringResource(R.string.help_turrets), style = MaterialTheme.typography.bodySmall)
         advice?.let { a ->
             a.orDial?.let { Text(it, style = MaterialTheme.typography.bodyMedium) }
             if (a.outside) Text(stringResource(R.string.hold_outside_reticle), color = MaterialTheme.colorScheme.error)
