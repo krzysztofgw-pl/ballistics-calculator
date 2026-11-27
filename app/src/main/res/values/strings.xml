@@ -433,8 +433,6 @@
     <string name="turret_elevation">Elevation turret: %1$s. Drag to turn.</string>
     <string name="turret_windage">Windage turret: %1$s. Drag to turn.</string>
     <string name="action_reset_turrets">Reset turrets</string>
-    <string name="target_wind">Wind %1$s m/s</string>
-    <string name="target_wind_range">Wind %1$s m/s (%2$s–%3$s m/s)</string>
     <string name="label_velocity_sd">Velocity SD</string>
     <string name="label_group">5-shot group</string>
     <string name="label_target_course">Course</string>

@@ -329,23 +329,6 @@ fun TargetScreen(
             Advice(elevation, windage, moving, orDial, abs(h.x) > reticle.extent || abs(h.y) > reticle.extent)
         }
 
-        // The wind the turrets and marks are worked out for.
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            val mean = conditions.windSpeed.toNumber() ?: 0.0
-            val lo = conditions.windMinMps.toNumber()?.takeIf { it >= 0 }
-            val hi = conditions.windMaxMps.toNumber()?.takeIf { it >= 0 }
-            fun one(v: Double) = if (v % 1.0 == 0.0) v.fmt(0) else v.fmt(1)
-            Text(
-                if (lo != null || hi != null) {
-                    stringResource(R.string.target_wind_range, one(mean), one(lo ?: mean), one(hi ?: mean))
-                } else {
-                    stringResource(R.string.target_wind, one(mean))
-                },
-                Modifier.weight(1f),
-                style = MaterialTheme.typography.bodyMedium,
-            )
-        }
-
         Box(Modifier.fillMaxWidth().aspectRatio(1f)) {
             ReticleView(
                 reticle, holds, selected, leadHold, gusts, field,
