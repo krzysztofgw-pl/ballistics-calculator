@@ -206,9 +206,6 @@ fun SettingsScreen(
                     stringResource(R.string.option_qnh), stringResource(R.string.option_station),
                     pressureIsQnh, onPressureIsQnh,
                 )
-                SwitchRow(stringResource(R.string.label_location_latitude), ui.locationSetsLatitude) { v ->
-                    onUi { it.copy(locationSetsLatitude = v) }
-                }
                 // Pressure source with a Test button that reads it without touching the conditions.
                 val sources = PressureSource.entries.filter { it != PressureSource.PHONE || hasBarometer || ui.pressureFrom == it }
                 Choice(
@@ -224,6 +221,10 @@ fun SettingsScreen(
                     stringResource(R.string.label_altitude_source), ui.altitudeFrom, AltitudeSource.entries - AltitudeSource.MANUAL,
                     name = { stringResource(it.label) },
                 ) { source -> onUi { it.copy(altitudeSource = source) } }
+                // Same order as on Conditions: pressure, altitude, then the latitude below them.
+                SwitchRow(stringResource(R.string.label_location_latitude), ui.locationSetsLatitude) { v ->
+                    onUi { it.copy(locationSetsLatitude = v) }
+                }
                 TwoOptions(
                     stringResource(R.string.label_forecast_direction),
                     stringResource(R.string.option_clock), stringResource(R.string.option_true),
