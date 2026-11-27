@@ -56,6 +56,9 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.res.stringResource
 import pl.ballistics.app.R
 import androidx.compose.ui.geometry.Offset
@@ -355,13 +358,32 @@ fun TargetScreen(
         val outerWidth = maxWidth
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         // The row stays in place with the moving target off (speed greyed out), so the lens never jumps.
-        NumberField(
-            // Off, it reads 0 m/s; the typed speed is kept for when the moving target is turned back on.
-            stringResource(R.string.label_target_speed), if (conditions.targetMoving) conditions.targetSpeedMps else "0", "m/s",
-            Modifier.width(FIELD_WIDTH),
-            enabled = conditions.targetMoving,
-        ) { v ->
-            update { it.copy(targetSpeedMps = v) }
+        // A tap on the greyed field turns the moving target on and puts the cursor in it.
+        val speedFocus = remember { FocusRequester() }
+        var focusSpeed by remember { mutableStateOf(false) }
+        LaunchedEffect(conditions.targetMoving, focusSpeed) {
+            if (conditions.targetMoving && focusSpeed) {
+                speedFocus.requestFocus()
+                focusSpeed = false
+            }
+        }
+        Box {
+            NumberField(
+                // Off, it reads 0 m/s; the typed speed is kept for when the moving target is turned back on.
+                stringResource(R.string.label_target_speed), if (conditions.targetMoving) conditions.targetSpeedMps else "0", "m/s",
+                Modifier.width(FIELD_WIDTH).focusRequester(speedFocus),
+                enabled = conditions.targetMoving,
+            ) { v ->
+                update { it.copy(targetSpeedMps = v) }
+            }
+            if (!conditions.targetMoving) {
+                Box(
+                    Modifier.matchParentSize().clickable(onClickLabel = stringResource(R.string.label_target_speed)) {
+                        update { it.copy(targetMoving = true) }
+                        focusSpeed = true
+                    },
+                )
+            }
         }
 
         BoxWithConstraints(Modifier.fillMaxWidth().aspectRatio(1f)) {
