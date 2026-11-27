@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -28,7 +29,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -374,6 +375,15 @@ fun TargetScreen(
                     onChange = { manualRight = it },
                     modifier = Modifier.align(Alignment.CenterEnd).size(TURRET_DEPTH + 8.dp, TURRET_LENGTH),
                 )
+                // Turned by hand: a round button under the windage turret puts both back to the computed corrections.
+                if (manualUp != null || manualRight != null) {
+                    FilledTonalIconButton(
+                        onClick = { manualUp = null; manualRight = null },
+                        modifier = Modifier.align(Alignment.CenterEnd).offset(y = TURRET_LENGTH / 2 + 28.dp).padding(end = 4.dp),
+                    ) {
+                        Icon(Icons.Default.Refresh, stringResource(R.string.action_reset_turrets))
+                    }
+                }
                 if (!(correction.dialElevation && manualUp == null)) {
                     CornerLabel(stringResource(R.string.label_elevation), a.elevation, Color.Unspecified, Modifier.align(Alignment.TopStart), maxWidth = CORNER_WIDTH)
                 }
@@ -405,13 +415,6 @@ fun TargetScreen(
                         Text(stringResource(R.string.label_target_course), style = MaterialTheme.typography.labelSmall)
                     }
                 }
-            }
-        }
-        if (manualUp != null || manualRight != null) {
-            FilledTonalButton(onClick = { manualUp = null; manualRight = null }) {
-                Icon(Icons.Default.Refresh, null, Modifier.size(18.dp))
-                Spacer(Modifier.width(6.dp))
-                Text(stringResource(R.string.action_reset_turrets))
             }
         }
         advice?.let { a ->
