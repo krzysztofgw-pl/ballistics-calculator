@@ -35,6 +35,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -69,7 +70,21 @@ fun ConditionsScreen(
     ) {
         // Wind changes most, so it comes first.
         Section(stringResource(R.string.section_wind)) {
-            NumberField(stringResource(R.string.label_wind_speed), i.windSpeed, "m/s") { v -> update { it.copy(windSpeed = v) } }
+            // As with the target distance, focusing empties it for a fresh entry, the last speed staying as the placeholder.
+            var speedTyped by remember { mutableStateOf<String?>(null) }
+            NumberField(
+                stringResource(R.string.label_wind_speed),
+                speedTyped ?: i.windSpeed,
+                "m/s",
+                Modifier.onFocusChanged { f ->
+                    if (f.isFocused && speedTyped == null) speedTyped = "" else if (!f.isFocused) speedTyped = null
+                },
+                optional = true,
+                placeholder = i.windSpeed,
+            ) { v ->
+                speedTyped = v
+                if (v.toNumber() != null) update { it.copy(windSpeed = v) }
+            }
             WindAndAzimuthDial(i, ui, update)
         }
 
