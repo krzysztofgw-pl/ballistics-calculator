@@ -290,7 +290,7 @@
     <string name="action_unlock_magnification">Beyond scope range</string>
     <string name="magnification_outside_range">Outside the scope\'s %1$s–%2$s× range</string>
     <string name="advice_dial">dial %1$s %2$s %3$s</string>
-    <string name="advice_hold">hold %1$s %2$s %3$s</string>
+    <string name="advice_hold">hold %1$s\n%2$s %3$s</string>
     <string name="or_dial">Or dial %1$s %2$s %5$s, %3$s %4$s %5$s</string>
     <string name="hold_outside_reticle">Hold point is outside the reticle: dial the turrets.</string>
     <string name="above_center">above center</string>
@@ -428,6 +428,11 @@
     <string name="toast_bc_copy_saved">Added %1$s</string>
     <string name="right_short">R</string>
     <string name="left_short">L</string>
+    <string name="up_short">U</string>
+    <string name="down_short">D</string>
+    <string name="turret_elevation">Elevation turret: %1$s. Drag to turn.</string>
+    <string name="turret_windage">Windage turret: %1$s. Drag to turn.</string>
+    <string name="action_reset_turrets">Reset turrets</string>
     <string name="label_velocity_sd">Velocity SD</string>
     <string name="label_group">5-shot group</string>
     <string name="label_target_course">Course</string>
