@@ -7,6 +7,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
@@ -359,7 +360,7 @@ fun TargetScreen(
             }
         }
 
-        Box(Modifier.fillMaxWidth().aspectRatio(1f)) {
+        BoxWithConstraints(Modifier.fillMaxWidth().aspectRatio(1f)) {
             ReticleView(
                 reticle, holds, selected, leadHold, gusts, flag, field,
                 // The lens keeps clear of the turrets: they stand above it and to its right, as on the scope.
@@ -418,7 +419,8 @@ fun TargetScreen(
                 }
             }
             // The course is set on a small dial in the free corner: up is away from the shooter, right is to the right.
-            // Bottom right, shifted left so it clears the windage turret above it.
+            // Bottom right corner, as large as fits clear of the lens and of the windage turret above it.
+            val course = courseSize(maxWidth)
             if (conditions.targetMoving) {
                 CompassDial(
                     markers = listOf(DialMarker(targetDirection, DialArrow.OUTWARD, MaterialTheme.colorScheme.primary, true)),
@@ -426,8 +428,8 @@ fun TargetScreen(
                     centerText = "${targetDirection.roundToInt().mod(360)}°",
                     outerLabel = null,
                     stepDeg = 15.0,
-                    maxSize = COURSE_SIZE,
-                    modifier = Modifier.align(Alignment.BottomEnd).offset(x = -(TURRET_DEPTH - 6.dp)).size(COURSE_SIZE),
+                    maxSize = course,
+                    modifier = Modifier.align(Alignment.BottomEnd).size(course),
                 )
             }
         }
@@ -550,10 +552,30 @@ private val TURRET_LENGTH = 136.dp
 private val TURRET_DEPTH = 46.dp
 /** The strip above and right of the lens: a turret and the same gap to the lens on both sides. */
 private val TURRET_BAND = TURRET_DEPTH + 6.dp
-/** The course dial in the bottom right corner. */
-private val COURSE_SIZE = 88.dp
+/**
+ * The course dial in the bottom right corner of a reticle box [width] wide: the largest size up to 88 dp
+ * that keeps a 4 dp gap to the lens and to the windage turret; never under 56 dp.
+ */
+private fun courseSize(width: Dp): Dp {
+    val w = width.value
+    val band = TURRET_BAND.value
+    val r = (w - band) / 2
+    val lensX = r
+    val lensY = band + r
+    val turretBottom = lensY + TURRET_LENGTH.value / 2
+    val gap = 4f
+    var size = 88f
+    while (size > 56f) {
+        val c = w - size / 2
+        val clearLens = kotlin.math.hypot(c - lensX, c - lensY) >= r + size / 2 + gap
+        val clearTurret = w - size >= turretBottom + gap
+        if (clearLens && clearTurret) break
+        size -= 2f
+    }
+    return size.dp
+}
 /** Distance and target speed fields share one width. */
-private val FIELD_WIDTH = 104.dp
+private val FIELD_WIDTH = 132.dp
 private val MOVING_BLUE = Color(0xFF1E88E5)
 
 /** The wind for the flag; [fromRad] as in core Wind: 0 from the target, π/2 from the right. */
@@ -678,10 +700,18 @@ private fun ReticleView(
             holds.firstOrNull { it.point == selected }?.let { aim ->
                 val orange = Color(0xFFFB8C00)
                 val bar = 10.dp.toPx()
-                gusts.forEach { g ->
+                // The left mark's speed ends at its bar and the right one's starts at it, so close marks never merge.
+                val sorted = gusts.sortedBy { it.x }
+                sorted.forEachIndexed { i, g ->
                     val p = at(g.x, aim.y)
                     drawLine(orange, p - Offset(0f, bar), p + Offset(0f, bar), 3.dp.toPx())
-                    label(text, g.label, p + Offset(0f, bar + 8.dp.toPx()), orange)
+                    val layout = text.measure(g.label, TextStyle(fontSize = 10.sp, color = orange))
+                    val x = when {
+                        sorted.size < 2 -> p.x - layout.size.width / 2f
+                        i == 0 -> p.x - 2.dp.toPx() - layout.size.width
+                        else -> p.x + 2.dp.toPx()
+                    }
+                    drawText(layout, topLeft = Offset(x, p.y + bar + 2.dp.toPx()))
                 }
             }
             lead?.let { h ->
