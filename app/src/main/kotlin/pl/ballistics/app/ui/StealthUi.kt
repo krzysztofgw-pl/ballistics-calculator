@@ -39,6 +39,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -373,15 +374,22 @@ private fun IconLabelButton(icon: Int, label: Int, modifier: Modifier = Modifier
     }
 }
 
-/** Stealth mode's options in Settings: on/off through the dialog, and what it still allows. */
+/** Stealth mode's card in Settings: on/off through the dialog in its header, and what it still allows. */
 @Composable
 fun StealthSettings(garminWatch: Boolean, onOpenStealth: () -> Unit) {
     val context = LocalContext.current
     val s by Stealth.state.collectAsStateWithLifecycle()
-    // Both ways go through the dialog, which shows what is blocked and the phone's radios.
-    SwitchRow(stringResource(R.string.stealth_title), s.on) { onOpenStealth() }
-    SwitchRow(stringResource(R.string.stealth_allow_gps), s.allowGps) { v -> Stealth.set(context, s.copy(allowGps = v)) }
-    if (garminWatch) SwitchRow(stringResource(R.string.stealth_allow_watch), s.allowWatch) { v -> Stealth.set(context, s.copy(allowWatch = v)) }
-    SwitchRow(stringResource(R.string.stealth_show_bar), s.showBar) { v -> Stealth.set(context, s.copy(showBar = v)) }
-    StealthTile(noteWhenAdded = false)
+    // The main switch sits in the header; both ways go through the dialog, which shows what is blocked and the
+    // phone's radios. Its options open once it is on; the quick-settings tile, a way to turn it on, stays.
+    Section(
+        stringResource(R.string.stealth_title), ImageVector.vectorResource(R.drawable.ic_stealth),
+        trailing = { Switch(checked = s.on, onCheckedChange = { onOpenStealth() }) },
+    ) {
+        if (s.on) {
+            SwitchRow(stringResource(R.string.stealth_allow_gps), s.allowGps) { v -> Stealth.set(context, s.copy(allowGps = v)) }
+            if (garminWatch) SwitchRow(stringResource(R.string.stealth_allow_watch), s.allowWatch) { v -> Stealth.set(context, s.copy(allowWatch = v)) }
+            SwitchRow(stringResource(R.string.stealth_show_bar), s.showBar) { v -> Stealth.set(context, s.copy(showBar = v)) }
+        }
+        StealthTile(noteWhenAdded = false)
+    }
 }
