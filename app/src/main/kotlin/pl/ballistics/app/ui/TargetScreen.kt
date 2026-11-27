@@ -187,7 +187,7 @@ fun TargetScreen(
         chartsToM = maxDistance,
     )
     // The distance is solved on its own first; the sweeps for the charts and tools follow once it settles,
-    // and until then the previous ones for the same distance stay on screen.
+    // and until then the previous ones stay on screen.
     val solved by produceState<Solved?>(null, result, distance, targetSpeed, targetDirection, inputs) {
         val (point, lead) = withContext(Dispatchers.Default) {
             runCatching {
@@ -195,7 +195,8 @@ fun TargetScreen(
                 p to targetSpeed?.let { result.setup.lead(distance, solution.zeroElevationRad, it, targetDirection) }
             }.getOrDefault(null to null)
         }
-        value = Solved(distance, point, lead, value?.takeIf { it.distance == distance }?.analysis)
+        // The previous sweeps stay until the new ones are ready, so the cards below keep their height.
+        value = Solved(distance, point, lead, value?.analysis)
         if (point != null) {
             delay(300)
             value = Solved(distance, point, lead, withContext(Dispatchers.Default) {
@@ -203,9 +204,10 @@ fun TargetScreen(
             })
         }
     }
-    // While dragging, the last solved distance stays on screen until the next one is ready.
-    val current = solved?.takeIf { it.distance == distance || dragged != null }
-    val analysis = current?.analysis?.takeIf { current.distance == distance }
+    // The last solved distance stays on screen until the next one is ready (dragging, arrows or typing), so the
+    // turrets, hold lines and cards never vanish for a moment and the screen never jumps.
+    val current = solved
+    val analysis = current?.analysis
     val outOfReach = current != null && current.point == null
     val selected = points.find { abs(it.rangeM - distance) < 1e-6 } ?: current?.point
 
