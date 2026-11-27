@@ -361,6 +361,7 @@ fun TargetScreen(
         // A tap on the greyed field turns the moving target on and puts the cursor in it.
         val speedFocus = remember { FocusRequester() }
         var focusSpeed by remember { mutableStateOf(false) }
+        var speedTyped by remember { mutableStateOf<String?>(null) }
         LaunchedEffect(conditions.targetMoving, focusSpeed) {
             if (conditions.targetMoving && focusSpeed) {
                 speedFocus.requestFocus()
@@ -370,11 +371,19 @@ fun TargetScreen(
         Box {
             NumberField(
                 // Off, it reads 0 m/s; the typed speed is kept for when the moving target is turned back on.
-                stringResource(R.string.label_target_speed), if (conditions.targetMoving) conditions.targetSpeedMps else "0", "m/s",
-                Modifier.width(FIELD_WIDTH).focusRequester(speedFocus),
+                // As with the distance, focusing empties it for a fresh entry, the last speed staying as the placeholder.
+                stringResource(R.string.label_target_speed),
+                if (conditions.targetMoving) speedTyped ?: conditions.targetSpeedMps else "0",
+                "m/s",
+                Modifier.width(FIELD_WIDTH).focusRequester(speedFocus).onFocusChanged { f ->
+                    if (f.isFocused && speedTyped == null) speedTyped = "" else if (!f.isFocused) speedTyped = null
+                },
+                optional = true,
+                placeholder = conditions.targetSpeedMps,
                 enabled = conditions.targetMoving,
             ) { v ->
-                update { it.copy(targetSpeedMps = v) }
+                speedTyped = v
+                if (v.toNumber() != null) update { it.copy(targetSpeedMps = v) }
             }
             if (!conditions.targetMoving) {
                 Box(
