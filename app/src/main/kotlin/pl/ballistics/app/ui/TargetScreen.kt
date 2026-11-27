@@ -278,6 +278,7 @@ fun TargetScreen(
                     if (f.isFocused && typed == null) typed = "" else if (!f.isFocused) typed = null
                 },
                 optional = true,
+                replaceOnFocus = false,
                 placeholder = distance.roundToInt().toString(),
             ) { v ->
                 typed = v
@@ -382,6 +383,7 @@ fun TargetScreen(
                     if (f.isFocused && speedTyped == null) speedTyped = "" else if (!f.isFocused) speedTyped = null
                 },
                 optional = true,
+                replaceOnFocus = false,
                 placeholder = conditions.targetSpeedMps,
                 enabled = conditions.targetMoving,
             ) { v ->
