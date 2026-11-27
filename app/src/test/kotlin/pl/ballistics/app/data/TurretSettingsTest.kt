@@ -25,22 +25,15 @@ class TurretSettingsTest {
     }
 
     @Test
-    fun windageFollowsElevationUnlessSeparate() {
-        val rifle = WeaponProfile(clickValue = "0.1", elevationFactor = "0,98", windageClickValue = "0.05", windageFactor = "1.01")
-        assertEquals(0.1, rifle.windageTurret.click)
-        assertEquals(0.98, rifle.windageTurret.factor)
-
-        val separate = rifle.copy(separateWindage = true)
-        assertEquals(0.05, separate.windageTurret.click)
-        assertEquals(1.01, separate.windageTurret.factor)
-        assertEquals(0.98, separate.elevationTurret.factor)
+    fun bothTurretsShareClickAndCorrection() {
+        val rifle = WeaponProfile(clickValue = "0.1", turretFactor = "0,98")
+        assertEquals(0.98, rifle.elevationTurret.factor)
+        assertEquals(rifle.elevationTurret, rifle.windageTurret)
     }
 
     @Test
-    fun blankWindageClickAndFactorsFallBack() {
-        val rifle = WeaponProfile(clickValue = "0.1", separateWindage = true)
-        assertEquals(0.1, rifle.windageTurret.click)
-        assertEquals(1.0, rifle.windageTurret.factor)
-        assertEquals(1.0, rifle.copy(elevationFactor = "0").elevationTurret.factor)
+    fun blankOrInvalidCorrectionIsOne() {
+        assertEquals(1.0, WeaponProfile().elevationTurret.factor)
+        assertEquals(1.0, WeaponProfile(turretFactor = "0").elevationTurret.factor)
     }
 }

@@ -93,33 +93,15 @@ fun WeaponEditor(
             Choice(stringResource(R.string.label_turret_units), unit, TurretUnit.entries, { it.label }) { v ->
                 // MOA and SMOA share click sizes, so a click typed for one stays.
                 val keepClicks = v.reticleUnit == unit.reticleUnit
-                w = w.withTurretUnit(v).let {
-                    if (keepClicks) it else it.copy(clickValue = v.defaultClick, windageClickValue = "")
-                }
+                w = w.withTurretUnit(v).let { if (keepClicks) it else it.copy(clickValue = v.defaultClick) }
             }
-            // Each turret: its click and its correction (measured ÷ dialled, blank is 1), explained in Help.
+            // The click and the turret correction (measured ÷ dialled, blank is 1), explained in Help.
             FieldRow { m ->
+                NumberField(stringResource(R.string.label_click_value), w.clickValue, unit.label, m) { w = w.copy(clickValue = it) }
                 NumberField(
-                    stringResource(if (w.separateWindage) R.string.label_elevation_click else R.string.label_click_value),
-                    w.clickValue, unit.label, m,
-                ) { w = w.copy(clickValue = it) }
-                NumberField(
-                    stringResource(R.string.label_turret_correction), w.elevationFactor, "", m, optional = true,
+                    stringResource(R.string.label_turret_correction), w.turretFactor, "", m, optional = true,
                     placeholder = "1", onHelp = { help = true },
-                ) { w = w.copy(elevationFactor = it) }
-            }
-            SwitchRow(stringResource(R.string.label_separate_windage), w.separateWindage) { w = w.copy(separateWindage = it) }
-            if (w.separateWindage) {
-                FieldRow { m ->
-                    NumberField(
-                        stringResource(R.string.label_windage_click), w.windageClickValue, unit.label, m, optional = true,
-                        placeholder = w.clickValue,
-                    ) { w = w.copy(windageClickValue = it) }
-                    NumberField(
-                        stringResource(R.string.label_turret_correction), w.windageFactor, "", m, optional = true,
-                        placeholder = "1", onHelp = { help = true },
-                    ) { w = w.copy(windageFactor = it) }
-                }
+                ) { w = w.copy(turretFactor = it) }
             }
             ReticleChoice(stringResource(R.string.label_reticle), Reticles.byId(w.reticleId), unit.reticleUnit, { stringResource(it.family) }) {
                 w = w.copy(

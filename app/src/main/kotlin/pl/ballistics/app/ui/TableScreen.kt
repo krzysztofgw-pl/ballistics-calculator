@@ -105,8 +105,6 @@ private fun Table(
             if (details) Text(
                 listOfNotNull(
                     stringResource(R.string.table_legend, unit.label, result.weapon.clickValue),
-                    stringResource(R.string.table_legend_windage_click, result.weapon.windageClickValue.ifBlank { result.weapon.clickValue }, unit.label)
-                        .takeIf { result.weapon.separateWindage && result.windageTurret.click != result.elevationTurret.click },
                     turretCorrectionNote(result),
                 ).joinToString(" "),
                 style = MaterialTheme.typography.bodySmall,
@@ -178,17 +176,10 @@ private fun PointRow(p: TrajectoryPoint, elevation: Turret, windage: Turret) {
     }
 }
 
-/** Which turret corrections the table includes, or null when both turrets track true. */
+/** The turret correction the table includes, or null when the turrets track true. */
 @Composable
-private fun turretCorrectionNote(result: CalcResult.Ok): String? {
-    val e = result.elevationTurret.factor
-    val w = result.windageTurret.factor
-    return when {
-        e == 1.0 && w == 1.0 -> null
-        e == w -> stringResource(R.string.table_legend_factor, "%.3f".format(e))
-        else -> stringResource(R.string.table_legend_factors, "%.3f".format(e), "%.3f".format(w))
-    }
-}
+private fun turretCorrectionNote(result: CalcResult.Ok): String? =
+    result.elevationTurret.factor.takeIf { it != 1.0 }?.let { stringResource(R.string.table_legend_factor, "%.3f".format(it)) }
 
 /** R or L for a correction to the right or left; nothing within [dead] of zero, where the figure rounds to 0. */
 private fun side(right: Double, dead: Double) = when {
