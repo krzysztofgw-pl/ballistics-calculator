@@ -222,9 +222,11 @@ fun SettingsScreen(
                     name = { stringResource(it.label) },
                 ) { source -> onUi { it.copy(altitudeSource = source) } }
                 // Same order as on Conditions: pressure, altitude, then the latitude below them.
-                SwitchRow(stringResource(R.string.label_location_latitude), ui.locationSetsLatitude) { v ->
-                    onUi { it.copy(locationSetsLatitude = v) }
-                }
+                TwoOptions(
+                    stringResource(R.string.label_latitude_source),
+                    stringResource(R.string.option_location), stringResource(R.string.option_manual),
+                    ui.locationSetsLatitude,
+                ) { v -> onUi { it.copy(locationSetsLatitude = v) } }
                 TwoOptions(
                     stringResource(R.string.label_forecast_direction),
                     stringResource(R.string.option_clock), stringResource(R.string.option_true),

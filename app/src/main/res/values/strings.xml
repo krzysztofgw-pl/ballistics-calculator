@@ -452,7 +452,9 @@
     <string name="correction_dial">Dial</string>
     <string name="correction_hold">Hold</string>
     <string name="section_measurements">Measurements and location</string>
-    <string name="label_location_latitude">Location sets the latitude</string>
+    <string name="label_latitude_source">Latitude from</string>
+    <string name="option_location">Location</string>
+    <string name="option_manual">Manual</string>
     <string name="label_altitude_source">Altitude from</string>
     <string name="altitude_manual">Typed in</string>
     <string name="altitude_terrain">Terrain map</string>
@@ -494,7 +496,7 @@
     <string name="help_table_title">What is in the DOPE?</string>
     <string name="help_table">For each range: drop, elevation and clicks, wind drift and windage, velocity, energy, time of flight and Mach. Its range and step are set below it; tap the open tab or the arrow to fold the details at the top.\n\nThe cm columns say where the bullet goes: drop below the line of sight, drift with the wind. The MRAD or MOA and clicks columns are the correction to dial, with the turret correction from the rifle profile: up has no mark, ↓ means dial down (short of the zero), and R or L is the windage.</string>
     <string name="help_altitude_title">Where does the altitude come from?</string>
-    <string name="help_altitude">Settings, Measurements and location, Altitude from: the terrain map or GPS. The button under the altitude on Conditions reads it; the field can always be typed in. The same location fix also sets the latitude for Coriolis (turn off with Location sets the latitude). The terrain map gives the ground height at your location (a 1 m lidar model in Poland, a 90 m model elsewhere) and needs the internet. GPS works anywhere under open sky, also in stealth mode; the height is converted to above sea level.\n\nThe altitude matters only with QNH: with station pressure the app does not need it.</string>
+    <string name="help_altitude">Settings, Measurements and location, Altitude from: the terrain map or GPS. The button under the altitude on Conditions reads it; the field can always be typed in. The same location fix also sets the latitude for Coriolis (set Latitude from to Manual to keep it). The terrain map gives the ground height at your location (a 1 m lidar model in Poland, a 90 m model elsewhere) and needs the internet. GPS works anywhere under open sky, also in stealth mode; the height is converted to above sea level.\n\nThe altitude matters only with QNH: with station pressure the app does not need it.</string>
     <string name="help_garmin_title">How do I use a Garmin watch?</string>
     <string name="help_garmin">Install the free Station Pressure app on the watch from the Connect IQ Store and in Settings, Measurements, set Pressure measurement to Garmin; the Test button there checks the connection. The Garmin button under the pressure on Conditions reads the watch\'s barometer as station pressure.</string>
     <string name="help_forecast_title">How does the wind forecast work?</string>
