@@ -376,11 +376,13 @@ fun TargetScreen(
                     onChange = { manualRight = it },
                     modifier = Modifier.align(Alignment.CenterEnd).offset(y = TOP_BAND / 2).size(TURRET_DEPTH + 8.dp, TURRET_LENGTH),
                 )
-                // Turned by hand: a round button under the windage turret puts both back to the computed corrections.
-                if (manualUp != null || manualRight != null) {
+                // Turned by hand: a round button in the top right corner puts both back to the computed corrections
+                // (the bottom right corner holds the moving target's course).
+                val turned = manualUp != null || manualRight != null
+                if (turned) {
                     FilledTonalIconButton(
                         onClick = { manualUp = null; manualRight = null },
-                        modifier = Modifier.align(Alignment.CenterEnd).offset(y = TOP_BAND / 2 + TURRET_LENGTH / 2 + 28.dp).padding(end = 4.dp),
+                        modifier = Modifier.align(Alignment.TopEnd),
                     ) {
                         Icon(Icons.Default.Refresh, stringResource(R.string.action_reset_turrets))
                     }
@@ -390,7 +392,7 @@ fun TargetScreen(
                 }
                 if (!(correction.dialWindage && manualRight == null)) {
                     CornerLabel(
-                        stringResource(R.string.label_windage), a.windage, Color.Unspecified, Modifier.align(Alignment.TopEnd), TextAlign.End,
+                        stringResource(R.string.label_windage), a.windage, Color.Unspecified, Modifier.align(Alignment.TopEnd).padding(top = if (turned) 44.dp else 0.dp), TextAlign.End,
                         maxWidth = CORNER_WIDTH,
                     )
                 }
