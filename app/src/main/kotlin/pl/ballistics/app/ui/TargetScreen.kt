@@ -55,7 +55,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.FocusRequester
@@ -159,7 +158,6 @@ fun TargetScreen(
     val maxDistance = points.lastOrNull()?.rangeM ?: 1000.0
     // While the slider is dragged the distance lives here and is saved when the finger lifts.
     var dragged by remember { mutableStateOf<Float?>(null) }
-    var typed by remember { mutableStateOf<String?>(null) }
     val distance = dragged?.roundToInt()?.toDouble()
         ?: conditions.targetRangeM.toNumber()?.takeIf { it > 0 }
         ?: points.getOrNull(points.size / 2)?.rangeM ?: 0.0
@@ -269,19 +267,12 @@ fun TargetScreen(
     ) {
         // The typed distance and the slider share one row; the arrows step a metre either way.
         Row(verticalAlignment = Alignment.CenterVertically) {
-            // Focusing the field empties it for a fresh entry; the last distance stays as the placeholder.
             NumberField(
                 stringResource(R.string.label_target_distance),
-                dragged?.roundToInt()?.toString() ?: typed ?: distance.roundToInt().toString(),
+                distance.roundToInt().toString(),
                 "m",
-                Modifier.width(FIELD_WIDTH).onFocusChanged { f ->
-                    if (f.isFocused && typed == null) typed = "" else if (!f.isFocused) typed = null
-                },
-                optional = true,
-                replaceOnFocus = false,
-                placeholder = distance.roundToInt().toString(),
+                Modifier.width(FIELD_WIDTH),
             ) { v ->
-                typed = v
                 if ((v.toNumber() ?: 0.0) > 0) update { it.copy(targetRangeM = v) }
             }
             IconButton(onClick = { setDistance(distance - 1) }) {
@@ -365,7 +356,6 @@ fun TargetScreen(
         // A tap on the greyed field turns the moving target on and puts the cursor in it.
         val speedFocus = remember { FocusRequester() }
         var focusSpeed by remember { mutableStateOf(false) }
-        var speedTyped by remember { mutableStateOf<String?>(null) }
         LaunchedEffect(conditions.targetMoving, focusSpeed) {
             if (conditions.targetMoving && focusSpeed) {
                 speedFocus.requestFocus()
@@ -375,19 +365,13 @@ fun TargetScreen(
         Box {
             NumberField(
                 // Off, it reads 0 m/s; the typed speed is kept for when the moving target is turned back on.
-                // As with the distance, focusing empties it for a fresh entry, the last speed staying as the placeholder.
                 stringResource(R.string.label_target_speed),
-                if (conditions.targetMoving) speedTyped ?: conditions.targetSpeedMps else "0",
+                if (conditions.targetMoving) conditions.targetSpeedMps else "0",
                 "m/s",
-                Modifier.width(FIELD_WIDTH).focusRequester(speedFocus).onFocusChanged { f ->
-                    if (f.isFocused && speedTyped == null) speedTyped = "" else if (!f.isFocused) speedTyped = null
-                },
+                Modifier.width(FIELD_WIDTH).focusRequester(speedFocus),
                 optional = true,
-                replaceOnFocus = false,
-                placeholder = conditions.targetSpeedMps,
                 enabled = conditions.targetMoving,
             ) { v ->
-                speedTyped = v
                 if (v.toNumber() != null) update { it.copy(targetSpeedMps = v) }
             }
             if (!conditions.targetMoving) {

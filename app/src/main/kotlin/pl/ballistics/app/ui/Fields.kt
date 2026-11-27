@@ -89,33 +89,24 @@ fun NumberField(
     onHelp: (() -> Unit)? = null,
     /** False greys the field out and leaves it in place, so the layout does not move. */
     enabled: Boolean = true,
-    /** Focusing empties the field so typing replaces the value; see [LocalReplaceOnFocus]. */
-    replaceOnFocus: Boolean = LocalReplaceOnFocus.current,
     onChange: (String) -> Unit,
 ) {
     // While focused, what is typed lives here; the stored value stays as the placeholder and in effect
     // until a number is typed (or, in an optional field, until it is typed over and cleared).
+    val replaceOnFocus = LocalReplaceOnFocus.current
     var typed by remember { mutableStateOf<String?>(null) }
-    val shown = if (replaceOnFocus) typed ?: value else value
+    val shown = typed ?: value
+    val hint = if (typed != null) value.ifBlank { null } ?: placeholder else placeholder
     OutlinedTextField(
         value = shown,
         onValueChange = { v ->
-            if (!replaceOnFocus) {
-                onChange(v)
-            } else {
-                typed = v
-                if (v.toNumber() != null || (optional && v.isBlank())) onChange(v)
-            }
+            if (replaceOnFocus) typed = v
+            if (!replaceOnFocus || v.toNumber() != null || (optional && v.isBlank())) onChange(v)
         },
         enabled = enabled,
         label = { Text(label) },
-        // The slot is always given when replacing: Material3 does not show a placeholder that only
-        // appears after the field gains focus.
-        placeholder = if (replaceOnFocus) {
-            { (if (typed != null) value.takeIf { it.isNotBlank() } ?: placeholder else placeholder)?.let { Text(it) } }
-        } else {
-            placeholder?.let { { Text(it) } }
-        },
+        // The slot is always given: Material3 does not show a placeholder that only appears once the field is focused.
+        placeholder = { hint?.let { Text(it) } },
         suffix = { if (onUnitClick == null) Text(unit) },
         trailingIcon = if (onHelp != null) {
             {
@@ -136,12 +127,11 @@ fun NumberField(
             }
         },
         singleLine = true,
-        isError = enabled && !(optional && shown.isBlank()) && !(replaceOnFocus && typed == "") && shown.toNumber() == null,
+        isError = enabled && !(shown.isBlank() && (optional || typed != null)) && shown.toNumber() == null,
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Next),
         keyboardActions = nextFieldActions(),
         modifier = modifier.fillMaxWidth().onFocusChanged { f ->
-            if (!replaceOnFocus) return@onFocusChanged
-            if (f.isFocused && typed == null) typed = "" else if (!f.isFocused) typed = null
+            if (replaceOnFocus) typed = if (f.isFocused) typed ?: "" else null
         },
     )
 }
