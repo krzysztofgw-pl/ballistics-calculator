@@ -11,6 +11,10 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
+import androidx.compose.material3.Switch
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -156,8 +160,30 @@ fun SettingsScreen(
             Section(stringResource(R.string.section_layout)) {
                 Placement(stringResource(R.string.label_tabs), ui.tabsAtTop) { v -> onUi { it.copy(tabsAtTop = v) } }
                 Placement(stringResource(R.string.label_sub_tabs), ui.subTabsAtTop) { v -> onUi { it.copy(subTabsAtTop = v) } }
-                SwitchRow(stringResource(R.string.label_show_charts), ui.showCharts) { v -> onUi { it.copy(showCharts = v) } }
-                if (ui.showCharts) {
+                // The switch turns all charts on or off; the arrow opens the list of single charts.
+                var chartsOpen by rememberSaveable { mutableStateOf(false) }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Row(
+                        Modifier.weight(1f).clickable(enabled = ui.showCharts) { chartsOpen = !chartsOpen },
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(stringResource(R.string.label_show_charts), Modifier.weight(1f))
+                        if (ui.showCharts) {
+                            Text(
+                                "${ChartKind.entries.count { it !in ui.hiddenCharts }}/${ChartKind.entries.size}",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                            Icon(
+                                if (chartsOpen) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
+                                stringResource(if (chartsOpen) R.string.action_collapse else R.string.action_expand),
+                            )
+                        }
+                    }
+                    Spacer(Modifier.width(8.dp))
+                    Switch(checked = ui.showCharts, onCheckedChange = { v -> onUi { it.copy(showCharts = v) } })
+                }
+                if (ui.showCharts && chartsOpen) {
                     Column(Modifier.padding(start = 16.dp)) {
                         ChartKind.entries.forEach { kind ->
                             SwitchRow(stringResource(kind.label), kind !in ui.hiddenCharts) { on ->
