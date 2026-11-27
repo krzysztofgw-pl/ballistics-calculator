@@ -111,6 +111,7 @@ import kotlin.math.atan2
 import kotlin.math.pow
 import kotlin.math.sign
 import kotlin.math.roundToInt
+import kotlin.math.sqrt
 
 /** The shot at [distance]; [point] is null when the bullet does not get there. */
 private data class Solved(val distance: Double, val point: TrajectoryPoint?, val lead: Lead?, val analysis: TargetAnalysis?)
@@ -187,7 +188,7 @@ fun TargetScreen(
         chartsToM = maxDistance,
     )
     // The distance is solved on its own first; the sweeps for the charts and tools follow once it settles,
-    // and until then the previous ones for the same distance stay on screen.
+    // and until then the previous ones stay on screen.
     val solved by produceState<Solved?>(null, result, distance, targetSpeed, targetDirection, inputs) {
         val (point, lead) = withContext(Dispatchers.Default) {
             runCatching {
@@ -195,7 +196,8 @@ fun TargetScreen(
                 p to targetSpeed?.let { result.setup.lead(distance, solution.zeroElevationRad, it, targetDirection) }
             }.getOrDefault(null to null)
         }
-        value = Solved(distance, point, lead, value?.takeIf { it.distance == distance }?.analysis)
+        // The previous sweeps stay until the new ones are ready, so the cards below keep their height.
+        value = Solved(distance, point, lead, value?.analysis)
         if (point != null) {
             delay(300)
             value = Solved(distance, point, lead, withContext(Dispatchers.Default) {
@@ -203,9 +205,10 @@ fun TargetScreen(
             })
         }
     }
-    // While dragging, the last solved distance stays on screen until the next one is ready.
-    val current = solved?.takeIf { it.distance == distance || dragged != null }
-    val analysis = current?.analysis?.takeIf { current.distance == distance }
+    // The last solved distance stays on screen until the next one is ready (dragging, arrows or typing), so the
+    // turrets, hold lines and cards never vanish for a moment and the screen never jumps.
+    val current = solved
+    val analysis = current?.analysis
     val outOfReach = current != null && current.point == null
     val selected = points.find { abs(it.rangeM - distance) < 1e-6 } ?: current?.point
 
@@ -353,7 +356,7 @@ fun TargetScreen(
         }
 
         val leadText = advice?.moving?.takeIf { conditions.targetMoving }
-            ?.let { stringResource(R.string.label_axis_advice, stringResource(R.string.label_moving), it) }
+            ?.let { stringResource(R.string.label_block_advice, stringResource(R.string.label_moving), it) }
         BoxWithConstraints(Modifier.fillMaxWidth()) {
         val outerWidth = maxWidth
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -361,6 +364,7 @@ fun TargetScreen(
         // A tap on the greyed field turns the moving target on and puts the cursor in it.
         val speedFocus = remember { FocusRequester() }
         var focusSpeed by remember { mutableStateOf(false) }
+        var speedTyped by remember { mutableStateOf<String?>(null) }
         LaunchedEffect(conditions.targetMoving, focusSpeed) {
             if (conditions.targetMoving && focusSpeed) {
                 speedFocus.requestFocus()
@@ -370,11 +374,19 @@ fun TargetScreen(
         Box {
             NumberField(
                 // Off, it reads 0 m/s; the typed speed is kept for when the moving target is turned back on.
-                stringResource(R.string.label_target_speed), if (conditions.targetMoving) conditions.targetSpeedMps else "0", "m/s",
-                Modifier.width(FIELD_WIDTH).focusRequester(speedFocus),
+                // As with the distance, focusing empties it for a fresh entry, the last speed staying as the placeholder.
+                stringResource(R.string.label_target_speed),
+                if (conditions.targetMoving) speedTyped ?: conditions.targetSpeedMps else "0",
+                "m/s",
+                Modifier.width(FIELD_WIDTH).focusRequester(speedFocus).onFocusChanged { f ->
+                    if (f.isFocused && speedTyped == null) speedTyped = "" else if (!f.isFocused) speedTyped = null
+                },
+                optional = true,
+                placeholder = conditions.targetSpeedMps,
                 enabled = conditions.targetMoving,
             ) { v ->
-                update { it.copy(targetSpeedMps = v) }
+                speedTyped = v
+                if (v.toNumber() != null) update { it.copy(targetSpeedMps = v) }
             }
             if (!conditions.targetMoving) {
                 Box(
@@ -656,10 +668,33 @@ private fun DrawScope.windFlag(f: WindFlag, top: Offset, measurer: TextMeasurer)
     val big = measurer.measure(f.label, TextStyle(fontSize = 11.sp, fontWeight = FontWeight.Bold, color = FLAG_GREEN))
     val x = if (side < 0) top.x + 5.dp.toPx() else top.x - 5.dp.toPx() - big.size.width
     drawText(big, topLeft = Offset(x, top.y + h))
+    var below = top.y + h + big.size.height
     f.range?.let { r ->
         val small = measurer.measure(r, TextStyle(fontSize = 10.sp, color = FLAG_GREEN))
         val x2 = if (side < 0) top.x + 5.dp.toPx() else top.x - 5.dp.toPx() - small.size.width
-        drawText(small, topLeft = Offset(x2, top.y + h + big.size.height))
+        drawText(small, topLeft = Offset(x2, below))
+        below += small.size.height
+    }
+    // Seen from above: a small dial with the shooter at the bottom (up is downrange) and an arrow where the wind blows,
+    // so a quartering, head or tail wind reads at a glance.
+    if (f.speedMps >= 0.3) {
+        val r = 11.dp.toPx()
+        val cx = if (side < 0) top.x + 5.dp.toPx() + r else top.x - 5.dp.toPx() - r
+        val c = Offset(cx, below + 4.dp.toPx() + r)
+        drawCircle(FLAG_GREEN, r, c, style = Stroke(1.2.dp.toPx()))
+        val shooter = Path().apply {
+            moveTo(c.x - 3.dp.toPx(), c.y + r); lineTo(c.x + 3.dp.toPx(), c.y + r); lineTo(c.x, c.y + r - 5.dp.toPx()); close()
+        }
+        drawPath(shooter, Color(0xFF37474F))
+        val to = f.fromRad + Math.PI
+        val b = Offset(sin(to).toFloat(), -cos(to).toFloat()) * (r * 0.8f)
+        val start = c - b
+        val end = c + b
+        drawLine(FLAG_GREEN, start, end, 2.dp.toPx())
+        val ang = atan2(end.y - start.y, end.x - start.x)
+        for (da in listOf(2.6, -2.6)) {
+            drawLine(FLAG_GREEN, end, end + Offset(cos(ang + da).toFloat(), sin(ang + da).toFloat()) * 5.dp.toPx(), 2.dp.toPx())
+        }
     }
 }
 
@@ -752,23 +787,41 @@ private fun ReticleView(
                 val p = at(h.x, h.y)
                 drawCircle(moving, 5.dp.toPx(), p)
                 drawCircle(moving, 9.dp.toPx(), p, style = Stroke(1.5.dp.toPx()))
-                // Its hold floats beside it on a faint plate, kept inside the lens's square.
+                // Its hold floats beside it on a faint plate, in the free corner around the dot: of the four
+                // (above or below, left or right), inside the lens, the one covering fewest trajectory dots and
+                // figures and crossing fewest reticle lines.
                 leadText?.let { t ->
                     val layout = text.measure(t, TextStyle(fontSize = 11.sp, color = Color(0xFF1565C0)))
                     val pad = 4.dp.toPx()
                     val w = layout.size.width + 2 * pad
                     val hgt = layout.size.height + 2 * pad
                     val gap = 12.dp.toPx()
-                    var x = p.x + gap
-                    if (x + w > size.width) x = p.x - gap - w
-                    val y = (p.y + gap).coerceAtMost(size.height - hgt)
+                    val figure = 26.dp.toPx()
+                    val dots = holds.map { at(it.x, it.y) }
+                    fun halfChord(y: Float) = sqrt(maxOf(0f, radius * radius - (y - c.y) * (y - c.y)))
+                    val best = listOf(true, false).flatMap { right -> listOf(true, false).map { above -> right to above } }
+                        .map { (right, above) ->
+                            val y = if (above) p.y - gap - hgt else p.y + gap
+                            // Shifted toward the middle as far as needed to stay inside the round lens.
+                            val inner = minOf(halfChord(y), halfChord(y + hgt)) - 4.dp.toPx()
+                            val x = (if (right) p.x + gap else p.x - gap - w).coerceIn(c.x - inner, maxOf(c.x - inner, c.x + inner - w))
+                            val covered = dots.count { d ->
+                                d.x > x - figure && d.x < x + w + figure && d.y > y - 4.dp.toPx() && d.y < y + hgt + 4.dp.toPx()
+                            }
+                            val lines = (if (c.x > x && c.x < x + w) 1 else 0) + (if (c.y > y && c.y < y + hgt) 1 else 0)
+                            val outside = if (w > 2 * inner) 1 else 0
+                            Triple(Offset(x, y), covered * 10 + lines * 3 + outside * 100, right)
+                        }
+                        .minBy { it.second }
+                    val x = best.first.x
+                    val y = best.first.y
                     drawRoundRect(Color.White.copy(alpha = 0.6f), Offset(x, y), Size(w, hgt), CornerRadius(4.dp.toPx()))
                     drawText(layout, topLeft = Offset(x + pad, y + pad))
                 }
             }
         }
         // Upper left of the lens: clear of the corner texts, the moving-target hold in the bottom left and most reticle marks.
-        clipPath(lens) { windFlag(flag, c + Offset(-radius * 0.70f, -radius * 0.42f), text) }
+        clipPath(lens) { windFlag(flag, c + Offset(-radius * 0.70f, -radius * 0.56f), text) }
         drawCircle(Color(0xFF263238), radius, c, style = Stroke(4.dp.toPx()))
     }
 }
