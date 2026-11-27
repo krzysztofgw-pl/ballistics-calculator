@@ -356,7 +356,7 @@ fun TargetScreen(
         }
 
         val leadText = advice?.moving?.takeIf { conditions.targetMoving }
-            ?.let { stringResource(R.string.label_axis_advice, stringResource(R.string.label_moving), it) }
+            ?.let { stringResource(R.string.label_block_advice, stringResource(R.string.label_moving), it) }
         BoxWithConstraints(Modifier.fillMaxWidth()) {
         val outerWidth = maxWidth
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
