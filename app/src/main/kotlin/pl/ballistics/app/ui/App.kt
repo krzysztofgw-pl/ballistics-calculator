@@ -25,6 +25,7 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -118,28 +119,32 @@ fun App(vm: MainViewModel = viewModel()) {
     when (val e = editor) {
         is Editor.Weapon -> {
             BackHandler { closeEditor() }
-            WeaponEditor(
-                initial = e.profile,
-                ammo = data.ammo,
-                isNew = data.weapons.none { it.id == e.profile.id },
-                onSave = { vm.saveWeapon(it); closeEditor() },
-                onDelete = { vm.deleteWeapon(e.profile.id); closeEditor() },
-                onClose = { closeEditor() },
-            )
+            CompositionLocalProvider(LocalReplaceOnFocus provides false) {
+                WeaponEditor(
+                    initial = e.profile,
+                    ammo = data.ammo,
+                    isNew = data.weapons.none { it.id == e.profile.id },
+                    onSave = { vm.saveWeapon(it); closeEditor() },
+                    onDelete = { vm.deleteWeapon(e.profile.id); closeEditor() },
+                    onClose = { closeEditor() },
+                )
+            }
             return
         }
         is Editor.Ammo -> {
             BackHandler { closeEditor() }
-            AmmoEditor(
-                initial = e.profile,
-                weapons = data.weapons,
-                isNew = data.ammo.none { it.id == e.profile.id },
-                onSave = { vm.saveAmmo(it); closeEditor() },
-                onDelete = { vm.deleteAmmo(e.profile.id); closeEditor() },
-                onClose = { closeEditor() },
-                signedIn = sync is SyncState.SignedIn,
-                onSuggest = vm::suggestBullet,
-            )
+            CompositionLocalProvider(LocalReplaceOnFocus provides false) {
+                AmmoEditor(
+                    initial = e.profile,
+                    weapons = data.weapons,
+                    isNew = data.ammo.none { it.id == e.profile.id },
+                    onSave = { vm.saveAmmo(it); closeEditor() },
+                    onDelete = { vm.deleteAmmo(e.profile.id); closeEditor() },
+                    onClose = { closeEditor() },
+                    signedIn = sync is SyncState.SignedIn,
+                    onSuggest = vm::suggestBullet,
+                )
+            }
             return
         }
         Editor.Profiles -> {

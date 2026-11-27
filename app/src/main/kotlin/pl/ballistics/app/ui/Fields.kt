@@ -28,12 +28,14 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
@@ -87,14 +89,28 @@ fun NumberField(
     onHelp: (() -> Unit)? = null,
     /** False greys the field out and leaves it in place, so the layout does not move. */
     enabled: Boolean = true,
+    /** Focusing empties the field so typing replaces the value; see [LocalReplaceOnFocus]. */
+    replaceOnFocus: Boolean = LocalReplaceOnFocus.current,
     onChange: (String) -> Unit,
 ) {
+    // While focused, what is typed lives here; the stored value stays as the placeholder and in effect
+    // until a number is typed (or, in an optional field, until it is typed over and cleared).
+    var typed by remember { mutableStateOf<String?>(null) }
+    val shown = if (replaceOnFocus) typed ?: value else value
     OutlinedTextField(
-        value = value,
-        onValueChange = onChange,
+        value = shown,
+        onValueChange = { v ->
+            if (!replaceOnFocus) {
+                onChange(v)
+            } else {
+                typed = v
+                if (v.toNumber() != null || (optional && v.isBlank())) onChange(v)
+            }
+        },
         enabled = enabled,
         label = { Text(label) },
-        placeholder = placeholder?.let { { Text(it) } },
+        placeholder = (if (replaceOnFocus && typed != null) value.takeIf { it.isNotBlank() } ?: placeholder else placeholder)
+            ?.let { { Text(it) } },
         suffix = { if (onUnitClick == null) Text(unit) },
         trailingIcon = if (onHelp != null) {
             {
@@ -115,12 +131,21 @@ fun NumberField(
             }
         },
         singleLine = true,
-        isError = enabled && !(optional && value.isBlank()) && value.toNumber() == null,
+        isError = enabled && !(optional && shown.isBlank()) && !(replaceOnFocus && typed == "") && shown.toNumber() == null,
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Next),
         keyboardActions = nextFieldActions(),
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth().onFocusChanged { f ->
+            if (!replaceOnFocus) return@onFocusChanged
+            if (f.isFocused && typed == null) typed = "" else if (!f.isFocused) typed = null
+        },
     )
 }
+
+/**
+ * Whether number fields empty on focus so typing replaces the value. On everywhere but the
+ * profile editors, where a value is usually adjusted rather than retyped.
+ */
+val LocalReplaceOnFocus = staticCompositionLocalOf { true }
 
 /**
  * Enter goes to the next field, so a form fills in without tapping each box; after the last
