@@ -332,7 +332,8 @@ fun TargetScreen(
         Box(Modifier.fillMaxWidth().aspectRatio(1f)) {
             ReticleView(
                 reticle, holds, selected, leadHold, gusts, field,
-                Modifier.fillMaxSize().pointerInput(weapon.id) {
+                // The lens keeps clear of the turrets: they stand above it and to its right, as on the scope.
+                Modifier.fillMaxSize().padding(top = TOP_BAND, end = SIDE_BAND).pointerInput(weapon.id) {
                     // Two-finger pinch only, so a one-finger drag still scrolls the screen.
                     awaitEachGesture {
                         awaitFirstDown(requireUnconsumed = false)
@@ -361,7 +362,7 @@ fun TargetScreen(
                     negativeLetter = stringResource(R.string.down_short) + " →",
                     description = stringResource(R.string.turret_elevation, a.elevation),
                     onChange = { manualUp = it },
-                    modifier = Modifier.align(Alignment.TopCenter).size(TURRET_LENGTH, TURRET_DEPTH),
+                    modifier = Modifier.align(Alignment.TopCenter).offset(x = -SIDE_BAND / 2).size(TURRET_LENGTH, TURRET_DEPTH),
                 )
                 val side = stringResource(if (setRight >= 0) R.string.right_short else R.string.left_short)
                 TurretView(
@@ -373,13 +374,13 @@ fun TargetScreen(
                     negativeLetter = stringResource(R.string.left_short) + " ↓",
                     description = stringResource(R.string.turret_windage, a.windage),
                     onChange = { manualRight = it },
-                    modifier = Modifier.align(Alignment.CenterEnd).size(TURRET_DEPTH + 8.dp, TURRET_LENGTH),
+                    modifier = Modifier.align(Alignment.CenterEnd).offset(y = TOP_BAND / 2).size(TURRET_DEPTH + 8.dp, TURRET_LENGTH),
                 )
                 // Turned by hand: a round button under the windage turret puts both back to the computed corrections.
                 if (manualUp != null || manualRight != null) {
                     FilledTonalIconButton(
                         onClick = { manualUp = null; manualRight = null },
-                        modifier = Modifier.align(Alignment.CenterEnd).offset(y = TURRET_LENGTH / 2 + 28.dp).padding(end = 4.dp),
+                        modifier = Modifier.align(Alignment.CenterEnd).offset(y = TOP_BAND / 2 + TURRET_LENGTH / 2 + 28.dp).padding(end = 4.dp),
                     ) {
                         Icon(Icons.Default.Refresh, stringResource(R.string.action_reset_turrets))
                     }
@@ -505,6 +506,10 @@ private fun Double.dialFmt(click: Double?): String {
 
 private val TURRET_LENGTH = 136.dp
 private val TURRET_DEPTH = 44.dp
+/** Strips of the reticle box kept for the turrets, so they never cover the lens. */
+private val TOP_BAND = TURRET_DEPTH + 4.dp
+private val SIDE_BAND = TURRET_DEPTH + 12.dp
+
 /** Room for a corner text beside the top turret. */
 private val CORNER_WIDTH = 96.dp
 
