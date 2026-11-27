@@ -57,16 +57,9 @@ object TableScreen {
         }
     }
 
-    /** The windage click and turret corrections, when they change the table. */
-    private fun turretNote(result: CalcResult.Ok): String {
-        val w = result.weapon
-        val e = result.elevationTurret
-        val x = result.windageTurret
-        return listOfNotNull(
-            S.windageClickLegend(w.windageClickValue.ifBlank { w.clickValue }, result.unit.label).takeIf { x.click != e.click },
-            S.factorLegend(fmt(e.factor, 3), fmt(x.factor, 3)).takeIf { e.factor != 1.0 || x.factor != 1.0 },
-        ).joinToString("") { " $it" }
-    }
+    /** The turret correction, when it changes the table. */
+    private fun turretNote(result: CalcResult.Ok): String =
+        result.elevationTurret.factor.takeIf { it != 1.0 }?.let { " " + S.factorLegend(fmt(it, 3)) }.orEmpty()
 
     private fun cells(p: TrajectoryPoint, elevation: Turret, windage: Turret): List<String> {
         // The cm columns are where the bullet goes: drop below the line of sight (negative only above it,

@@ -64,16 +64,9 @@ data class WeaponProfile(
     val angularUnit: AngularUnit = AngularUnit.MRAD,
     /** With [angularUnit] MOA: the turrets are in shooter's MOA (1 in at 100 yd). */
     val inchMoa: Boolean = false,
-    /** The elevation click, and the windage one unless [separateWindage]. */
     val clickValue: String = "0.1",
-    /** Turret correction: what the elevation turret really moves per marked unit, measured ÷ dialled; blank is 1. */
-    val elevationFactor: String = "",
-    /** The windage turret has its own click value and correction. */
-    val separateWindage: Boolean = false,
-    /** Blank uses [clickValue]. */
-    val windageClickValue: String = "",
-    /** Like [elevationFactor], for the windage turret; blank is 1. */
-    val windageFactor: String = "",
+    /** Turret correction: what the turrets really move per marked unit, measured ÷ dialled; blank is 1. */
+    val turretFactor: String = "",
     val sightHeightCm: String = "4.5",
     val reticleId: String = "mrad-hash",
     /** The finest step of the scope's reticle scale, in the reticle's unit; blank uses the reticle's own. */
@@ -133,14 +126,10 @@ data class WeaponProfile(
     fun withTurretUnit(unit: TurretUnit): WeaponProfile = copy(angularUnit = unit.reticleUnit, inchMoa = unit == TurretUnit.SMOA)
 
     val elevationTurret: Turret
-        get() = Turret(turretUnit.radians, clickValue.toNumber()?.takeIf { it > 0 }, factor(elevationFactor))
+        get() = Turret(turretUnit.radians, clickValue.toNumber()?.takeIf { it > 0 }, factor(turretFactor))
 
-    val windageTurret: Turret
-        get() = if (!separateWindage) elevationTurret else Turret(
-            turretUnit.radians,
-            (windageClickValue.toNumber() ?: clickValue.toNumber())?.takeIf { it > 0 },
-            factor(windageFactor),
-        )
+    /** The same click and correction as elevation: a different windage turret is too rare to ask about. */
+    val windageTurret: Turret get() = elevationTurret
 
     fun measuredVelocity(ammo: AmmoProfile): String? = muzzleVelocities[ammo.id]?.takeIf { it.isNotBlank() }
 
