@@ -375,8 +375,7 @@
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>
     <string name="title_settings">Settings</string>
-    <string name="section_appearance">Appearance</string>
-    <string name="section_layout">Layout</string>
+    <string name="section_display">Display</string>
     <string name="label_keep_screen_on">Keep the screen on</string>
     <string name="label_tabs">Tabs</string>
     <string name="label_sub_tabs">Sub-tabs</string>
@@ -451,10 +450,8 @@
     <string name="label_windage">Windage</string>
     <string name="correction_dial">Dial</string>
     <string name="correction_hold">Hold</string>
-    <string name="section_measurements">Measurements and location</string>
-    <string name="label_latitude_source">Latitude from</string>
-    <string name="option_location">Location</string>
-    <string name="option_manual">Manual</string>
+    <string name="section_measurements">Data sources</string>
+    <string name="label_latitude_from_location">Latitude from location</string>
     <string name="label_altitude_source">Altitude from</string>
     <string name="altitude_manual">Typed in</string>
     <string name="altitude_terrain">Terrain map</string>
@@ -496,9 +493,9 @@
     <string name="help_table_title">What is in the DOPE?</string>
     <string name="help_table">For each range: drop, elevation and clicks, wind drift and windage, velocity, energy, time of flight and Mach. Its range and step are set below it; tap the open tab or the arrow to fold the details at the top.\n\nThe cm columns say where the bullet goes: drop below the line of sight, drift with the wind. The MRAD or MOA and clicks columns are the correction to dial, with the turret correction from the rifle profile: up has no mark, ↓ means dial down (short of the zero), and R or L is the windage.</string>
     <string name="help_altitude_title">Where does the altitude come from?</string>
-    <string name="help_altitude">Settings, Measurements and location, Altitude from: the terrain map or GPS. The button under the altitude on Conditions reads it; the field can always be typed in. The same location fix also sets the latitude for Coriolis (set Latitude from to Manual to keep it). The terrain map gives the ground height at your location (a 1 m lidar model in Poland, a 90 m model elsewhere) and needs the internet. GPS works anywhere under open sky, also in stealth mode; the height is converted to above sea level.\n\nThe altitude matters only with QNH: with station pressure the app does not need it.</string>
+    <string name="help_altitude">Settings, Data sources, Altitude from: the terrain map or GPS. The button under the altitude on Conditions reads it; the field can always be typed in. The same location fix also sets the latitude for Coriolis (untick Latitude from location to keep it). The terrain map gives the ground height at your location (a 1 m lidar model in Poland, a 90 m model elsewhere) and needs the internet. GPS works anywhere under open sky, also in stealth mode; the height is converted to above sea level.\n\nThe altitude matters only with QNH: with station pressure the app does not need it.</string>
     <string name="help_garmin_title">How do I use a Garmin watch?</string>
-    <string name="help_garmin">Install the free Station Pressure app on the watch from the Connect IQ Store and in Settings, Measurements, set Pressure measurement to Garmin; the Test button there checks the connection. The Garmin button under the pressure on Conditions reads the watch\'s barometer as station pressure.</string>
+    <string name="help_garmin">Install the free Station Pressure app on the watch from the Connect IQ Store and in Settings, Data sources, set Pressure measurement to Garmin; the Test button there checks the connection. The Garmin button under the pressure on Conditions reads the watch\'s barometer as station pressure.</string>
     <string name="help_forecast_title">How does the wind forecast work?</string>
     <string name="help_forecast">Forecast under the wind dial gets the wind for your location from Open-Meteo. Pick the hours you will shoot on the chart and the shooting height, then Use fills in the wind, and the atmosphere too if you leave that on. The ? in the forecast window explains the chart.</string>
     <string name="help_chrono_title">How do I import chronograph data?</string>
@@ -506,7 +503,7 @@
     <string name="help_tools_title">What are the tools on the Target tab?</string>
     <string name="help_tools">Under the reticle, each card is a tool for the chosen distance:\n\nWind bracket: the holds for the lightest and strongest wind you expect, drawn on a slice of your reticle, and the spread between them.\n\nRange error: where the bullet lands if the distance is off by a few metres, and the window of distances that still hits a target of your size.\n\nTemperature: how the velocity and elevation change if the powder is warmer or colder.\n\nHit probability: the chance of a first-round hit from your group size, velocity SD, and how well you know the wind and the distance.\n\nRanging with the reticle: the distance from the target\'s size and how many MRAD or MOA it reads.\n\nBC from range data: the BC that matches a measured drop or downrange velocity, saved to the load or as a copy.</string>
     <string name="help_charts_title">How do I read the charts?</string>
-    <string name="help_charts">The charts show how a correction changes with distance, wind or azimuth, with the current value marked. Drag a finger along a chart to read any point; the reading stays when you lift it. On the charts by distance, hold the finger still to make that the target distance. A tap clears the reading.\n\nEach chart can be turned off in Settings, Layout, Charts; a chart that is off is not worked out either.</string>
+    <string name="help_charts">The charts show how a correction changes with distance, wind or azimuth, with the current value marked. Drag a finger along a chart to read any point; the reading stays when you lift it. On the charts by distance, hold the finger still to make that the target distance. A tap clears the reading.\n\nEach chart can be turned off in Settings, Display, Charts; a chart that is off is not worked out either.</string>
     <string name="help_sync_title">How are my profiles kept?</string>
     <string name="help_sync">Sign in with Google in Settings to sync between phones. Export writes all profiles to a file you can import again, here or in the web version.</string>
     <string name="help_update_title">How do I update the app?</string>

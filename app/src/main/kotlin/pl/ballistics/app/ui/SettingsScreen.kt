@@ -11,6 +11,7 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Switch
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.material.icons.filled.KeyboardArrowUp
@@ -140,11 +141,53 @@ fun SettingsScreen(
                 Text(stringResource(R.string.action_profiles))
             }
 
+            Section(stringResource(R.string.section_ballistic_model)) {
+                SwitchRow(stringResource(R.string.label_spin_drift), conditions.spinDrift) { v -> onConditions { it.copy(spinDrift = v) } }
+                SwitchRow(stringResource(R.string.label_aero_jump), conditions.aerodynamicJump) { v -> onConditions { it.copy(aerodynamicJump = v) } }
+                SwitchRow(stringResource(R.string.label_coriolis), conditions.coriolis) { v -> onConditions { it.copy(coriolis = v) } }
+            }
+
+            Section(stringResource(R.string.section_measurements)) {
+                TwoOptions(
+                    stringResource(R.string.label_pressure),
+                    stringResource(R.string.option_qnh), stringResource(R.string.option_station),
+                    pressureIsQnh, onPressureIsQnh,
+                )
+                // Pressure source with a Test button that reads it without touching the conditions.
+                val sources = PressureSource.entries.filter { it != PressureSource.PHONE || hasBarometer || ui.pressureFrom == it }
+                Choice(
+                    stringResource(R.string.label_pressure_source), ui.pressureFrom, sources,
+                    name = { stringResource(it.label) },
+                ) { source -> onUi { it.withPressureFrom(source) } }
+                when (ui.pressureFrom) {
+                    PressureSource.GARMIN -> WatchPressureButton({ }, Modifier.fillMaxWidth(), stringResource(R.string.action_test_pressure))
+                    PressureSource.PHONE -> PhonePressureButton({ }, Modifier.fillMaxWidth(), stringResource(R.string.action_test_pressure))
+                    PressureSource.NONE -> Unit
+                }
+                Choice(
+                    stringResource(R.string.label_altitude_source), ui.altitudeFrom, AltitudeSource.entries - AltitudeSource.MANUAL,
+                    name = { stringResource(it.label) },
+                ) { source -> onUi { it.copy(altitudeSource = source) } }
+                // Same order as on Conditions: pressure, altitude, then the latitude below them.
+                Row(
+                    Modifier.fillMaxWidth().clickable { onUi { it.copy(locationSetsLatitude = !it.locationSetsLatitude) } },
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(stringResource(R.string.label_latitude_from_location), Modifier.weight(1f))
+                    Checkbox(checked = ui.locationSetsLatitude, onCheckedChange = { v -> onUi { it.copy(locationSetsLatitude = v) } })
+                }
+                TwoOptions(
+                    stringResource(R.string.label_forecast_direction),
+                    stringResource(R.string.option_clock), stringResource(R.string.option_true),
+                    !ui.forecastTrueBearing,
+                ) { clock -> onUi { it.copy(forecastTrueBearing = !clock) } }
+            }
+
             Section(stringResource(R.string.stealth_title), ImageVector.vectorResource(R.drawable.ic_stealth)) {
                 StealthSettings(ui.garminWatch, onOpenStealth)
             }
 
-            Section(stringResource(R.string.section_appearance)) {
+            Section(stringResource(R.string.section_display)) {
                 ThemeMode.entries.forEach { mode ->
                     Row(
                         Modifier.fillMaxWidth().clickable { onUi { it.copy(theme = mode) } },
@@ -155,9 +198,6 @@ fun SettingsScreen(
                     }
                 }
                 SwitchRow(stringResource(R.string.label_keep_screen_on), ui.keepScreenOn) { v -> onUi { it.copy(keepScreenOn = v) } }
-            }
-
-            Section(stringResource(R.string.section_layout)) {
                 Placement(stringResource(R.string.label_tabs), ui.tabsAtTop) { v -> onUi { it.copy(tabsAtTop = v) } }
                 Placement(stringResource(R.string.label_sub_tabs), ui.subTabsAtTop) { v -> onUi { it.copy(subTabsAtTop = v) } }
                 // The switch turns all charts on or off; the arrow opens the list of single charts.
@@ -192,46 +232,6 @@ fun SettingsScreen(
                         }
                     }
                 }
-            }
-
-            Section(stringResource(R.string.section_ballistic_model)) {
-                SwitchRow(stringResource(R.string.label_spin_drift), conditions.spinDrift) { v -> onConditions { it.copy(spinDrift = v) } }
-                SwitchRow(stringResource(R.string.label_aero_jump), conditions.aerodynamicJump) { v -> onConditions { it.copy(aerodynamicJump = v) } }
-                SwitchRow(stringResource(R.string.label_coriolis), conditions.coriolis) { v -> onConditions { it.copy(coriolis = v) } }
-            }
-
-            Section(stringResource(R.string.section_measurements)) {
-                TwoOptions(
-                    stringResource(R.string.label_pressure),
-                    stringResource(R.string.option_qnh), stringResource(R.string.option_station),
-                    pressureIsQnh, onPressureIsQnh,
-                )
-                // Pressure source with a Test button that reads it without touching the conditions.
-                val sources = PressureSource.entries.filter { it != PressureSource.PHONE || hasBarometer || ui.pressureFrom == it }
-                Choice(
-                    stringResource(R.string.label_pressure_source), ui.pressureFrom, sources,
-                    name = { stringResource(it.label) },
-                ) { source -> onUi { it.withPressureFrom(source) } }
-                when (ui.pressureFrom) {
-                    PressureSource.GARMIN -> WatchPressureButton({ }, Modifier.fillMaxWidth(), stringResource(R.string.action_test_pressure))
-                    PressureSource.PHONE -> PhonePressureButton({ }, Modifier.fillMaxWidth(), stringResource(R.string.action_test_pressure))
-                    PressureSource.NONE -> Unit
-                }
-                Choice(
-                    stringResource(R.string.label_altitude_source), ui.altitudeFrom, AltitudeSource.entries - AltitudeSource.MANUAL,
-                    name = { stringResource(it.label) },
-                ) { source -> onUi { it.copy(altitudeSource = source) } }
-                // Same order as on Conditions: pressure, altitude, then the latitude below them.
-                TwoOptions(
-                    stringResource(R.string.label_latitude_source),
-                    stringResource(R.string.option_location), stringResource(R.string.option_manual),
-                    ui.locationSetsLatitude,
-                ) { v -> onUi { it.copy(locationSetsLatitude = v) } }
-                TwoOptions(
-                    stringResource(R.string.label_forecast_direction),
-                    stringResource(R.string.option_clock), stringResource(R.string.option_true),
-                    !ui.forecastTrueBearing,
-                ) { clock -> onUi { it.copy(forecastTrueBearing = !clock) } }
             }
 
             Collapsible(stringResource(R.string.section_corrections)) {
