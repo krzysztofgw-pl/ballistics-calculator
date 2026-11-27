@@ -75,7 +75,7 @@ private fun answerRating(context: Context, later: Boolean) {
  * the watch is switched on in Settings; without Garmin Connect it reports that as its failure.
  */
 @Composable
-fun WatchPressureButton(update: ((Conditions) -> Conditions) -> Unit, modifier: Modifier = Modifier) {
+fun WatchPressureButton(update: ((Conditions) -> Conditions) -> Unit, modifier: Modifier = Modifier, label: String? = null) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var error by remember { mutableStateOf<WatchError?>(null) }
@@ -124,7 +124,7 @@ fun WatchPressureButton(update: ((Conditions) -> Conditions) -> Unit, modifier: 
                 Icon(ImageVector.vectorResource(R.drawable.ic_watch), contentDescription = null, modifier = Modifier.size(ButtonDefaults.IconSize))
             }
             Spacer(Modifier.width(ButtonDefaults.IconSpacing))
-            Text(stringResource(R.string.action_watch_pressure_short), maxLines = 1)
+            Text(label ?: stringResource(R.string.action_watch_pressure_short), maxLines = 1)
         }
         if (error != null) {
             IconButton(onClick = { showError = true }) {
@@ -194,5 +194,34 @@ fun WatchPressureButton(update: ((Conditions) -> Conditions) -> Unit, modifier: 
                 }
             },
         )
+    }
+}
+
+/** Fills in the station pressure from the phone's own barometer; [label] replaces the button's text (Test in Settings). */
+@Composable
+fun PhonePressureButton(update: ((Conditions) -> Conditions) -> Unit, modifier: Modifier = Modifier, label: String? = null) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var job by remember { mutableStateOf<Job?>(null) }
+    FilledTonalButton(
+        enabled = job == null,
+        modifier = modifier,
+        onClick = {
+            job = scope.launch {
+                val hPa = DeviceSensors.barometerHpa(context)?.let { String.format(Locale.US, "%.1f", it) }
+                if (hPa != null) update { it.copy(pressureHpa = hPa, pressureIsQnh = false) }
+                val text = if (hPa != null) context.getString(R.string.phone_pressure_result, hPa) else context.getString(R.string.phone_pressure_none)
+                Toast.makeText(context, text, Toast.LENGTH_LONG).show()
+                job = null
+            }
+        },
+    ) {
+        if (job != null) {
+            CircularProgressIndicator(Modifier.size(ButtonDefaults.IconSize), strokeWidth = 2.dp)
+        } else {
+            Icon(ImageVector.vectorResource(R.drawable.ic_phone), contentDescription = null, modifier = Modifier.size(ButtonDefaults.IconSize))
+        }
+        Spacer(Modifier.width(ButtonDefaults.IconSpacing))
+        Text(label ?: stringResource(R.string.action_phone_pressure_short), maxLines = 1)
     }
 }

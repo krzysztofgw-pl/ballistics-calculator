@@ -63,6 +63,7 @@ import pl.ballistics.app.BuildConfig
 import pl.ballistics.app.R
 import pl.ballistics.app.data.AltitudeSource
 import pl.ballistics.app.data.Conditions
+import pl.ballistics.app.data.PressureSource
 import pl.ballistics.app.data.Correction
 import pl.ballistics.app.data.SyncState
 import pl.ballistics.app.data.ThemeMode
@@ -95,6 +96,7 @@ fun SettingsScreen(
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    val hasBarometer = remember { DeviceSensors.hasBarometer(context) }
     val exportLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
         if (uri == null) return@rememberLauncherForActivityResult
         val ok = runCatching {
@@ -181,6 +183,17 @@ fun SettingsScreen(
                 SwitchRow(stringResource(R.string.label_location_latitude), ui.locationSetsLatitude) { v ->
                     onUi { it.copy(locationSetsLatitude = v) }
                 }
+                // Pressure source with a Test button that reads it without touching the conditions.
+                val sources = PressureSource.entries.filter { it != PressureSource.PHONE || hasBarometer || ui.pressureFrom == it }
+                Choice(
+                    stringResource(R.string.label_pressure_source), ui.pressureFrom, sources,
+                    name = { stringResource(it.label) },
+                ) { source -> onUi { it.withPressureFrom(source) } }
+                when (ui.pressureFrom) {
+                    PressureSource.GARMIN -> WatchPressureButton({ }, Modifier.fillMaxWidth(), stringResource(R.string.action_test_pressure))
+                    PressureSource.PHONE -> PhonePressureButton({ }, Modifier.fillMaxWidth(), stringResource(R.string.action_test_pressure))
+                    PressureSource.NONE -> Unit
+                }
                 Choice(
                     stringResource(R.string.label_altitude_source), ui.altitudeFrom, AltitudeSource.entries - AltitudeSource.MANUAL,
                     name = { stringResource(it.label) },
@@ -190,10 +203,6 @@ fun SettingsScreen(
                     stringResource(R.string.option_clock), stringResource(R.string.option_true),
                     !ui.forecastTrueBearing,
                 ) { clock -> onUi { it.copy(forecastTrueBearing = !clock) } }
-            }
-
-            Section(stringResource(R.string.section_devices)) {
-                SwitchRow(stringResource(R.string.label_garmin_watch), ui.garminWatch) { v -> onUi { it.copy(garminWatch = v) } }
             }
 
             Collapsible(stringResource(R.string.section_corrections)) {

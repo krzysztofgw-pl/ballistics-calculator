@@ -45,6 +45,7 @@ import kotlinx.coroutines.launch
 import pl.ballistics.app.R
 import pl.ballistics.app.data.AltitudeSource
 import pl.ballistics.app.data.Conditions
+import pl.ballistics.app.data.PressureSource
 import pl.ballistics.app.data.Stealth
 import pl.ballistics.app.data.TerrainHeight
 import pl.ballistics.app.data.UiSettings
@@ -88,7 +89,11 @@ fun ConditionsScreen(
             }
             // One row, each button under its field: the watch under pressure, the altitude source under altitude.
             FieldRow { m ->
-                if (ui.garminWatch) WatchPressureButton(update, m) else Spacer(m)
+                when (ui.pressureFrom) {
+                    PressureSource.GARMIN -> WatchPressureButton(update, m)
+                    PressureSource.PHONE -> PhonePressureButton(update, m.fillMaxWidth())
+                    PressureSource.NONE -> Spacer(m)
+                }
                 AltitudeButton(ui.altitudeFrom, ui.locationSetsLatitude, update, m)
             }
         }
