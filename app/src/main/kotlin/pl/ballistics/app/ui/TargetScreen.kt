@@ -356,7 +356,9 @@ fun TargetScreen(
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         // The row stays in place with the moving target off (speed greyed out), so the lens never jumps.
         NumberField(
-            stringResource(R.string.label_target_speed), conditions.targetSpeedMps, "m/s", Modifier.width(FIELD_WIDTH),
+            // Off, it reads 0 m/s; the typed speed is kept for when the moving target is turned back on.
+            stringResource(R.string.label_target_speed), if (conditions.targetMoving) conditions.targetSpeedMps else "0", "m/s",
+            Modifier.width(FIELD_WIDTH),
             enabled = conditions.targetMoving,
         ) { v ->
             update { it.copy(targetSpeedMps = v) }
