@@ -65,7 +65,9 @@ class TerrainHeightTest {
     @Test
     fun olderSettingsKeepTheirAltitudeChoice() {
         assertEquals(AltitudeSource.TERRAIN, UiSettings(locationSetsAltitude = true).altitudeFrom)
-        assertEquals(AltitudeSource.MANUAL, UiSettings().altitudeFrom)
+        // Typed in is no longer a choice: old settings without one, or with MANUAL, read the terrain map.
+        assertEquals(AltitudeSource.TERRAIN, UiSettings().altitudeFrom)
+        assertEquals(AltitudeSource.TERRAIN, UiSettings(altitudeSource = AltitudeSource.MANUAL).altitudeFrom)
         assertEquals(AltitudeSource.GPS, UiSettings(locationSetsAltitude = true, altitudeSource = AltitudeSource.GPS).altitudeFrom)
     }
 }

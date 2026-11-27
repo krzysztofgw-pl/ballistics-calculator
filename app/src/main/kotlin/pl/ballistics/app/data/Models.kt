@@ -281,7 +281,7 @@ data class UiSettings(
     val hiddenCharts: Set<ChartKind> = emptySet(),
     /** A location fix (forecast, compass) also sets the latitude for Coriolis. */
     val locationSetsLatitude: Boolean = true,
-    /** Older setting: the forecast set the altitude. Read only to choose [altitudeFrom] for settings saved before [altitudeSource]. */
+    /** Older setting: the forecast set the altitude. No longer read; kept so older apps decode synced settings the same. */
     val locationSetsAltitude: Boolean = false,
     /** Where the altitude comes from; null in settings saved before there was a choice. */
     val altitudeSource: AltitudeSource? = null,
@@ -299,8 +299,9 @@ data class UiSettings(
 
     fun correction(reticleId: String): Correction = corrections[reticleId] ?: Correction.defaultFor(reticleId)
 
+    /** The altitude can always be typed, so the old "typed in" choice (MANUAL) now means the terrain map, the default. */
     val altitudeFrom: AltitudeSource
-        get() = altitudeSource ?: if (locationSetsAltitude) AltitudeSource.TERRAIN else AltitudeSource.MANUAL
+        get() = altitudeSource?.takeIf { it != AltitudeSource.MANUAL } ?: AltitudeSource.TERRAIN
 }
 
 /** The charts on the target screen, each of which can be turned off in Settings. */
@@ -323,7 +324,10 @@ enum class ChartKind(@StringRes val label: Int) {
 
 /** Where the altitude of the firing point comes from. */
 enum class AltitudeSource(@StringRes val label: Int) {
-    /** Typed in. */
+    /**
+     * Typed in: no longer offered (the field can always be typed in, and Stealth mode covers staying offline), read as
+     * [TERRAIN]. Kept so settings synced from older apps still decode, and so older apps can decode ours.
+     */
     MANUAL(R.string.altitude_manual),
     /** Terrain height at the location from an elevation model: GUGiK's 1 m lidar model in Poland, Copernicus elsewhere. Needs the network. */
     TERRAIN(R.string.altitude_terrain),

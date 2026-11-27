@@ -239,7 +239,6 @@
     <string name="label_aero_jump">Aerodynamic jump from crosswind</string>
     <string name="label_coriolis">Coriolis and Eötvös effects</string>
     <string name="label_latitude">Latitude</string>
-    <string name="action_locate_short">Locate</string>
     <string name="compass_reading">Reading the compass: hold the phone along the line of fire, flat or upright with the camera to the target.</string>
     <string name="compass_true">Phone heading %1$s° (magnetic declination %2$s° applied).</string>
     <string name="compass_magnetic">Phone heading %1$s° magnetic: no location, so declination is not applied.</string>
@@ -467,7 +466,7 @@
     <!-- Help: each answer's paragraphs are separated by a blank line (\n\n). -->
     <string name="title_help">Help</string>
     <string name="help_start_title">Where do I start?</string>
-    <string name="help_start">Settings, Profiles: add your rifle with its scope and zero, and your load (from the library or your own data). The Rifle tab picks the rifle and load in use and whether the suppressor is on.\n\nConditions: set the wind, temperature, pressure and altitude, and the shot angle if you shoot up or down. Where the altitude comes from (typed in, terrain map or GPS) is set in Settings.\n\nDOPE gives the scope settings for every range; Target gives the correction for one distance, drawn on your reticle.</string>
+    <string name="help_start">Settings, Profiles: add your rifle with its scope and zero, and your load (from the library or your own data). The Rifle tab picks the rifle and load in use and whether the suppressor is on.\n\nConditions: set the wind, temperature, pressure and altitude, and the shot angle if you shoot up or down. The button under the altitude fills it from your location (terrain map or GPS, set in Settings) and also sets the latitude; you can still type both.\n\nDOPE gives the scope settings for every range; Target gives the correction for one distance, drawn on your reticle.</string>
     <string name="help_suppressor_title">How does the suppressor work?</string>
     <string name="help_suppressor">Turn on Suppressor in the rifle section of the rifle profile. Then, in the zero section, say whether you zeroed with it on (Suppressed) or off (Bare), and enter where the impact goes in the other state, up and right from the zero in the turret unit (negative for down or left). Shoot a group in that state at your zero range to find it. Switching which state the zero was shot in flips the signs.\n\nOn the Rifle tab, switch the suppressor on or off. When it differs from the zero, every correction includes the shift and the rifle on the Rifle tab icon carries a suppressor while it is on.</string>
     <string name="help_zero_title">What goes into the zero?</string>
@@ -489,7 +488,7 @@
     <string name="help_table_title">What is in the DOPE?</string>
     <string name="help_table">For each range: drop, elevation and clicks, wind drift and windage, velocity, energy, time of flight and Mach. Its range and step are set below it; tap the open tab or the arrow to fold the details at the top.\n\nThe cm columns say where the bullet goes: drop below the line of sight, drift with the wind. The MRAD or MOA and clicks columns are the correction to dial, with the turret correction from the rifle profile: up has no mark, ↓ means dial down (short of the zero), and R or L is the windage.</string>
     <string name="help_altitude_title">Where does the altitude come from?</string>
-    <string name="help_altitude">Settings, Measurements and location, Altitude from: typed in, the terrain map or GPS. The terrain map gives the ground height at your location (a 1 m lidar model in Poland, a 90 m model elsewhere) and needs the internet. GPS works anywhere under open sky, also in stealth mode; the height is converted to above sea level.\n\nThe altitude matters only with QNH: with station pressure the app does not need it.</string>
+    <string name="help_altitude">Settings, Measurements and location, Altitude from: the terrain map or GPS. The button under the altitude on Conditions reads it; the field can always be typed in. The same location fix also sets the latitude for Coriolis (turn off with Location sets the latitude). The terrain map gives the ground height at your location (a 1 m lidar model in Poland, a 90 m model elsewhere) and needs the internet. GPS works anywhere under open sky, also in stealth mode; the height is converted to above sea level.\n\nThe altitude matters only with QNH: with station pressure the app does not need it.</string>
     <string name="help_garmin_title">How do I use a Garmin watch?</string>
     <string name="help_garmin">Install the free Station Pressure app on the watch from the Connect IQ Store and turn on Pressure from a Garmin watch in Settings, External devices. The Garmin button under the pressure on Conditions reads the watch\'s barometer as station pressure.</string>
     <string name="help_forecast_title">How does the wind forecast work?</string>

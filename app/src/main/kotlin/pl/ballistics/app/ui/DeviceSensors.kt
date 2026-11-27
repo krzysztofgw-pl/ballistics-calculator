@@ -102,7 +102,7 @@ object DeviceSensors {
      * [ellipsoidal] means it could not be converted and is the raw height above the WGS84 ellipsoid,
      * which in Poland reads some 30-40 m high.
      */
-    data class GpsAltitude(val metres: Double, val accuracyM: Double?, val ellipsoidal: Boolean)
+    data class GpsAltitude(val metres: Double, val accuracyM: Double?, val ellipsoidal: Boolean, val latitude: Double)
 
     /**
      * Listens to GPS_PROVIDER alone (no network help, so it works offline and in stealth mode) for up
@@ -162,11 +162,11 @@ object DeviceSensors {
             }
             if (converted != null) {
                 val mslAccuracy = if (fix.hasMslAltitudeAccuracy()) fix.mslAltitudeAccuracyMeters.toDouble() else accuracy
-                return GpsAltitude(converted, mslAccuracy, ellipsoidal = false)
+                return GpsAltitude(converted, mslAccuracy, ellipsoidal = false, latitude = fix.latitude)
             }
         }
-        (ggaAtBest ?: ggaMsl)?.let { return GpsAltitude(it, accuracy, ellipsoidal = false) }
-        return GpsAltitude(fix.altitude, accuracy, ellipsoidal = true)
+        (ggaAtBest ?: ggaMsl)?.let { return GpsAltitude(it, accuracy, ellipsoidal = false, latitude = fix.latitude) }
+        return GpsAltitude(fix.altitude, accuracy, ellipsoidal = true, latitude = fix.latitude)
     }
 
     @SuppressLint("MissingPermission")
