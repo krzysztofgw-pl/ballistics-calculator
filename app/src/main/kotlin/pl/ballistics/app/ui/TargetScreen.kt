@@ -668,10 +668,33 @@ private fun DrawScope.windFlag(f: WindFlag, top: Offset, measurer: TextMeasurer)
     val big = measurer.measure(f.label, TextStyle(fontSize = 11.sp, fontWeight = FontWeight.Bold, color = FLAG_GREEN))
     val x = if (side < 0) top.x + 5.dp.toPx() else top.x - 5.dp.toPx() - big.size.width
     drawText(big, topLeft = Offset(x, top.y + h))
+    var below = top.y + h + big.size.height
     f.range?.let { r ->
         val small = measurer.measure(r, TextStyle(fontSize = 10.sp, color = FLAG_GREEN))
         val x2 = if (side < 0) top.x + 5.dp.toPx() else top.x - 5.dp.toPx() - small.size.width
-        drawText(small, topLeft = Offset(x2, top.y + h + big.size.height))
+        drawText(small, topLeft = Offset(x2, below))
+        below += small.size.height
+    }
+    // Seen from above: a small dial with the shooter at the bottom (up is downrange) and an arrow where the wind blows,
+    // so a quartering, head or tail wind reads at a glance.
+    if (f.speedMps >= 0.3) {
+        val r = 11.dp.toPx()
+        val cx = if (side < 0) top.x + 5.dp.toPx() + r else top.x - 5.dp.toPx() - r
+        val c = Offset(cx, below + 4.dp.toPx() + r)
+        drawCircle(FLAG_GREEN, r, c, style = Stroke(1.2.dp.toPx()))
+        val shooter = Path().apply {
+            moveTo(c.x - 3.dp.toPx(), c.y + r); lineTo(c.x + 3.dp.toPx(), c.y + r); lineTo(c.x, c.y + r - 5.dp.toPx()); close()
+        }
+        drawPath(shooter, Color(0xFF37474F))
+        val to = f.fromRad + Math.PI
+        val b = Offset(sin(to).toFloat(), -cos(to).toFloat()) * (r * 0.8f)
+        val start = c - b
+        val end = c + b
+        drawLine(FLAG_GREEN, start, end, 2.dp.toPx())
+        val ang = atan2(end.y - start.y, end.x - start.x)
+        for (da in listOf(2.6, -2.6)) {
+            drawLine(FLAG_GREEN, end, end + Offset(cos(ang + da).toFloat(), sin(ang + da).toFloat()) * 5.dp.toPx(), 2.dp.toPx())
+        }
     }
 }
 
@@ -798,7 +821,7 @@ private fun ReticleView(
             }
         }
         // Upper left of the lens: clear of the corner texts, the moving-target hold in the bottom left and most reticle marks.
-        clipPath(lens) { windFlag(flag, c + Offset(-radius * 0.70f, -radius * 0.42f), text) }
+        clipPath(lens) { windFlag(flag, c + Offset(-radius * 0.70f, -radius * 0.56f), text) }
         drawCircle(Color(0xFF263238), radius, c, style = Stroke(4.dp.toPx()))
     }
 }
