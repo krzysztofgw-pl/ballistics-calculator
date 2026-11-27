@@ -691,8 +691,13 @@ private fun ReticleView(
                 val p = at(h.x, h.y)
                 drawCircle(hold, if (isSelected) 5.dp.toPx() else 3.dp.toPx(), p)
                 if (isSelected) drawCircle(hold, 9.dp.toPx(), p, style = Stroke(1.5.dp.toPx()))
-                if (isSelected || h.point.rangeM.roundToInt() % 100 == 0) {
-                    label(text, "${h.point.rangeM.roundToInt()}", p + Offset(14.dp.toPx(), 0f), hold)
+                // The chosen distance is in the field above, so its dot needs no figure; the others sit on the
+                // side away from the vertical line, so they never cover the reticle's marks.
+                if (!isSelected && h.point.rangeM.roundToInt() % 100 == 0) {
+                    val layout = text.measure("${h.point.rangeM.roundToInt()}", TextStyle(fontSize = 10.sp, color = hold))
+                    val gap = 6.dp.toPx()
+                    val x = if (h.x < 0) p.x - gap - layout.size.width else p.x + gap
+                    drawText(layout, topLeft = Offset(x, p.y - layout.size.height / 2f))
                 }
             }
             // Lightest and strongest wind: orange bars across the aim point's row, speed under each.
