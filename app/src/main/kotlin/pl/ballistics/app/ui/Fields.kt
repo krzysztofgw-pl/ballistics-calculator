@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -42,12 +44,30 @@ import pl.ballistics.app.R
 import pl.ballistics.app.toNumber
 
 @Composable
-fun Section(title: String, icon: ImageVector? = null, content: @Composable ColumnScope.() -> Unit) {
+fun Section(
+    title: String,
+    icon: ImageVector? = null,
+    /** Given, the header shows the icon and the title side by side with this (a main switch) at the end. */
+    trailing: (@Composable () -> Unit)? = null,
+    content: @Composable ColumnScope.() -> Unit,
+) {
     Card(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            // An icon stands in for the title where one says it as well; the title stays for screen readers.
-            if (icon != null) Icon(icon, title, Modifier.size(28.dp), tint = MaterialTheme.colorScheme.primary)
-            else Text(title, style = MaterialTheme.typography.titleMedium)
+            if (trailing != null) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (icon != null) {
+                        Icon(icon, null, Modifier.size(28.dp), tint = MaterialTheme.colorScheme.primary)
+                        Spacer(Modifier.width(12.dp))
+                    }
+                    Text(title, Modifier.weight(1f), style = MaterialTheme.typography.titleMedium)
+                    trailing()
+                }
+            } else if (icon != null) {
+                // An icon stands in for the title where one says it as well; the title stays for screen readers.
+                Icon(icon, title, Modifier.size(28.dp), tint = MaterialTheme.colorScheme.primary)
+            } else {
+                Text(title, style = MaterialTheme.typography.titleMedium)
+            }
             content()
         }
     }

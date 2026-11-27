@@ -187,6 +187,7 @@
     <string name="action_watch_pressure_short">Garmin</string>
     <string name="action_phone_pressure_short">Phone</string>
     <string name="action_test_pressure">Test</string>
+    <string name="label_other_reticles">Other reticles</string>
     <string name="label_pressure_source">Pressure measurement</string>
     <string name="pressure_source_none">Off</string>
     <string name="pressure_source_garmin">Garmin</string>

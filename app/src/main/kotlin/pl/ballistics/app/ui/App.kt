@@ -43,6 +43,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import pl.ballistics.app.MainViewModel
 import pl.ballistics.app.R
+import pl.ballistics.app.reticle.Reticles
 import pl.ballistics.app.data.Stealth
 import pl.ballistics.app.data.SyncState
 import pl.ballistics.app.data.AmmoProfile
@@ -166,6 +167,7 @@ fun App(vm: MainViewModel = viewModel()) {
                 onPressureIsQnh = { v -> vm.updateConditions { it.copy(pressureIsQnh = v) } },
                 conditions = data.conditions,
                 onConditions = vm::updateConditions,
+                usedReticles = data.weapons.map { Reticles.designKey(Reticles.byId(it.reticleId)) }.toSet(),
                 sync = sync,
                 onSignIn = vm::signIn,
                 onSignOut = vm::signOut,

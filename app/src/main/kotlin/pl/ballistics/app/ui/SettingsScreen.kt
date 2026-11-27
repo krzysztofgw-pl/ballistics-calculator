@@ -74,6 +74,7 @@ import pl.ballistics.app.data.SyncState
 import pl.ballistics.app.data.ThemeMode
 import pl.ballistics.app.data.ChartKind
 import pl.ballistics.app.data.UiSettings
+import pl.ballistics.app.reticle.Reticle
 import pl.ballistics.app.reticle.Reticles
 import java.time.LocalDate
 
@@ -87,6 +88,8 @@ fun SettingsScreen(
     onPressureIsQnh: (Boolean) -> Unit,
     conditions: Conditions,
     onConditions: ((Conditions) -> Conditions) -> Unit,
+    /** Design keys (Reticles.designKey) of the reticles on the user's rifles. */
+    usedReticles: Set<String>,
     sync: SyncState,
     onSignIn: suspend (Context) -> String?,
     onSignOut: () -> Unit,
@@ -183,9 +186,7 @@ fun SettingsScreen(
                 ) { clock -> onUi { it.copy(forecastTrueBearing = !clock) } }
             }
 
-            Section(stringResource(R.string.stealth_title), ImageVector.vectorResource(R.drawable.ic_stealth)) {
-                StealthSettings(ui.garminWatch, onOpenStealth)
-            }
+            StealthSettings(ui.garminWatch, onOpenStealth)
 
             Section(stringResource(R.string.section_display)) {
                 ThemeMode.entries.forEach { mode ->
@@ -240,7 +241,9 @@ fun SettingsScreen(
                     Text(stringResource(R.string.label_elevation), Modifier.width(CHIP_WIDTH), style = MaterialTheme.typography.labelMedium)
                     Text(stringResource(R.string.label_windage), Modifier.width(CHIP_WIDTH), style = MaterialTheme.typography.labelMedium)
                 }
-                Reticles.designs.forEach { r ->
+                // The reticles of the user's rifles first; the rest of the library folds away under Other reticles.
+                @Composable
+                fun ReticleRow(r: Reticle) {
                     val key = Reticles.designKey(r)
                     val c = ui.correction(key)
                     fun set(next: Correction) = onUi { it.copy(corrections = it.corrections + (key to next)) }
@@ -249,6 +252,24 @@ fun SettingsScreen(
                         DialOrHold(c.dialElevation) { set(c.copy(dialElevation = it)) }
                         DialOrHold(c.dialWindage) { set(c.copy(dialWindage = it)) }
                     }
+                }
+                val (mine, others) = Reticles.designs.partition { Reticles.designKey(it) in usedReticles }
+                mine.forEach { ReticleRow(it) }
+                if (mine.isEmpty()) {
+                    others.forEach { ReticleRow(it) }
+                } else {
+                    var othersOpen by rememberSaveable { mutableStateOf(false) }
+                    Row(
+                        Modifier.fillMaxWidth().clickable { othersOpen = !othersOpen }.padding(vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(stringResource(R.string.label_other_reticles), Modifier.weight(1f), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Icon(
+                            if (othersOpen) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
+                            stringResource(if (othersOpen) R.string.action_collapse else R.string.action_expand),
+                        )
+                    }
+                    if (othersOpen) others.forEach { ReticleRow(it) }
                 }
             }
 
