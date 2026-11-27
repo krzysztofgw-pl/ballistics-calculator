@@ -18,6 +18,8 @@ object Units {
     const val LB_PER_IN2 = 703.0695796
 
     const val MOA = PI / 10800.0            // rad
+    /** Shooter's MOA (SMOA, IPHY): 1 inch at 100 yards, 4.7 % smaller than a true [MOA]. */
+    const val SMOA = INCH / (100 * YARD)    // rad
     const val MRAD = 1e-3                   // rad
     const val DEG = PI / 180.0              // rad
 

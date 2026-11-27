@@ -1,6 +1,9 @@
 package pl.ballistics.app.ui
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -23,9 +26,9 @@ import pl.ballistics.app.TargetInputs
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.ui.unit.dp
 import pl.ballistics.app.data.AmmoProfile
-import pl.ballistics.app.data.AngularUnit
 import pl.ballistics.app.data.FocalPlane
 import pl.ballistics.app.data.RailPlatform
+import pl.ballistics.app.data.TurretUnit
 import pl.ballistics.app.data.WeaponProfile
 import pl.ballistics.app.data.caliberGroup
 import pl.ballistics.app.data.diameterInOrMax
@@ -47,7 +50,10 @@ fun WeaponEditor(
     var w by remember { mutableStateOf(initial) }
     var mountHelper by remember { mutableStateOf(false) }
     var showAllLoads by remember { mutableStateOf(false) }
+    // Help opens over the editor, so what is typed here stays.
+    var help by remember { mutableStateOf(false) }
 
+    Box(Modifier.fillMaxSize()) {
     EditorScaffold(
         title = if (isNew) stringResource(R.string.title_new_rifle) else w.name,
         canDelete = !isNew,
@@ -83,11 +89,39 @@ fun WeaponEditor(
 
         Section(stringResource(R.string.section_scope_mount)) {
             TextInput(stringResource(R.string.label_scope), w.scopeName) { w = w.copy(scopeName = it) }
-            Choice(stringResource(R.string.label_turret_units), w.angularUnit, AngularUnit.entries, { it.label }) { v ->
-                w = w.copy(angularUnit = v, clickValue = if (v == AngularUnit.MRAD) "0.1" else "0.25")
+            val unit = w.turretUnit
+            Choice(stringResource(R.string.label_turret_units), unit, TurretUnit.entries, { it.label }) { v ->
+                // MOA and SMOA share click sizes, so a click typed for one stays.
+                val keepClicks = v.reticleUnit == unit.reticleUnit
+                w = w.withTurretUnit(v).let {
+                    if (keepClicks) it else it.copy(clickValue = v.defaultClick, windageClickValue = "")
+                }
             }
-            NumberField(stringResource(R.string.label_click_value), w.clickValue, w.angularUnit.label) { w = w.copy(clickValue = it) }
-            ReticleChoice(stringResource(R.string.label_reticle), Reticles.byId(w.reticleId), w.angularUnit, { stringResource(it.family) }) {
+            // Each turret: its click and its correction (measured ÷ dialled, blank is 1), explained in Help.
+            FieldRow { m ->
+                NumberField(
+                    stringResource(if (w.separateWindage) R.string.label_elevation_click else R.string.label_click_value),
+                    w.clickValue, unit.label, m,
+                ) { w = w.copy(clickValue = it) }
+                NumberField(
+                    stringResource(R.string.label_turret_correction), w.elevationFactor, "", m, optional = true,
+                    placeholder = "1", onHelp = { help = true },
+                ) { w = w.copy(elevationFactor = it) }
+            }
+            SwitchRow(stringResource(R.string.label_separate_windage), w.separateWindage) { w = w.copy(separateWindage = it) }
+            if (w.separateWindage) {
+                FieldRow { m ->
+                    NumberField(
+                        stringResource(R.string.label_windage_click), w.windageClickValue, unit.label, m, optional = true,
+                        placeholder = w.clickValue,
+                    ) { w = w.copy(windageClickValue = it) }
+                    NumberField(
+                        stringResource(R.string.label_turret_correction), w.windageFactor, "", m, optional = true,
+                        placeholder = "1", onHelp = { help = true },
+                    ) { w = w.copy(windageFactor = it) }
+                }
+            }
+            ReticleChoice(stringResource(R.string.label_reticle), Reticles.byId(w.reticleId), unit.reticleUnit, { stringResource(it.family) }) {
                 w = w.copy(
                     reticleId = it.id,
                     reticleGraduation = "",
@@ -171,15 +205,21 @@ fun WeaponEditor(
                 // Where the impact goes in the other state than the zero; switching the zero flips the signs.
                 val other = stringResource(if (w.zeroSuppressed) R.string.option_bare else R.string.option_suppressed)
                 FieldRow { m ->
-                    NumberField(stringResource(R.string.label_poi_up_in, other), w.suppressorShiftUp, w.angularUnit.label, m, optional = true) {
+                    NumberField(stringResource(R.string.label_poi_up_in, other), w.suppressorShiftUp, w.turretUnit.label, m, optional = true) {
                         w = w.copy(suppressorShiftUp = it)
                     }
-                    NumberField(stringResource(R.string.label_poi_right_in, other), w.suppressorShiftRight, w.angularUnit.label, m, optional = true) {
+                    NumberField(stringResource(R.string.label_poi_right_in, other), w.suppressorShiftRight, w.turretUnit.label, m, optional = true) {
                         w = w.copy(suppressorShiftRight = it)
                     }
                 }
             }
         }
+    }
+
+    if (help) {
+        BackHandler { help = false }
+        HelpScreen(onClose = { help = false }, openTopic = R.string.help_turret_title)
+    }
     }
 
     if (mountHelper) {

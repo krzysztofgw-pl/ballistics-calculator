@@ -2,10 +2,10 @@ package pl.ballistics.app
 
 import androidx.annotation.StringRes
 import pl.ballistics.app.data.AmmoProfile
-import pl.ballistics.app.data.AngularUnit
 import pl.ballistics.app.data.Conditions
 import pl.ballistics.app.data.DragType
 import pl.ballistics.app.data.STANDARD_POWDER_SENSITIVITY
+import pl.ballistics.app.data.TurretUnit
 import pl.ballistics.app.data.WeaponProfile
 import pl.ballistics.core.Ammunition
 import pl.ballistics.core.Atmosphere
@@ -19,6 +19,7 @@ import pl.ballistics.core.ShotConditions
 import pl.ballistics.core.Solution
 import pl.ballistics.core.Solver
 import pl.ballistics.core.SolverOptions
+import pl.ballistics.core.Turret
 import pl.ballistics.core.Units
 import pl.ballistics.core.Wind
 
@@ -29,8 +30,10 @@ sealed interface CalcResult {
         val ammo: AmmoProfile,
         val setup: Setup,
     ) : CalcResult {
-        val angularUnit: AngularUnit get() = weapon.angularUnit
-        val clickValue: Double? get() = weapon.clickValue.toNumber()?.takeIf { it > 0 }
+        /** The unit corrections are shown in: the turret's. */
+        val turretUnit: TurretUnit get() = weapon.turretUnit
+        val elevationTurret: Turret get() = weapon.elevationTurret
+        val windageTurret: Turret get() = weapon.windageTurret
     }
 
     data class Error(val message: UiText) : CalcResult
@@ -129,8 +132,8 @@ object Calculator {
         val shift = w.suppressorShift()
         return Setup(
             rifle, ammo, conditions, zeroAtmosphere, options,
-            shiftUpRad = (shift?.first ?: 0.0) * w.angularUnit.radians,
-            shiftRightRad = (shift?.second ?: 0.0) * w.angularUnit.radians,
+            shiftUpRad = (shift?.first ?: 0.0) * w.turretUnit.radians,
+            shiftRightRad = (shift?.second ?: 0.0) * w.turretUnit.radians,
         )
     }
 

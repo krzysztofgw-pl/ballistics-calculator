@@ -4,6 +4,7 @@ import androidx.annotation.StringRes
 import kotlinx.serialization.Serializable
 import pl.ballistics.app.R
 import pl.ballistics.app.toNumber
+import pl.ballistics.core.Turret
 import pl.ballistics.core.Units
 import java.util.UUID
 
@@ -12,15 +13,30 @@ enum class FocalPlane(@StringRes val label: Int) {
     SFP(R.string.focal_plane_sfp),
 }
 
+/** A reticle's unit, and how a turret unit is stored (see [TurretUnit]). */
 enum class AngularUnit(val label: String, val radians: Double) {
     MRAD("MRAD", Units.MRAD),
     MOA("MOA", Units.MOA),
+}
+
+/**
+ * The unit marked on a scope's turrets. SMOA (shooter's MOA, 1 in at 100 yd) is stored as
+ * [AngularUnit.MOA] plus [WeaponProfile.inchMoa], so older versions still read the profile.
+ * [decimals] is how finely angles in this unit are shown.
+ */
+enum class TurretUnit(val label: String, val radians: Double, val reticleUnit: AngularUnit, val defaultClick: String, val decimals: Int) {
+    MRAD("MRAD", Units.MRAD, AngularUnit.MRAD, "0.1", 2),
+    MOA("MOA", Units.MOA, AngularUnit.MOA, "0.25", 1),
+    SMOA("SMOA", Units.SMOA, AngularUnit.MOA, "0.25", 1),
 }
 
 /** G1…RA4 map to the standard drag functions; CUSTOM uses a pasted Cd(Mach) curve. */
 enum class DragType { G1, G7, G2, G5, G6, G8, GI, GS, RA4, CUSTOM }
 
 fun newId(): String = UUID.randomUUID().toString()
+
+/** A turret correction as typed; blank, unreadable or not positive is 1. */
+private fun factor(text: String): Double = text.toNumber()?.takeIf { it > 0 } ?: 1.0
 
 /** Typical change of muzzle velocity with powder temperature, used when a load gives none. */
 const val STANDARD_POWDER_SENSITIVITY = 1.0
@@ -44,8 +60,20 @@ data class WeaponProfile(
     val barrelInches: Boolean = true,
 
     val scopeName: String = "",
+    /** The turret unit as stored; read it through [turretUnit]. */
     val angularUnit: AngularUnit = AngularUnit.MRAD,
+    /** With [angularUnit] MOA: the turrets are in shooter's MOA (1 in at 100 yd). */
+    val inchMoa: Boolean = false,
+    /** The elevation click, and the windage one unless [separateWindage]. */
     val clickValue: String = "0.1",
+    /** Turret correction: what the elevation turret really moves per marked unit, measured ÷ dialled; blank is 1. */
+    val elevationFactor: String = "",
+    /** The windage turret has its own click value and correction. */
+    val separateWindage: Boolean = false,
+    /** Blank uses [clickValue]. */
+    val windageClickValue: String = "",
+    /** Like [elevationFactor], for the windage turret; blank is 1. */
+    val windageFactor: String = "",
     val sightHeightCm: String = "4.5",
     val reticleId: String = "mrad-hash",
     /** The finest step of the scope's reticle scale, in the reticle's unit; blank uses the reticle's own. */
@@ -69,7 +97,7 @@ data class WeaponProfile(
     val suppressorMounted: Boolean = true,
     /** The zero was shot with the suppressor on. */
     val zeroSuppressed: Boolean = true,
-    /** Where the impact goes in the state the rifle was not zeroed in, against the zero, in [angularUnit]: up and right positive. */
+    /** Where the impact goes in the state the rifle was not zeroed in, against the zero, in [turretUnit]: up and right positive. */
     val suppressorShiftUp: String = "",
     val suppressorShiftRight: String = "",
 
@@ -80,7 +108,7 @@ data class WeaponProfile(
     /** Muzzle velocity measured with this rifle, by ammo id; it overrides the load's reference velocity. */
     val muzzleVelocities: Map<String, String> = emptyMap(),
 ) {
-    /** Impact shift (up, right) in [angularUnit] against the zero while the suppressor is not as zeroed; null when it is. */
+    /** Impact shift (up, right) in [turretUnit] against the zero while the suppressor is not as zeroed; null when it is. */
     fun suppressorShift(): Pair<Double, Double>? {
         if (!suppressor || suppressorMounted == zeroSuppressed) return null
         val up = suppressorShiftUp.trim().replace(',', '.').toDoubleOrNull() ?: 0.0
@@ -94,6 +122,25 @@ data class WeaponProfile(
         fun flip(v: String) = v.trim().let { if (it.isEmpty() || it.trimStart('-').replace(',', '.').toDoubleOrNull() == 0.0) it else if (it.startsWith("-")) it.removePrefix("-") else "-$it" }
         return copy(zeroSuppressed = suppressed, suppressorShiftUp = flip(suppressorShiftUp), suppressorShiftRight = flip(suppressorShiftRight))
     }
+
+    val turretUnit: TurretUnit
+        get() = when {
+            angularUnit == AngularUnit.MRAD -> TurretUnit.MRAD
+            inchMoa -> TurretUnit.SMOA
+            else -> TurretUnit.MOA
+        }
+
+    fun withTurretUnit(unit: TurretUnit): WeaponProfile = copy(angularUnit = unit.reticleUnit, inchMoa = unit == TurretUnit.SMOA)
+
+    val elevationTurret: Turret
+        get() = Turret(turretUnit.radians, clickValue.toNumber()?.takeIf { it > 0 }, factor(elevationFactor))
+
+    val windageTurret: Turret
+        get() = if (!separateWindage) elevationTurret else Turret(
+            turretUnit.radians,
+            (windageClickValue.toNumber() ?: clickValue.toNumber())?.takeIf { it > 0 },
+            factor(windageFactor),
+        )
 
     fun measuredVelocity(ammo: AmmoProfile): String? = muzzleVelocities[ammo.id]?.takeIf { it.isNotBlank() }
 
