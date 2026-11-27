@@ -161,7 +161,7 @@
     <string name="section_atmosphere">Atmosphere</string>
     <string name="section_wind">Wind</string>
     <string name="section_shot">Shot</string>
-    <string name="section_advanced">Advanced effects</string>
+    <string name="section_ballistic_model">Ballistic model</string>
     <string name="label_temperature">Temperature</string>
     <string name="label_humidity">Humidity</string>
     <string name="label_pressure_qnh">Pressure (QNH)</string>
@@ -351,7 +351,7 @@
     <string name="chart_hit_range">Hit probability by distance (m)</string>
     <string name="chart_azimuth_windage">Coriolis effect: windage correction without wind (%1$s) by azimuth at %2$d m</string>
     <string name="chart_azimuth_elevation">Eötvös effect: elevation change (%1$s) by azimuth at %2$d m, against shooting north</string>
-    <string name="azimuth_charts_need_coriolis">Charts by azimuth need Coriolis and Eötvös effects on in Conditions.</string>
+    <string name="azimuth_charts_need_coriolis">Charts by azimuth need Coriolis and Eötvös effects on in Settings → Ballistic model.</string>
     <string name="label_show_charts">Charts</string>
     <string name="chart_kind_bracket_direction">Wind bracket: wind drift by direction</string>
     <string name="chart_kind_range_error">Range error</string>
@@ -363,7 +363,7 @@
     <string name="chart_kind_azimuth_elevation">Eötvös effect by azimuth</string>
     <string name="spin_drift_point">%1$s cm · %2$d m</string>
     <string name="spin_drift_needs_data">Spin drift needs the bullet length and the barrel twist.</string>
-    <string name="spin_drift_off">Spin drift is off in Conditions.</string>
+    <string name="spin_drift_off">Spin drift is off in Settings → Ballistic model.</string>
     <string name="label_target_width">Target width</string>
     <string name="label_target_height">Target height</string>
     <string name="theme_system">Follow the system</string>
