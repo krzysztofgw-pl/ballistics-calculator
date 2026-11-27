@@ -182,7 +182,7 @@ fun SettingsScreen(
                     onUi { it.copy(locationSetsLatitude = v) }
                 }
                 Choice(
-                    stringResource(R.string.label_altitude_source), ui.altitudeFrom, AltitudeSource.entries,
+                    stringResource(R.string.label_altitude_source), ui.altitudeFrom, AltitudeSource.entries - AltitudeSource.MANUAL,
                     name = { stringResource(it.label) },
                 ) { source -> onUi { it.copy(altitudeSource = source) } }
                 TwoOptions(

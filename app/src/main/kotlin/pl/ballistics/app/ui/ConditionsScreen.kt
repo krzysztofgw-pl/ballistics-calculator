@@ -87,9 +87,9 @@ fun ConditionsScreen(
                 }
             }
             // One row, each button under its field: the watch under pressure, the altitude source under altitude.
-            if (ui.garminWatch || ui.altitudeFrom != AltitudeSource.MANUAL) FieldRow { m ->
+            FieldRow { m ->
                 if (ui.garminWatch) WatchPressureButton(update, m) else Spacer(m)
-                if (ui.altitudeFrom != AltitudeSource.MANUAL) AltitudeButton(ui.altitudeFrom, update, m) else Spacer(m)
+                AltitudeButton(ui.altitudeFrom, ui.locationSetsLatitude, update, m)
             }
         }
 
@@ -277,14 +277,18 @@ private fun rememberWithLocationPermission(): (() -> Unit) -> Unit {
  * Beside the button: where the value came from, or the GPS vertical accuracy.
  */
 @Composable
-private fun AltitudeButton(source: AltitudeSource, update: ((Conditions) -> Conditions) -> Unit, modifier: Modifier = Modifier) {
+private fun AltitudeButton(source: AltitudeSource, setsLatitude: Boolean, update: ((Conditions) -> Conditions) -> Unit, modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val withPermission = rememberWithLocationPermission()
     var reading by remember { mutableStateOf(false) }
     var note by remember(source) { mutableStateOf<String?>(null) }
     fun toast(id: Int) = Toast.makeText(context, context.getString(id), Toast.LENGTH_LONG).show()
-    fun store(metres: Double) = update { it.copy(altitudeM = metres.roundToInt().toString()) }
+    // One location fix fills the altitude and, unless turned off in Settings, the latitude for Coriolis too.
+    fun store(metres: Double, latitude: Double) = update { c ->
+        c.copy(altitudeM = metres.roundToInt().toString())
+            .let { if (setsLatitude) it.copy(latitudeDeg = String.format(Locale.US, "%.2f", latitude)) else it }
+    }
 
     suspend fun fromGps() {
         toast(R.string.altitude_gps_searching)
@@ -293,7 +297,7 @@ private fun AltitudeButton(source: AltitudeSource, update: ((Conditions) -> Cond
             toast(R.string.altitude_gps_unavailable)
             return
         }
-        store(gps.metres)
+        store(gps.metres, gps.latitude)
         note = gps.accuracyM?.let { context.getString(R.string.location_accuracy, it.roundToInt()) }
         if (gps.ellipsoidal) toast(R.string.altitude_gps_ellipsoid)
     }
@@ -306,7 +310,7 @@ private fun AltitudeButton(source: AltitudeSource, update: ((Conditions) -> Cond
         }
         try {
             val r = TerrainHeight.lookup(location.latitude, location.longitude)
-            store(r.heightM)
+            store(r.heightM, location.latitude)
             note = context.getString(if (r.source == TerrainHeight.Source.NMT_PL) R.string.altitude_source_nmt else R.string.altitude_source_dem)
         } catch (e: java.io.IOException) {
             Toast.makeText(context, context.getString(R.string.altitude_terrain_failed, e.message ?: e.javaClass.simpleName), Toast.LENGTH_LONG).show()
@@ -349,13 +353,8 @@ private fun AltitudeButton(source: AltitudeSource, update: ((Conditions) -> Cond
 
 @Composable
 private fun LatitudeInput(i: Conditions, update: ((Conditions) -> Conditions) -> Unit) {
-    val context = LocalContext.current
-    val scope = rememberCoroutineScope()
-    val withPermission = rememberWithLocationPermission()
-    var reading by remember { mutableStateOf(false) }
-    var accuracyM by remember { mutableStateOf<Int?>(null) }
-
     // The field holds the size of the latitude and its unit the hemisphere (tap to switch), so south needs no minus key.
+    // A location fix (the altitude button, the forecast, the compass) fills it; this is for typing or correcting it.
     val raw = i.latitudeDeg.trim()
     var south by remember { mutableStateOf(raw.startsWith("-")) }
     LaunchedEffect(raw) { if (raw.isNotEmpty() && raw != "-") south = raw.startsWith("-") }
@@ -364,43 +363,9 @@ private fun LatitudeInput(i: Conditions, update: ((Conditions) -> Conditions) ->
         update { it.copy(latitudeDeg = if (isSouth && size.isNotBlank()) "-$size" else size) }
     }
 
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-        NumberField(
-            stringResource(R.string.label_latitude), raw.removePrefix("-"),
-            "°" + stringResource(if (south) R.string.hemisphere_south else R.string.hemisphere_north), Modifier.weight(1f),
-            onUnitClick = { accuracyM = null; store(raw.removePrefix("-"), !south) },
-        ) { v ->
-            accuracyM = null
-            if (v.startsWith("-")) store(v.removePrefix("-"), true) else store(v, south)
-        }
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            FilledTonalButton(enabled = !reading, contentPadding = PaddingValues(horizontal = 12.dp), onClick = {
-                if (Stealth.blocksLocation) {
-                    Toast.makeText(context, context.getString(R.string.stealth_location_blocked), Toast.LENGTH_LONG).show()
-                    return@FilledTonalButton
-                }
-                withPermission {
-                    scope.launch {
-                        reading = true
-                        val location = DeviceSensors.location(context)
-                        reading = false
-                        if (location == null) {
-                            accuracyM = null
-                            Toast.makeText(context, context.getString(R.string.location_unavailable), Toast.LENGTH_LONG).show()
-                        } else {
-                            val size = String.format(Locale.US, "%.2f", abs(location.latitude))
-                            store(size, location.latitude < 0)
-                            accuracyM = location.accuracy.roundToInt()
-                        }
-                    }
-                }
-            }) {
-                if (reading) CircularProgressIndicator(Modifier.size(ButtonDefaults.IconSize), strokeWidth = 2.dp)
-                else Icon(Icons.Filled.LocationOn, contentDescription = null, modifier = Modifier.size(ButtonDefaults.IconSize))
-                Spacer(Modifier.width(ButtonDefaults.IconSpacing))
-                Text(stringResource(R.string.action_locate_short), maxLines = 1)
-            }
-            accuracyM?.let { Text(stringResource(R.string.location_accuracy, it), style = MaterialTheme.typography.labelSmall) }
-        }
-    }
+    NumberField(
+        stringResource(R.string.label_latitude), raw.removePrefix("-"),
+        "°" + stringResource(if (south) R.string.hemisphere_south else R.string.hemisphere_north), Modifier.fillMaxWidth(),
+        onUnitClick = { store(raw.removePrefix("-"), !south) },
+    ) { v -> if (v.startsWith("-")) store(v.removePrefix("-"), true) else store(v, south) }
 }
