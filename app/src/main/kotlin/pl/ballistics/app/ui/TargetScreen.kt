@@ -64,6 +64,9 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.text.font.FontWeight
+import kotlin.math.cos
+import kotlin.math.sin
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.Dispatchers
@@ -228,6 +231,20 @@ fun TargetScreen(
             .map { (mps, rad) -> Gust(-rad / reticle.unit.radians * scale - dialX, mps.fmt(if (mps % 1.0 == 0.0) 0 else 1)) }
     }.orEmpty()
 
+    // The wind as a flag in the field of view: speed and side from Conditions, the forecast's range under it.
+    val flag = result.setup.conditions.winds.firstOrNull().let { w ->
+        fun one(v: Double) = if (v % 1.0 == 0.0) v.fmt(0) else v.fmt(1)
+        val lo = conditions.windMinMps.toNumber()?.takeIf { it >= 0 }
+        val hi = conditions.windMaxMps.toNumber()?.takeIf { it >= 0 }
+        val speed = w?.speedMps ?: 0.0
+        WindFlag(
+            speedMps = speed,
+            fromRad = w?.fromRad ?: 0.0,
+            label = "${one(speed)} m/s",
+            range = if (lo != null || hi != null) "${one(lo ?: speed)}–${one(hi ?: speed)} m/s" else null,
+        )
+    }
+
     Column(
         modifier.verticalScroll(rememberScrollState()).padding(12.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -331,7 +348,7 @@ fun TargetScreen(
 
         Box(Modifier.fillMaxWidth().aspectRatio(1f)) {
             ReticleView(
-                reticle, holds, selected, leadHold, gusts, field,
+                reticle, holds, selected, leadHold, gusts, flag, field,
                 // The lens keeps clear of the turrets: they stand above it and to its right, as on the scope.
                 Modifier.fillMaxSize().padding(top = TOP_BAND, end = SIDE_BAND).pointerInput(weapon.id) {
                     // Two-finger pinch only, so a one-finger drag still scrolls the screen.
@@ -515,6 +532,63 @@ private val SIDE_BAND = TURRET_DEPTH + 12.dp
 /** Room for a corner text beside the top turret. */
 private val CORNER_WIDTH = 96.dp
 
+/** The wind for the flag; [fromRad] as in core Wind: 0 from the target, π/2 from the right. */
+private class WindFlag(val speedMps: Double, val fromRad: Double, val label: String, val range: String?)
+
+/** How far a flag stands out from the pole, degrees from hanging, by Beaufort force (0–6). */
+private fun flagAngle(mps: Double): Double = when {
+    mps < 0.3 -> 0.0
+    mps < 1.6 -> 10.0
+    mps < 3.4 -> 30.0
+    mps < 5.5 -> 45.0
+    mps < 8.0 -> 60.0
+    mps < 10.8 -> 80.0
+    else -> 90.0
+}
+
+private val FLAG_GREEN = Color(0xFF2E7D32)
+
+/**
+ * A green flag on a pole whose top is at [top]: the hoist stays on the pole and the fly stands out by the
+ * Beaufort angle, downwind. Seen from behind the rifle, a head or tail wind shortens it; past force 6 it flutters.
+ */
+private fun DrawScope.windFlag(f: WindFlag, top: Offset, measurer: TextMeasurer) {
+    val pole = 46.dp.toPx()
+    val h = 22.dp.toPx() * 0.7f
+    val len = 38.dp.toPx() * 0.7f
+    val a = Math.toRadians(maxOf(flagAngle(f.speedMps), 8.0))
+    val side = -sign(sin(f.fromRad)).let { if (it == 0.0) -1.0 else it }  // from the right blows to the left
+    val cross = maxOf(abs(sin(f.fromRad)), 0.25)
+    val d = Offset((side * sin(a) * cross).toFloat(), cos(a).toFloat()) * len
+    val wave = if (flagAngle(f.speedMps) >= 30) 2.dp.toPx() else 0f
+    drawLine(Color(0xFF37474F), top, top + Offset(0f, pole), 2.dp.toPx())
+    val cloth = Path().apply {
+        moveTo(top.x, top.y)
+        lineTo(top.x + d.x / 2, top.y + d.y / 2 - wave)
+        lineTo(top.x + d.x, top.y + d.y)
+        lineTo(top.x + d.x, top.y + h + d.y)
+        lineTo(top.x + d.x / 2, top.y + h + d.y / 2 - wave)
+        lineTo(top.x, top.y + h)
+        close()
+    }
+    drawPath(cloth, FLAG_GREEN)
+    if (flagAngle(f.speedMps) >= 90) {
+        val e = top + Offset(d.x + (side * 5.dp.toPx()).toFloat(), h / 2)
+        drawLine(FLAG_GREEN, e + Offset(0f, -4.dp.toPx()), e + Offset(0f, 4.dp.toPx()), 1.5.dp.toPx())
+        val e2 = e + Offset((side * 4.dp.toPx()).toFloat(), 0f)
+        drawLine(FLAG_GREEN, e2 + Offset(0f, -6.dp.toPx()), e2 + Offset(0f, 6.dp.toPx()), 1.5.dp.toPx())
+    }
+    // Speed beside the pole on the side away from the cloth.
+    val big = measurer.measure(f.label, TextStyle(fontSize = 11.sp, fontWeight = FontWeight.Bold, color = FLAG_GREEN))
+    val x = if (side < 0) top.x + 5.dp.toPx() else top.x - 5.dp.toPx() - big.size.width
+    drawText(big, topLeft = Offset(x, top.y + h))
+    f.range?.let { r ->
+        val small = measurer.measure(r, TextStyle(fontSize = 10.sp, color = FLAG_GREEN))
+        val x2 = if (side < 0) top.x + 5.dp.toPx() else top.x - 5.dp.toPx() - small.size.width
+        drawText(small, topLeft = Offset(x2, top.y + h + big.size.height))
+    }
+}
+
 /** A wind speed's hold beside the aim point, [x] in reticle units like [Hold.x]. */
 private class Gust(val x: Double, val label: String)
 
@@ -545,6 +619,7 @@ private fun ReticleView(
     selected: TrajectoryPoint?,
     lead: Hold?,
     gusts: List<Gust>,
+    flag: WindFlag,
     field: Double,
     modifier: Modifier,
 ) {
@@ -609,6 +684,7 @@ private fun ReticleView(
                 drawCircle(moving, 9.dp.toPx(), p, style = Stroke(1.5.dp.toPx()))
             }
         }
+        clipPath(lens) { windFlag(flag, c + Offset(-radius * 0.62f, radius * 0.30f), text) }
         drawCircle(Color(0xFF263238), radius, c, style = Stroke(4.dp.toPx()))
     }
 }
