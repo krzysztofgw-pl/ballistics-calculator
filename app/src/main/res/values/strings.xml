@@ -560,7 +560,7 @@
     <string name="label_headwind">Headwind</string>
     <string name="label_tailwind">Tailwind</string>
     <string name="dial_shooter_view">Line of fire up</string>
-    <string name="label_forecast_direction">Forecast direction</string>
+    <string name="label_forecast_direction">Wind forecast</string>
     <string name="option_clock">Clock</string>
     <string name="option_true">True</string>
     <!-- Chronograph import and typed velocities -->
