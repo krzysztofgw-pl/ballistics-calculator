@@ -44,6 +44,13 @@ import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.material3.FilledTonalIconToggleButton
+import androidx.compose.material3.IconToggleButton
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.ui.res.painterResource
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
@@ -256,7 +263,7 @@ fun TargetScreen(
                 stringResource(R.string.label_target_distance),
                 dragged?.roundToInt()?.toString() ?: typed ?: distance.roundToInt().toString(),
                 "m",
-                Modifier.width(116.dp).onFocusChanged { f ->
+                Modifier.width(FIELD_WIDTH).onFocusChanged { f ->
                     if (f.isFocused && typed == null) typed = "" else if (!f.isFocused) typed = null
                 },
                 optional = true,
@@ -278,21 +285,12 @@ fun TargetScreen(
             IconButton(onClick = { setDistance(distance + 1) }) {
                 Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, stringResource(R.string.action_farther))
             }
-        }
-        // The speed shares the row with the switch, so the reticle keeps its room.
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Row(
-                Modifier.clickable { update { it.copy(targetMoving = !it.targetMoving) } }.padding(end = 4.dp),
-                verticalAlignment = Alignment.CenterVertically,
+            // A moving target is switched on by the running figure; its speed, course and hold appear when on.
+            FilledTonalIconToggleButton(
+                checked = conditions.targetMoving,
+                onCheckedChange = { v -> update { it.copy(targetMoving = v) } },
             ) {
-                Checkbox(conditions.targetMoving, onCheckedChange = { v -> update { it.copy(targetMoving = v) } })
-                Text(stringResource(R.string.label_moving_target))
-            }
-            if (conditions.targetMoving) {
-                Spacer(Modifier.width(12.dp))
-                NumberField(stringResource(R.string.label_target_speed), conditions.targetSpeedMps, "m/s", Modifier.weight(1f)) { v ->
-                    update { it.copy(targetSpeedMps = v) }
-                }
+                Icon(painterResource(R.drawable.ic_moving_target), stringResource(R.string.label_moving_target))
             }
         }
 
@@ -346,11 +344,26 @@ fun TargetScreen(
             Advice(elevation, windage, moving, orDial, abs(h.x) > reticle.extent || abs(h.y) > reticle.extent)
         }
 
+        if (conditions.targetMoving) {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                NumberField(stringResource(R.string.label_target_speed), conditions.targetSpeedMps, "m/s", Modifier.width(FIELD_WIDTH)) { v ->
+                    update { it.copy(targetSpeedMps = v) }
+                }
+                Text(
+                    advice?.moving.orEmpty(),
+                    Modifier.weight(1f).padding(start = 12.dp),
+                    color = MOVING_BLUE,
+                    style = MaterialTheme.typography.bodyMedium,
+                    textAlign = TextAlign.End,
+                )
+            }
+        }
+
         Box(Modifier.fillMaxWidth().aspectRatio(1f)) {
             ReticleView(
                 reticle, holds, selected, leadHold, gusts, flag, field,
                 // The lens keeps clear of the turrets: they stand above it and to its right, as on the scope.
-                Modifier.fillMaxSize().padding(top = TOP_BAND, end = SIDE_BAND).pointerInput(weapon.id) {
+                Modifier.fillMaxSize().padding(top = TURRET_BAND, end = TURRET_BAND).pointerInput(weapon.id) {
                     // Two-finger pinch only, so a one-finger drag still scrolls the screen.
                     awaitEachGesture {
                         awaitFirstDown(requireUnconsumed = false)
@@ -369,7 +382,7 @@ fun TargetScreen(
             )
             advice?.let { a ->
                 // Both turrets, set as the settings say (computed figure dialed, or zero to hold); dragging a drum turns it.
-                // The corner text gives the hold on the reticle for an axis not fully dialed.
+                // Both are the same thickness and the same gap from the lens, centred on it.
                 TurretView(
                     vertical = false,
                     value = setUp,
@@ -379,7 +392,7 @@ fun TargetScreen(
                     negativeLetter = stringResource(R.string.down_short) + " →",
                     description = stringResource(R.string.turret_elevation, a.elevation),
                     onChange = { manualUp = it },
-                    modifier = Modifier.align(Alignment.TopCenter).offset(x = -SIDE_BAND / 2).size(TURRET_LENGTH, TURRET_DEPTH),
+                    modifier = Modifier.align(Alignment.TopCenter).offset(x = -TURRET_BAND / 2).size(TURRET_LENGTH, TURRET_DEPTH),
                 )
                 val side = stringResource(if (setRight >= 0) R.string.right_short else R.string.left_short)
                 TurretView(
@@ -391,87 +404,77 @@ fun TargetScreen(
                     negativeLetter = stringResource(R.string.left_short) + " ↓",
                     description = stringResource(R.string.turret_windage, a.windage),
                     onChange = { manualRight = it },
-                    modifier = Modifier.align(Alignment.CenterEnd).offset(y = TOP_BAND / 2).size(TURRET_DEPTH + 8.dp, TURRET_LENGTH),
+                    modifier = Modifier.align(Alignment.CenterEnd).offset(y = TURRET_BAND / 2).size(TURRET_DEPTH, TURRET_LENGTH),
                 )
-                // Turned by hand: a round button in the top right corner puts both back to the computed corrections
+                // Turned by hand: a round button in the corner between the turrets puts both back to the computed corrections
                 // (the bottom right corner holds the moving target's course).
-                val turned = manualUp != null || manualRight != null
-                if (turned) {
+                if (manualUp != null || manualRight != null) {
                     FilledTonalIconButton(
                         onClick = { manualUp = null; manualRight = null },
-                        modifier = Modifier.align(Alignment.TopEnd),
+                        modifier = Modifier.align(Alignment.TopEnd).size(TURRET_DEPTH),
                     ) {
                         Icon(Icons.Default.Refresh, stringResource(R.string.action_reset_turrets))
                     }
                 }
-                if (!(correction.dialElevation && manualUp == null)) {
-                    CornerLabel(stringResource(R.string.label_elevation), a.elevation, Color.Unspecified, Modifier.align(Alignment.TopStart), maxWidth = CORNER_WIDTH)
-                }
-                if (!(correction.dialWindage && manualRight == null)) {
-                    CornerLabel(
-                        stringResource(R.string.label_windage), a.windage, Color.Unspecified, Modifier.align(Alignment.TopEnd).padding(top = if (turned) 44.dp else 0.dp), TextAlign.End,
-                        maxWidth = CORNER_WIDTH,
-                    )
-                }
-                a.moving?.let { CornerLabel(stringResource(R.string.label_moving), it, Color(0xFF1E88E5), Modifier.align(Alignment.BottomStart)) }
             }
             // The course is set on a small dial in the free corner: up is away from the shooter, right is to the right.
+            // Bottom right, shifted left so it clears the windage turret above it.
             if (conditions.targetMoving) {
-                Surface(
-                    Modifier.align(Alignment.BottomEnd),
-                    shape = MaterialTheme.shapes.small,
-                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
-                ) {
-                    Column(Modifier.padding(4.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                        CompassDial(
-                            markers = listOf(DialMarker(targetDirection, DialArrow.OUTWARD, MaterialTheme.colorScheme.primary, true)),
-                            onChange = { v -> update { it.copy(targetDirectionDeg = v.roundToInt().mod(360).toString()) } },
-                            centerText = "${targetDirection.roundToInt().mod(360)}°",
-                            outerLabel = null,
-                            stepDeg = 15.0,
-                            maxSize = 96.dp,
-                            modifier = Modifier.size(96.dp),
-                        )
-                        Text(stringResource(R.string.label_target_course), style = MaterialTheme.typography.labelSmall)
-                    }
-                }
+                CompassDial(
+                    markers = listOf(DialMarker(targetDirection, DialArrow.OUTWARD, MaterialTheme.colorScheme.primary, true)),
+                    onChange = { v -> update { it.copy(targetDirectionDeg = v.roundToInt().mod(360).toString()) } },
+                    centerText = "${targetDirection.roundToInt().mod(360)}°",
+                    outerLabel = null,
+                    stepDeg = 15.0,
+                    maxSize = COURSE_SIZE,
+                    modifier = Modifier.align(Alignment.BottomEnd).offset(x = -(TURRET_DEPTH - 6.dp)).size(COURSE_SIZE),
+                )
             }
         }
+        // What is held on the reticle for an axis not fully dialed, one line each under the lens.
         advice?.let { a ->
+            if (!(correction.dialElevation && manualUp == null)) {
+                Text(stringResource(R.string.label_axis_advice, stringResource(R.string.label_elevation), a.elevation), style = MaterialTheme.typography.bodyMedium)
+            }
+            if (!(correction.dialWindage && manualRight == null)) {
+                Text(stringResource(R.string.label_axis_advice, stringResource(R.string.label_windage), a.windage), style = MaterialTheme.typography.bodyMedium)
+            }
             a.orDial?.let { Text(it, style = MaterialTheme.typography.bodyMedium) }
             if (a.outside) Text(stringResource(R.string.hold_outside_reticle), color = MaterialTheme.colorScheme.error)
         }
+        // Reticle, magnification and the lock past the scope's range share one row: they change least often.
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            ReticleChip(reticle) { previewId = it.id }
             Text(
                 stringResource(R.string.magnification_value, magnification.toDouble().magFmt()),
-                Modifier.weight(1f),
+                Modifier.padding(horizontal = 8.dp),
                 style = MaterialTheme.typography.titleSmall,
             )
-            FilterChip(
-                selected = unlocked,
-                onClick = {
-                    unlocked = !unlocked
+            Slider(
+                value = magnification.coerceIn(range),
+                onValueChange = { magnification = it },
+                valueRange = range,
+                modifier = Modifier.weight(1f),
+            )
+            IconToggleButton(
+                checked = unlocked,
+                onCheckedChange = {
+                    unlocked = it
                     if (!unlocked) magnification = magnification.coerceIn(minMag.toFloat(), maxMag.toFloat())
                 },
-                label = { Text(stringResource(R.string.action_unlock_magnification)) },
-            )
+            ) {
+                Icon(
+                    painterResource(if (unlocked) R.drawable.ic_lock_open else R.drawable.ic_lock),
+                    stringResource(R.string.action_unlock_magnification),
+                )
+            }
         }
-        Slider(
-            value = magnification.coerceIn(range),
-            onValueChange = { magnification = it },
-            valueRange = range,
-        )
         if (magnification < minMag - 1e-3 || magnification > maxMag + 1e-3) {
             Text(
                 stringResource(R.string.magnification_outside_range, minMag.magFmt(), maxMag.magFmt()),
                 color = MaterialTheme.colorScheme.error,
                 style = MaterialTheme.typography.bodySmall,
             )
-        }
-        ReticleChoice(stringResource(R.string.label_reticle), reticle, reticle.unit, {
-            stringResource(it.family)
-        }) {
-            previewId = it.id
         }
         if (previewId != own.id) {
             Text(
@@ -484,6 +487,26 @@ fun TargetScreen(
         TargetTools(result, conditions, update, analysis, inputs, reticle, scale, ui.charts, { setDistance(it) }, onSaveAmmo, onAddAmmoCopy)
         if (analysis != null && ui.charts.any { it in ChartKind.card }) {
             Collapsible(stringResource(R.string.section_charts)) { TargetCharts(result, analysis, distance, ui.charts) { setDistance(it) } }
+        }
+    }
+}
+
+/** The reticle as a small chip that drops down every design, with its unit where it comes in both. */
+@Composable
+private fun ReticleChip(selected: Reticle, onSelect: (Reticle) -> Unit) {
+    var open by remember { mutableStateOf(false) }
+    Box {
+        FilledTonalButton(onClick = { open = true }, contentPadding = PaddingValues(horizontal = 10.dp)) {
+            Text(stringResource(selected.family) + " ▾", style = MaterialTheme.typography.labelLarge)
+        }
+        DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+            Reticles.families(selected.unit).flatMap { Reticles.variants(it) }.distinctBy { it.id }.forEach { r ->
+                val both = Reticles.variants(r).size > 1
+                DropdownMenuItem(
+                    text = { Text(stringResource(r.family) + if (both) " (${r.unit.label})" else "") },
+                    onClick = { onSelect(r); open = false },
+                )
+            }
         }
     }
 }
@@ -524,13 +547,14 @@ private fun Double.dialFmt(click: Double?): String {
 }
 
 private val TURRET_LENGTH = 136.dp
-private val TURRET_DEPTH = 44.dp
-/** Strips of the reticle box kept for the turrets, so they never cover the lens. */
-private val TOP_BAND = TURRET_DEPTH + 4.dp
-private val SIDE_BAND = TURRET_DEPTH + 12.dp
-
-/** Room for a corner text beside the top turret. */
-private val CORNER_WIDTH = 96.dp
+private val TURRET_DEPTH = 46.dp
+/** The strip above and right of the lens: a turret and the same gap to the lens on both sides. */
+private val TURRET_BAND = TURRET_DEPTH + 6.dp
+/** The course dial in the bottom right corner. */
+private val COURSE_SIZE = 88.dp
+/** Distance and target speed fields share one width. */
+private val FIELD_WIDTH = 104.dp
+private val MOVING_BLUE = Color(0xFF1E88E5)
 
 /** The wind for the flag; [fromRad] as in core Wind: 0 from the target, π/2 from the right. */
 private class WindFlag(val speedMps: Double, val fromRad: Double, val label: String, val range: String?)
@@ -593,24 +617,6 @@ private fun DrawScope.windFlag(f: WindFlag, top: Offset, measurer: TextMeasurer)
 private class Gust(val x: Double, val label: String)
 
 private class Advice(val elevation: String, val windage: String, val moving: String?, val orDial: String?, val outside: Boolean)
-
-/** A short title over its value, on a pale plate so it reads over the lens edge. */
-@Composable
-private fun CornerLabel(
-    title: String,
-    value: String,
-    color: Color,
-    modifier: Modifier,
-    align: TextAlign = TextAlign.Start,
-    maxWidth: Dp = 168.dp,
-) {
-    Surface(modifier.widthIn(max = maxWidth), shape = MaterialTheme.shapes.small, color = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f)) {
-        Column(Modifier.padding(horizontal = 6.dp, vertical = 3.dp)) {
-            Text(title, Modifier.fillMaxWidth(), style = MaterialTheme.typography.labelSmall, textAlign = align, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Text(value, Modifier.fillMaxWidth(), style = MaterialTheme.typography.labelLarge, textAlign = align, color = color)
-        }
-    }
-}
 
 @Composable
 private fun ReticleView(
