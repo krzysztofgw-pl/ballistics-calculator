@@ -239,8 +239,9 @@ fun TargetScreen(
         )
     }
 
-    // With the mean wind dialed, the lightest and strongest forecast wind are marks to hold beside the aim point.
-    val gusts = analysis?.bracket?.takeIf { (correction.dialWindage || manualRight != null) && selected != null }?.let { b ->
+    // The lightest and strongest forecast wind are marks to hold beside the aim point, dialed or held, after the turret
+    // (Settings > Display can hide them).
+    val gusts = analysis?.bracket?.takeIf { ui.windBracketOnLens && selected != null }?.let { b ->
         listOf(b.minMps to b.minRad, b.maxMps to b.maxRad)
             .filter { !it.second.isNaN() }
             .distinctBy { it.first }

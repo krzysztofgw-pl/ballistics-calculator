@@ -384,6 +384,7 @@
     <string name="title_settings">Settings</string>
     <string name="section_display">Display</string>
     <string name="label_keep_screen_on">Keep the screen on</string>
+    <string name="label_wind_bracket_on_lens">Wind bracket on the lens</string>
     <string name="label_tabs">Tabs</string>
     <string name="label_sub_tabs">Sub-tabs</string>
     <string name="placement_top">Top</string>

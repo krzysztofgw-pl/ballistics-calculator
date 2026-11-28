@@ -215,6 +215,7 @@ fun SettingsScreen(
                     }
                 }
                 SwitchRow(stringResource(R.string.label_keep_screen_on), ui.keepScreenOn) { v -> onUi { it.copy(keepScreenOn = v) } }
+                SwitchRow(stringResource(R.string.label_wind_bracket_on_lens), ui.windBracketOnLens) { v -> onUi { it.copy(windBracketOnLens = v) } }
                 Placement(stringResource(R.string.label_tabs), ui.tabsAtTop) { v -> onUi { it.copy(tabsAtTop = v) } }
                 Placement(stringResource(R.string.label_sub_tabs), ui.subTabsAtTop) { v -> onUi { it.copy(subTabsAtTop = v) } }
                 // The switch turns all charts on or off; the arrow opens the list of single charts.

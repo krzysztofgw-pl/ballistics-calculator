@@ -269,6 +269,8 @@ data class UiSettings(
     val tabsAtTop: Boolean = false,
     val subTabsAtTop: Boolean = false,
     val keepScreenOn: Boolean = false,
+    /** The wind bracket's lightest and strongest wind as marks beside the aim point in the target lens. */
+    val windBracketOnLens: Boolean = true,
     /** Charts in the target tools and the Charts card; off saves the work of drawing them. */
     val showCharts: Boolean = true,
     /** Single charts turned off under [showCharts]. */
