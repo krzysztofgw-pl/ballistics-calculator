@@ -54,6 +54,9 @@ class CloudSync(private val context: Context, private val onRemote: (remote: App
      */
     private var paused = Stealth.blocksNetwork
 
+    /** The cloud holds a copy this version can't read (e.g. from a much newer app); nothing is uploaded over it. */
+    private var cloudUnreadable = false
+
     private val _state = MutableStateFlow<SyncState>(if (available) SyncState.SignedOut else SyncState.Unavailable)
     val state: StateFlow<SyncState> = _state.asStateFlow()
 
@@ -81,9 +84,16 @@ class CloudSync(private val context: Context, private val onRemote: (remote: App
                 _state.value = SyncState.SignedIn(auth.currentUser?.email, error.localizedMessage)
                 return@addSnapshotListener
             }
-            val remote = snapshot?.getString(FIELD_DATA)?.let { Repository.decode(it) }
+            val text = snapshot?.getString(FIELD_DATA)
+            val remote = text?.let { Repository.decode(it) }
             // A copy read from the local cache (e.g. offline) is no proof of what the cloud holds.
             val fromServer = snapshot?.metadata?.isFromCache == false
+            cloudUnreadable = text != null && remote == null
+            if (cloudUnreadable) {
+                // A copy this version can't read is kept as it is: uploading the phone's data would replace it.
+                _state.value = SyncState.SignedIn(auth.currentUser?.email, context.getString(R.string.sync_unreadable))
+                return@addSnapshotListener
+            }
             if (remote == null) {
                 // Upload only when the server says there is no copy yet, never on a cache miss.
                 if (fromServer) pendingFirstPush?.invoke()
@@ -115,7 +125,7 @@ class CloudSync(private val context: Context, private val onRemote: (remote: App
     }
 
     fun push(data: AppData) {
-        if (paused) return
+        if (paused || cloudUnreadable) return
         val uid = if (available) auth.currentUser?.uid else null
         uid ?: return
         db.collection(USERS).document(uid).set(

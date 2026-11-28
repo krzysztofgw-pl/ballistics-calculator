@@ -93,7 +93,7 @@ fun WeaponEditor(
             Choice(stringResource(R.string.label_turret_units), unit, TurretUnit.entries, { it.label }) { v ->
                 // MOA and SMOA share click sizes, so a click typed for one stays.
                 val keepClicks = v.reticleUnit == unit.reticleUnit
-                w = w.withTurretUnit(v).let { if (keepClicks) it else it.copy(clickValue = v.defaultClick) }
+                w = w.copy(turretUnit = v).let { if (keepClicks) it else it.copy(clickValue = v.defaultClick) }
             }
             // The click and the turret correction (measured ÷ dialled, blank is 1), explained in Help.
             FieldRow { m ->

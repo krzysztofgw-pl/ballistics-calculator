@@ -10,6 +10,7 @@ object Store {
 
     private val json = Json {
         ignoreUnknownKeys = true
+        coerceInputValues = true
         encodeDefaults = true
         prettyPrint = true
     }
@@ -58,7 +59,10 @@ object Store {
 
     fun encode(data: AppData): String = json.encodeToString(AppData.serializer(), data)
 
-    fun decode(text: String): AppData? = runCatching { json.decodeFromString(AppData.serializer(), text) }.getOrNull()
+    /** Reads saved or imported data, older formats included (see [DataMigration]); null when it can't be read. */
+    fun decode(text: String): AppData? = runCatching {
+        json.decodeFromJsonElement(AppData.serializer(), DataMigration.migrate(json.parseToJsonElement(text))).copy(version = AppData.CURRENT_VERSION)
+    }.getOrNull()
 
     private fun load(): AppData = localStorage.getItem(KEY)?.let { decode(it) } ?: AppData.sample()
 }

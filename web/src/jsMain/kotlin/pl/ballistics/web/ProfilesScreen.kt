@@ -56,7 +56,7 @@ object ProfilesScreen {
         root.card(S.sectionScope) {
             textField(S.labelScope, w.scopeName) { w = w.copy(scopeName = it) }
             row {
-                select(S.labelTurretUnits, TurretUnit.entries.map { it to it.label }, w.turretUnit) { w = w.withTurretUnit(it) }
+                select(S.labelTurretUnits, TurretUnit.entries.map { it to it.label }, w.turretUnit) { w = w.copy(turretUnit = it) }
                 numberField(S.labelClickValue, w.clickValue) { w = w.copy(clickValue = it) }
             }
             numberField(S.labelTurretCorrection, w.turretFactor) { w = w.copy(turretFactor = it) }

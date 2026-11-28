@@ -78,7 +78,7 @@ object Calculator {
             projectile = Projectile(drag, massKg, diameterM, lengthM),
             muzzleVelocityMps = num(w.muzzleVelocityFor(a), R.string.field_muzzle_velocity, true),
             powderSensitivityMpsPerC = a.powderSensitivity.takeIf { it.isNotBlank() }
-                ?.let { num(it, R.string.field_powder_sensitivity) }?.takeIf { it != 0.0 }
+                ?.let { num(it, R.string.field_powder_sensitivity) }
                 ?: STANDARD_POWDER_SENSITIVITY,
             powderReferenceTempC = a.powderReferenceTemp.takeIf { it.isNotBlank() }
                 ?.let { num(it, R.string.field_powder_reference_temp) } ?: 21.0,
@@ -108,7 +108,7 @@ object Calculator {
         }
 
         val windSpeed = num(c.windSpeed, R.string.field_wind_speed)
-        val winds = if (windSpeed != 0.0) listOf(Wind.fromClock(windSpeed, num(c.windDirectionDeg, R.string.field_wind_direction) / 30)) else emptyList()
+        val winds = if (windSpeed != 0.0) listOf(Wind.fromClock(windSpeed, num(c.windFromDeg, R.string.field_wind_direction) / 30)) else emptyList()
 
         val conditions = ShotConditions(
             atmosphere = atmosphere,

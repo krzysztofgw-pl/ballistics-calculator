@@ -3,25 +3,16 @@ package pl.ballistics.app.data
 import pl.ballistics.core.Units
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class TurretSettingsTest {
     @Test
-    fun smoaIsStoredAsMoaSoOlderVersionsStillReadIt() {
-        val rifle = WeaponProfile().withTurretUnit(TurretUnit.SMOA)
+    fun smoaRoundTripsAsItsOwnUnit() {
+        val rifle = WeaponProfile(turretUnit = TurretUnit.SMOA)
         val json = Repository.encode(AppData(weapons = listOf(rifle)))
-        assertTrue("\"angularUnit\": \"MOA\"" in json)
-        assertTrue("\"inchMoa\": true" in json)
+        assertTrue("\"turretUnit\": \"SMOA\"" in json)
         assertEquals(TurretUnit.SMOA, Repository.decode(json)!!.weapons.single().turretUnit)
         assertEquals(Units.SMOA, rifle.elevationTurret.unitRad)
-    }
-
-    @Test
-    fun switchingBackToMradClearsTheInchFlag() {
-        val rifle = WeaponProfile().withTurretUnit(TurretUnit.SMOA).withTurretUnit(TurretUnit.MRAD)
-        assertEquals(AngularUnit.MRAD, rifle.angularUnit)
-        assertFalse(rifle.inchMoa)
     }
 
     @Test

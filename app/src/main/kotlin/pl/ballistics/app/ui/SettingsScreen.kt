@@ -157,18 +157,18 @@ fun SettingsScreen(
                     pressureIsQnh, onPressureIsQnh,
                 )
                 // Pressure source with a Test button that reads it without touching the conditions.
-                val sources = PressureSource.entries.filter { it != PressureSource.PHONE || hasBarometer || ui.pressureFrom == it }
+                val sources = PressureSource.entries.filter { it != PressureSource.PHONE || hasBarometer || ui.pressureSource == it }
                 Choice(
-                    stringResource(R.string.label_pressure_source), ui.pressureFrom, sources,
+                    stringResource(R.string.label_pressure_source), ui.pressureSource, sources,
                     name = { stringResource(it.label) },
-                ) { source -> onUi { it.withPressureFrom(source) } }
-                when (ui.pressureFrom) {
+                ) { source -> onUi { it.copy(pressureSource = source) } }
+                when (ui.pressureSource) {
                     PressureSource.GARMIN -> WatchPressureButton({ }, Modifier.fillMaxWidth(), stringResource(R.string.action_test_pressure))
                     PressureSource.PHONE -> PhonePressureButton({ }, Modifier.fillMaxWidth(), stringResource(R.string.action_test_pressure))
                     PressureSource.NONE -> Unit
                 }
                 Choice(
-                    stringResource(R.string.label_altitude_source), ui.altitudeFrom, AltitudeSource.entries - AltitudeSource.MANUAL,
+                    stringResource(R.string.label_altitude_source), ui.altitudeSource, AltitudeSource.entries,
                     name = { stringResource(it.label) },
                 ) { source -> onUi { it.copy(altitudeSource = source) } }
                 // Same order as on Conditions: pressure, altitude, then the latitude below them.
@@ -186,7 +186,7 @@ fun SettingsScreen(
                 ) { clock -> onUi { it.copy(forecastTrueBearing = !clock) } }
             }
 
-            StealthSettings(ui.garminWatch, onOpenStealth)
+            StealthSettings(ui.pressureSource == PressureSource.GARMIN, onOpenStealth)
 
             Section(stringResource(R.string.section_display)) {
                 ThemeMode.entries.forEach { mode ->

@@ -117,7 +117,7 @@ fun ForecastDialog(
             ForecastState.Failed(noLocation)
         } else {
             try {
-                val terrain = ui.altitudeFrom == AltitudeSource.TERRAIN
+                val terrain = ui.altitudeSource == AltitudeSource.TERRAIN
                 // The forecast's own height is a coarse model; the terrain map is finer (1 m in Poland).
                 val (forecast, ground) = coroutineScope {
                     val height = async {
@@ -231,7 +231,7 @@ fun ForecastDialog(
                         )
                         ready?.let { r ->
                             if (ui.locationSetsLatitude) next = next.copy(latitudeDeg = String.format(Locale.US, "%.2f", r.latitude))
-                            if (ui.altitudeFrom == AltitudeSource.TERRAIN) r.elevationM?.let { next = next.copy(altitudeM = it.roundToInt().toString()) }
+                            if (ui.altitudeSource == AltitudeSource.TERRAIN) r.elevationM?.let { next = next.copy(altitudeM = it.roundToInt().toString()) }
                         }
                         if (fillAtmosphere) {
                             s.temperatureC?.let { next = next.copy(temperatureC = one(it)) }
