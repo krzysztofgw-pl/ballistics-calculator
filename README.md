@@ -7,7 +7,7 @@ models: standard drag functions, Doppler-derived drag curves, a humid-air atmosp
 aerodynamic jump. It keeps rifle and load profiles, gives a DOPE chart with turret clicks, draws the holds and
 the turrets around your scope's reticle, and syncs everything to the cloud.
 
-Current version: **1.1.0**, on [Google Play](https://play.google.com/store/apps/details?id=com.kgwlabs.ballistics)
+Current version: **1.2.0**, on [Google Play](https://play.google.com/store/apps/details?id=com.kgwlabs.ballistics)
 as "Ballistics by KGW Labs", and as an APK from the [latest release](#installing).
 
 | | | | |
