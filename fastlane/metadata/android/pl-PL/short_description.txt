@@ -1,0 +1,1 @@
+Kalkulator balistyczny: tabela DOPE, punkty celowania na siatce, wiatr, MRAD/MOA

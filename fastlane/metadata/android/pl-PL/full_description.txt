@@ -1,0 +1,63 @@
+Ballistics to darmowy kalkulator balistyczny dla strzelców precyzyjnych i myśliwych. Wpisz raz karabin, lunetę i amunicję, a aplikacja powie, ile wykręcić na bębnach albo gdzie trzymać na siatce, na każdym dystansie. Bez reklam, bez śledzenia, działa offline.
+
+CO WYKRĘCIĆ, GDZIE TRZYMAĆ
+• Poprawki w pionie i poziomie w MRAD, MOA lub SMOA, zaokrąglone do pełnych kliknięć
+• Korekta bębnów z testu wysokiej tarczy, dla lunet, które nie kręcą dokładnie
+• Oba bębny narysowane przy siatce: obracasz je palcem, jednym dotknięciem wracają
+• Punkty trafień na siatce Twojej lunety (DLR-3, DLS-1, DLS-3, Mil-Dot, choinka, hash i duplex w MRAD lub MOA), FFP lub SFP, przy każdym powiększeniu
+• Dla każdej siatki wybierasz, czy pion i poziom wykręcasz, czy trzymasz
+• Flaga wiatru w polu widzenia pokazuje jego siłę i kierunek
+• Cele ruchome: jedno dotknięcie, prędkość i kurs, a punkt wyprzedzenia pojawia się na siatce
+
+TABELA DOPE I KARTA DYSTANSÓW
+• Tabela DOPE do maksymalnego dystansu: opad, poprawka, kliknięcia, znos wiatru, prędkość, energia, czas lotu i Mach
+• Karta dystansów z zapisanymi celami: dystans, kąt, azymut i wielkość
+• Wykresy znosu od prędkości i kierunku wiatru, dryfu żyroskopowego i prawdopodobieństwa trafienia od dystansu oraz Coriolisa od azymutu
+
+WIATR I POGODA
+• Tarcza wiatru: zegar wiatru w pierścieniu kompasu, obracany z azymutem strzału
+• Wiatr boczny oraz czołowy lub w plecy pod tarczą
+• Kompas z deklinacją i kontrolą kalibracji
+• Prognoza wiatru dla Twojej lokalizacji (Open-Meteo): 12-godzinny wykres średniego wiatru, porywów i kierunku; przeciągnij okno na godziny strzelania
+• Przeliczenie na wysokość strzelania (10 m, otwarty teren, las)
+• Temperatura, wilgotność i ciśnienie z prognozy
+• Ciśnienie z barometru telefonu lub z zegarka Garmin z darmową aplikacją Station Pressure, z przyciskiem Test
+• Wysokość i szerokość geograficzna jednym dotknięciem, z mapy terenu lub GPS
+• Kąt strzału mierzony kamerą telefonu
+
+IMPORT Z CHRONOGRAFU
+• Labradar, Labradar LX, Garmin Xero C1 (CSV lub FIT), Athlon Rangecraft, MagnetoSpeed V3 i Sporter albo dowolna tabela z prędkościami
+• Albo wpisz prędkości strzał po strzale, w m/s lub fps
+• Średnia, SD i ES, oznaczone błędne odczyty
+• Zapis prędkości wylotowej dla karabinu lub amunicji, przeliczonej na temperaturę prochu
+
+DOKŁADNY SOLWER BALISTYCZNY
+• Model punktu materialnego 3-DOF z funkcjami oporu G1, G7, G2, G5, G6, G8, GI, GS i RA4
+• Własne krzywe oporu Cd(Mach) z radaru dopplerowskiego i BC w przedziałach prędkości
+• Atmosfera z wilgotnością, wysokość gęstościowa, ciśnienie na stanowisku lub QNH
+• Efekty Coriolisa i Eötvösa, dryf żyroskopowy, skok aerodynamiczny i stabilność Millera, każdy do wyłączenia
+• Wrażliwość prochu na temperaturę i osobne warunki przestrzeliwania
+• Sprawdzony z niezależnym silnikiem balistycznym open source
+
+TWOJE KARABINY I AMUNICJA
+• Profile karabinów, lunet i amunicji, z pomocnikiem wysokości lunety
+• Prędkość wylotowa dla każdego karabinu i długość lufy z testu fabrycznego
+• Tłumik założony lub nie, z przesunięciem punktu trafienia
+• Biblioteka ponad 600 pocisków Barnes, Berger, Hornady, Lapua, Sierra i Speer z BC G1 i G7 oraz amunicja fabryczna
+• Korekta BC ze zmierzonego opadu lub prędkości na dystansie
+
+NARZĘDZIA W TERENIE
+• Szansa trafienia pierwszym strzałem z wielkości skupienia, SD prędkości, niepewności wiatru i dystansu
+• Widełki wiatru na wycinku siatki, z porywami z prognozy
+• Błąd dystansu: gdzie trafi pocisk, gdy dystans jest źle oceniony
+• Pomiar dystansu siatką (mil-dot)
+
+TRYB STEALTH
+• Jedno dotknięcie wyłącza wszystkie połączenia aplikacji; lokalizacja tylko z GPS
+• Kafelek w Szybkich ustawieniach i ostrzeżenie, gdy radia telefonu nadają
+
+SYNCHRONIZACJA I KOPIA
+• Opcjonalna synchronizacja między telefonami przez konto Google
+• Eksport i import wszystkich profili do pliku
+
+Dla PRS, F-Class, ELR, polowań i strzelectwa tarczowego z broni centralnego zapłonu. Kalkulator tylko przewiduje: zawsze potwierdź poprawki strzelaniem.
