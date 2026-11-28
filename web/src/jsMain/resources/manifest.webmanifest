@@ -1,7 +1,7 @@
 {
   "name": "Ballistics",
   "short_name": "Ballistics",
-  "description": "Ballistic calculator by KGW Labs",
+  "description": "Ballistic calculator by KGWLabs",
   "id": "./",
   "start_url": "./",
   "scope": "./",

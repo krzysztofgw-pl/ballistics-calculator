@@ -136,7 +136,7 @@ object S {
     const val optionHold = "Hold"
     const val hintInstall = "In Safari tap Share, then Add to Home Screen. The app then opens full screen and works offline."
     const val hintBackup = "Profiles are stored in this browser only. The file is the same as the Android app's export, so profiles move both ways."
-    const val aboutWeb = "Web version of KGW Labs Ballistics, for phones without Android. It uses the same solver as the Android app. Garmin watch pressure, the weather forecast and cloud sync are only in the Android app."
+    const val aboutWeb = "Web version of KGWLabs Ballistics, for phones without Android. It uses the same solver as the Android app. Garmin watch pressure, the weather forecast and cloud sync are only in the Android app."
 
     const val errorNoWeapon = "Add a rifle profile on the Profiles tab."
     fun errorNoAmmo(rifle: String) = "Choose a load for $rifle."
