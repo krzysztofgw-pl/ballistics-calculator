@@ -773,10 +773,9 @@ private fun ReticleView(
                 val p = at(h.x, h.y)
                 drawCircle(moving, 5.dp.toPx(), p)
                 drawCircle(moving, 9.dp.toPx(), p, style = Stroke(1.5.dp.toPx()))
-                // Its hold sits on a faint plate in a corner of the lens on the lead dot's side (Krzysiek: the
-                // advice belongs with the blue dot): bottom left when the dot is left (the upper left holds the
-                // wind flag), top right or bottom right when it is right. Along the rim of that corner it takes
-                // the spot covering fewest trajectory dots, their figures and the lead dot, then the one deepest in the corner.
+                // Its hold sits on a faint plate right above or below the blue dot (Krzysiek: close to the dot),
+                // slid sideways only as far as it takes to stay inside the lens and clear of trajectory dots,
+                // their figures, the reticle's figures and the wind flag; of those spots the one nearest the dot.
                 leadText?.let { t ->
                     val layout = text.measure(t, TextStyle(fontSize = 11.sp, color = Color(0xFF1565C0)))
                     val pad = 4.dp.toPx()
@@ -795,34 +794,31 @@ private fun ReticleView(
                             val fx = if (hh.x < 0) d.x - gap - fig.width else d.x + gap
                             listOf(dot, androidx.compose.ui.geometry.Rect(fx, d.y - fig.height / 2f, fx + fig.width, d.y + fig.height / 2f))
                         }
-                    } + androidx.compose.ui.geometry.Rect(p, 11.dp.toPx())
+                    } + androidx.compose.ui.geometry.Rect(p, 11.dp.toPx()) +
+                        // The reticle's figures and the wind flag in the upper left (pole, speeds and dial).
+                        reticle.marks.filterIsInstance<Mark.Label>().map { m ->
+                            val sz = text.measure(m.text, TextStyle(fontSize = 10.sp)).size
+                            androidx.compose.ui.geometry.Rect(at(m.x, m.y) - Offset(sz.width / 2f, sz.height / 2f), Size(sz.width.toFloat(), sz.height.toFloat()))
+                        } +
+                        androidx.compose.ui.geometry.Rect(c.x - radius * 0.82f, c.y - radius * 0.60f, c.x - radius * 0.30f, c.y - radius * 0.12f) +
+                        // The crosshair, with a few px of air on each side (Krzysiek).
+                        androidx.compose.ui.geometry.Rect(c.x - 4.dp.toPx(), c.y - radius, c.x + 4.dp.toPx(), c.y + radius) +
+                        androidx.compose.ui.geometry.Rect(c.x - radius, c.y - 4.dp.toPx(), c.x + radius, c.y + 4.dp.toPx())
                     val rim = radius - margin
-                    val corners = when {
-                        p.x < c.x - 1f -> listOf(false to true)
-                        p.x > c.x + 1f -> listOf(true to false, true to true)
-                        else -> listOf(false to true, true to false, true to true)
+                    val gap = 14.dp.toPx()
+                    val step = 2.dp.toPx()
+                    val candidates = listOf(p.y + gap, p.y - gap - hgt).flatMap { y ->
+                        generateSequence(p.x - w) { it + step }.takeWhile { it <= p.x }.map { x -> Offset(x, y) }
+                    }.filter { o ->
+                        listOf(o, o + Offset(w, 0f), o + Offset(0f, hgt), o + Offset(w, hgt))
+                            .all { (it - c).getDistance() <= rim }
                     }
-                    // [right]/[below]: the corner's side. The plate's outer corner goes on the rim, at angles
-                    // (from the horizontal) where the whole plate stays inside the lens.
-                    val best = corners.flatMap { (right, below) ->
-                        val sx = if (right) 1f else -1f
-                        val sy = if (below) 1f else -1f
-                        (5..85).map { deg ->
-                            val a = Math.toRadians(deg.toDouble())
-                            val dx = (rim * cos(a)).toFloat()
-                            val dy = (rim * sin(a)).toFloat()
-                            Offset(if (right) c.x + dx - w else c.x - dx, if (below) c.y + dy - hgt else c.y - dy)
-                        }.filter { o ->
-                            listOf(o, o + Offset(w, 0f), o + Offset(0f, hgt), o + Offset(w, hgt))
-                                .all { (it - c).getDistance() <= rim + 0.5f }
-                        }.map { o ->
-                            val plate = androidx.compose.ui.geometry.Rect(o, Size(w, hgt)).inflate(2.dp.toPx())
-                            val covered = obstacles.count { it.overlaps(plate) }
-                            val mid = o + Offset(w / 2, hgt / 2) - c
-                            o to covered * 10_000f - (sx * mid.x + sy * mid.y)
-                        }
+                    val best = candidates.map { o ->
+                        val plate = androidx.compose.ui.geometry.Rect(o, Size(w, hgt)).inflate(2.dp.toPx())
+                        val covered = obstacles.count { it.overlaps(plate) }
+                        o to covered * 10_000f + (o + Offset(w / 2, hgt / 2) - p).getDistance()
                     }.minByOrNull { it.second }
-                        ?: (Offset(c.x - rim * 0.7f, c.y + rim * 0.7f - hgt) to 0f)
+                        ?: (Offset((p.x - w / 2).coerceIn(c.x - rim, c.x + rim - w), p.y + gap) to 0f)
                     val x = best.first.x
                     val y = best.first.y
                     drawRoundRect(Color.White.copy(alpha = 0.6f), Offset(x, y), Size(w, hgt), CornerRadius(4.dp.toPx()))
@@ -830,7 +826,7 @@ private fun ReticleView(
                 }
             }
         }
-        // Upper left of the lens: clear of the corner texts, the moving-target hold (another corner) and most reticle marks.
+        // Upper left of the lens: clear of the corner texts, the moving-target hold (kept clear of it) and most reticle marks.
         clipPath(lens) { windFlag(flag, c + Offset(-radius * 0.70f, -radius * 0.56f), text) }
         drawCircle(Color(0xFF263238), radius, c, style = Stroke(4.dp.toPx()))
     }
