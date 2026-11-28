@@ -197,30 +197,42 @@ fun <T> Choice(
     swatch: ((T) -> Pair<Color, Color>)? = null,
     onSelect: (T) -> Unit,
 ) {
-    var open by remember { mutableStateOf(false) }
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         // The label keeps its width; a long choice wraps inside its button instead of squeezing the label.
         if (icon != null) Icon(icon, label, Modifier.padding(end = 12.dp))
         else Text(label, Modifier.padding(end = 12.dp))
         Box(Modifier.weight(1f), contentAlignment = Alignment.CenterEnd) {
-            // The menu shares a box with the button only, so it drops down from the button.
-            Box {
-                FilledTonalButton(onClick = { open = true }) {
-                    if (swatch != null) {
-                        Swatch(swatch(selected))
-                        Spacer(Modifier.width(8.dp))
-                    }
-                    Text(name(selected), textAlign = TextAlign.Center)
-                }
-                DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
-                    options.forEach {
-                        DropdownMenuItem(
-                            text = { Text(name(it)) },
-                            onClick = { onSelect(it); open = false },
-                            leadingIcon = swatch?.let { s -> { Swatch(s(it)) } },
-                        )
-                    }
-                }
+            ChoiceButton(selected, options, name, swatch, onSelect)
+        }
+    }
+}
+
+/** The button of a [Choice] with its drop-down menu, for a row that has its own label. */
+@Composable
+fun <T> ChoiceButton(
+    selected: T,
+    options: List<T>,
+    name: @Composable (T) -> String,
+    swatch: ((T) -> Pair<Color, Color>)? = null,
+    onSelect: (T) -> Unit,
+) {
+    var open by remember { mutableStateOf(false) }
+    // The menu shares a box with the button only, so it drops down from the button.
+    Box {
+        FilledTonalButton(onClick = { open = true }) {
+            if (swatch != null) {
+                Swatch(swatch(selected))
+                Spacer(Modifier.width(8.dp))
+            }
+            Text(name(selected), textAlign = TextAlign.Center)
+        }
+        DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+            options.forEach {
+                DropdownMenuItem(
+                    text = { Text(name(it)) },
+                    onClick = { onSelect(it); open = false },
+                    leadingIcon = swatch?.let { s -> { Swatch(s(it)) } },
+                )
             }
         }
     }

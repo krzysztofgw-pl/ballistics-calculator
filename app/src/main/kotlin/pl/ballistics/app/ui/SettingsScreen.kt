@@ -190,26 +190,29 @@ fun SettingsScreen(
             StealthSettings(ui.pressureSource == PressureSource.GARMIN, onOpenStealth)
 
             Section(stringResource(R.string.section_display)) {
-                ThemeMode.entries.forEach { mode ->
-                    Row(
-                        Modifier.fillMaxWidth().clickable { onUi { it.copy(theme = mode) } },
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        RadioButton(selected = ui.theme == mode, onClick = { onUi { it.copy(theme = mode) } })
-                        Text(stringResource(mode.label))
-                    }
-                }
-                // Each theme keeps its own card shade; the previews show each in its own theme's colours.
+                // Light and Dark each carry the card shade of that theme; the previews show each in its own theme's colours.
                 val context = LocalContext.current
-                listOf(false, true).forEach { dark ->
-                    val scheme = remember(dark) { colorScheme(context, dark) }
-                    Choice(
-                        stringResource(if (dark) R.string.label_card_shade_dark else R.string.label_card_shade_light),
-                        if (dark) ui.cardShadeDark else ui.cardShadeLight,
-                        CardShade.entries,
-                        name = { stringResource(it.label) },
-                        swatch = { scheme.surface to it.color(scheme) },
-                    ) { shade -> onUi { if (dark) it.copy(cardShadeDark = shade) else it.copy(cardShadeLight = shade) } }
+                ThemeMode.entries.forEach { mode ->
+                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                        // Only the radio and its label pick the theme; the shade button beside them leaves it as it is.
+                        Row(
+                            Modifier.weight(1f).clickable { onUi { it.copy(theme = mode) } },
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            RadioButton(selected = ui.theme == mode, onClick = { onUi { it.copy(theme = mode) } })
+                            Text(stringResource(mode.label))
+                        }
+                        if (mode != ThemeMode.SYSTEM) {
+                            val dark = mode == ThemeMode.DARK
+                            val scheme = remember(dark) { colorScheme(context, dark) }
+                            ChoiceButton(
+                                if (dark) ui.cardShadeDark else ui.cardShadeLight,
+                                CardShade.entries,
+                                name = { stringResource(it.label) },
+                                swatch = { scheme.surface to it.color(scheme) },
+                            ) { shade -> onUi { if (dark) it.copy(cardShadeDark = shade) else it.copy(cardShadeLight = shade) } }
+                        }
+                    }
                 }
                 SwitchRow(stringResource(R.string.label_keep_screen_on), ui.keepScreenOn) { v -> onUi { it.copy(keepScreenOn = v) } }
                 Placement(stringResource(R.string.label_tabs), ui.tabsAtTop) { v -> onUi { it.copy(tabsAtTop = v) } }

@@ -376,8 +376,6 @@
     <string name="theme_system">Follow the system</string>
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>
-    <string name="label_card_shade_light">Cards, light theme</string>
-    <string name="label_card_shade_dark">Cards, dark theme</string>
     <string name="card_shade_strong">Strong</string>
     <string name="card_shade_medium">Medium</string>
     <string name="card_shade_soft">Soft</string>
