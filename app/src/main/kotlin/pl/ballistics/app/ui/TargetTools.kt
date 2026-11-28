@@ -88,7 +88,11 @@ private fun inArc(deg: Double, from: Double, to: Double): Boolean {
 private fun Double.f(decimals: Int) = "%.${decimals}f".format(this)
 private fun cm(m: Double) = (m * 100).roundToInt().toString()
 
-/** Wind bracket, range error, temperature, hit probability, ranging with the reticle and BC truing, at the chosen distance. */
+/**
+ * Wind bracket, range error, temperature, hit probability, ranging with the reticle and BC truing, at the chosen distance.
+ * [dialedRad] is the windage the turret is set to (dialed or turned by hand): the wind bracket shows the holds left over
+ * after it, so it follows the turret like the gust marks in the reticle above.
+ */
 @Composable
 fun TargetTools(
     result: CalcResult.Ok,
@@ -98,6 +102,7 @@ fun TargetTools(
     inputs: TargetInputs,
     reticle: Reticle,
     reticleScale: Double,
+    dialedRad: Double,
     charts: Set<ChartKind>,
     onUseDistance: (Double) -> Unit,
     onSaveAmmo: (AmmoProfile) -> Unit,
@@ -125,7 +130,9 @@ fun TargetTools(
                 update { it.copy(windMaxMps = v) }
             }
         }
-        analysis?.bracket?.let { b ->
+        analysis?.bracket?.let { forecast ->
+            // Holds and chart are what is left after the turret: the bracket follows the windage turret.
+            val b = forecast.copy(minRad = forecast.minRad - dialedRad, maxRad = forecast.maxRad - dialedRad)
             val spread = abs(b.maxRad - b.minRad)
             // The reticle shows a hold on the side the bullet drifts to, opposite the correction.
             fun x(rad: Double) = -rad / reticle.unit.radians * reticleScale
@@ -136,6 +143,8 @@ fun TargetTools(
             val spreadText = stringResource(R.string.wind_bracket_spread, (spread / unit.radians).f(digits), unit.label, cm(spread * analysis.point.rangeM))
             if (holds.isNotEmpty()) WindBracketView(reticle, holds, if (holds.size == 2) spreadText else null)
             if (ChartKind.BRACKET_DIRECTION in charts) analysis.bracketSweep?.let { sw ->
+                val light = sw.light.map { (d, c) -> d to c - dialedRad }
+                val strong = sw.strong.map { (d, c) -> d to c - dialedRad }
                 val clockLabel = stringResource(R.string.wind_from_clock)
                 val lo = conditions.windFromMinDeg.toNumber()?.mod(360.0)
                 val hi = conditions.windFromMaxDeg.toNumber()?.mod(360.0)
@@ -144,8 +153,8 @@ fun TargetTools(
                 LineChart(
                     title = stringResource(R.string.chart_bracket_direction, unit.label, analysis.point.rangeM.roundToInt()),
                     series = listOf(
-                        ChartSeries("${b.minMps.f(1)} m/s", BracketLight, sw.light.map { (d, c) -> d to c / unit.radians }),
-                        ChartSeries("${b.maxMps.f(1)} m/s", BracketStrong, sw.strong.map { (d, c) -> d to c / unit.radians }),
+                        ChartSeries("${b.minMps.f(1)} m/s", BracketLight, light.map { (d, c) -> d to c / unit.radians }),
+                        ChartSeries("${b.maxMps.f(1)} m/s", BracketStrong, strong.map { (d, c) -> d to c / unit.radians }),
                     ),
                     xTicks = (0..4).map { it * 90.0 },
                     xLabel = { clockText(it) },
@@ -166,8 +175,8 @@ fun TargetTools(
                     ),
                     fillBetween = BracketSpread,
                     readout = { x ->
-                        val l = sw.light.valueAt(x)
-                        val st = sw.strong.valueAt(x)
+                        val l = light.valueAt(x)
+                        val st = strong.valueAt(x)
                         if (l == null || st == null) emptyList()
                         else listOf(
                             ChartPoint(x, l / unit.radians, BracketLight),
