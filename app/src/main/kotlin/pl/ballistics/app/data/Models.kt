@@ -249,10 +249,23 @@ enum class ThemeMode(@StringRes val label: Int) {
     DARK(R.string.theme_dark),
 }
 
+/** How far the section cards stand out from the page, from the strongest; one of Material's surface container tones. */
+enum class CardShade(@StringRes val label: Int) {
+    STRONG(R.string.card_shade_strong),
+    MEDIUM(R.string.card_shade_medium),
+    SOFT(R.string.card_shade_soft),
+    SUBTLE(R.string.card_shade_subtle),
+    INVERSE(R.string.card_shade_inverse),
+}
+
 /** How the app looks; synced with the profiles. */
 @Serializable
 data class UiSettings(
     val theme: ThemeMode = ThemeMode.SYSTEM,
+    /** Section card background in the light theme. */
+    val cardShadeLight: CardShade = CardShade.SUBTLE,
+    /** Section card background in the dark theme. */
+    val cardShadeDark: CardShade = CardShade.SUBTLE,
     val tabsAtTop: Boolean = false,
     val subTabsAtTop: Boolean = false,
     val keepScreenOn: Boolean = false,

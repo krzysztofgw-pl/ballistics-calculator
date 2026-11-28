@@ -40,7 +40,7 @@ class MainActivity : ComponentActivity() {
                 )
                 onDispose {}
             }
-            BallisticsTheme(data.ui.theme) {
+            BallisticsTheme(data.ui) {
                 App(vm)
             }
         }

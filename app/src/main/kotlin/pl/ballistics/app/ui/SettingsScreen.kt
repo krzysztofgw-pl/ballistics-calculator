@@ -1,5 +1,6 @@
 package pl.ballistics.app.ui
 
+import pl.ballistics.app.data.CardShade
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.only
@@ -197,6 +198,18 @@ fun SettingsScreen(
                         RadioButton(selected = ui.theme == mode, onClick = { onUi { it.copy(theme = mode) } })
                         Text(stringResource(mode.label))
                     }
+                }
+                // Each theme keeps its own card shade; the previews show each in its own theme's colours.
+                val context = LocalContext.current
+                listOf(false, true).forEach { dark ->
+                    val scheme = remember(dark) { colorScheme(context, dark) }
+                    Choice(
+                        stringResource(if (dark) R.string.label_card_shade_dark else R.string.label_card_shade_light),
+                        if (dark) ui.cardShadeDark else ui.cardShadeLight,
+                        CardShade.entries,
+                        name = { stringResource(it.label) },
+                        swatch = { scheme.surface to it.color(scheme) },
+                    ) { shade -> onUi { if (dark) it.copy(cardShadeDark = shade) else it.copy(cardShadeLight = shade) } }
                 }
                 SwitchRow(stringResource(R.string.label_keep_screen_on), ui.keepScreenOn) { v -> onUi { it.copy(keepScreenOn = v) } }
                 Placement(stringResource(R.string.label_tabs), ui.tabsAtTop) { v -> onUi { it.copy(tabsAtTop = v) } }
