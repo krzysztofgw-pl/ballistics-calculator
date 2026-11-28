@@ -1,6 +1,8 @@
 package pl.ballistics.app.ui
 
 import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.displayCutout
@@ -252,7 +254,9 @@ fun App(vm: MainViewModel = viewModel()) {
             }
         },
     ) { padding ->
-        val modifier = Modifier.padding(padding)
+        // The keyboard shrinks the tab to the space above it (less the tab bar it covers), so a focused
+        // field scrolls into view instead of staying under the keyboard.
+        val modifier = Modifier.padding(padding).consumeWindowInsets(padding).imePadding()
         // Each tab keeps its scroll position while another one is open.
         saved.SaveableStateProvider(tab) {
         when (tab) {
