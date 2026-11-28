@@ -59,6 +59,7 @@
     <string name="sync_not_configured">Cloud sync is not configured in this build</string>
     <string name="sync_missing_client_id">The Firebase configuration has no Google client ID</string>
     <string name="sync_sign_in_failed">Sign-in failed</string>
+    <string name="sync_unreadable">The cloud copy can\'t be read by this version. Update the app; nothing is uploaded until then.</string>
     <string name="toast_exported">Profiles saved</string>
     <string name="toast_export_failed">Could not save the file</string>
     <string name="toast_imported">Profiles loaded</string>
@@ -454,7 +455,6 @@
     <string name="section_measurements">Data sources</string>
     <string name="label_latitude_from_location">Latitude from location</string>
     <string name="label_altitude_source">Altitude from</string>
-    <string name="altitude_manual">Typed in</string>
     <string name="altitude_terrain">Terrain map</string>
     <string name="altitude_gps">GPS</string>
     <string name="action_altitude_terrain_short">Map</string>

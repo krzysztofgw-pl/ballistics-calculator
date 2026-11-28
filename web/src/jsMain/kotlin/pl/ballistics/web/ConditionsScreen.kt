@@ -23,7 +23,7 @@ object ConditionsScreen {
         root.card(S.sectionWind) {
             row {
                 numberField(S.labelWindSpeed, c.windSpeed, "m/s") { v -> Store.updateConditions { it.copy(windSpeed = v) } }
-                numberField(S.labelWindFrom, c.windDirectionDeg, "°") { v -> Store.updateConditions { it.copy(windFromDeg = v) } }
+                numberField(S.labelWindFrom, c.windFromDeg, "°") { v -> Store.updateConditions { it.copy(windFromDeg = v) } }
             }
             el("p", "hint", S.hintWindFrom)
         }

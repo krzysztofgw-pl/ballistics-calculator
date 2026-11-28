@@ -89,12 +89,12 @@ fun ConditionsScreen(
             }
             // One row, each button under its field: the watch under pressure, the altitude source under altitude.
             FieldRow { m ->
-                when (ui.pressureFrom) {
+                when (ui.pressureSource) {
                     PressureSource.GARMIN -> WatchPressureButton(update, m)
                     PressureSource.PHONE -> PhonePressureButton(update, m.fillMaxWidth())
                     PressureSource.NONE -> Spacer(m)
                 }
-                AltitudeButton(ui.altitudeFrom, ui.locationSetsLatitude, update, m)
+                AltitudeButton(ui.altitudeSource, ui.locationSetsLatitude, update, m)
             }
         }
 
@@ -147,7 +147,7 @@ private fun WindAndAzimuthDial(i: Conditions, ui: UiSettings, update: ((Conditio
     var warning by remember { mutableStateOf<String?>(null) }
     var forecast by remember { mutableStateOf(false) }
 
-    val relative = i.windDirectionDeg.toNumber()
+    val relative = i.windFromDeg.toNumber()
     val azimuth = i.azimuthDeg.toNumber() ?: 0.0
     val bearing = relative?.let { (it + azimuth).mod(360.0) }
     val trueText = bearing?.let { "${deg(it)}° ${compassPoint(it)}" }
@@ -161,7 +161,7 @@ private fun WindAndAzimuthDial(i: Conditions, ui: UiSettings, update: ((Conditio
         onAzimuth = { v ->
             update { c ->
                 if (c.windDialNorthUp) {
-                    val keep = c.windDirectionDeg.toNumber()?.let { it + (c.azimuthDeg.toNumber() ?: 0.0) }
+                    val keep = c.windFromDeg.toNumber()?.let { it + (c.azimuthDeg.toNumber() ?: 0.0) }
                     c.copy(azimuthDeg = deg(v), windFromDeg = keep?.let { deg(it - v) } ?: c.windFromDeg)
                 } else {
                     c.copy(azimuthDeg = deg(v))

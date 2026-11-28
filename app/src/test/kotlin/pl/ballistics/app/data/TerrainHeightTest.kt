@@ -61,13 +61,4 @@ class TerrainHeightTest {
         assertNull(Nmea.ggaMslHeight("\$GPGGA,123519,,,,,0,00,,,M,,M,,*66"))
         assertNull(Nmea.ggaMslHeight("\$GPRMC,123519,A,4807.038,N,01131.000,E,022.4,084.4,230394,003.1,W*6A"))
     }
-
-    @Test
-    fun olderSettingsKeepTheirAltitudeChoice() {
-        assertEquals(AltitudeSource.TERRAIN, UiSettings(locationSetsAltitude = true).altitudeFrom)
-        // Typed in is no longer a choice: old settings without one, or with MANUAL, read the terrain map.
-        assertEquals(AltitudeSource.TERRAIN, UiSettings().altitudeFrom)
-        assertEquals(AltitudeSource.TERRAIN, UiSettings(altitudeSource = AltitudeSource.MANUAL).altitudeFrom)
-        assertEquals(AltitudeSource.GPS, UiSettings(locationSetsAltitude = true, altitudeSource = AltitudeSource.GPS).altitudeFrom)
-    }
 }

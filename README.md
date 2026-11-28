@@ -53,7 +53,7 @@ Settings → Profiles (or the Profiles button on the Rifle tab) lists and edits 
   corrections go there as pull requests.
 
 Muzzle velocity follows the air temperature (taken as the powder temperature) with the load's sensitivity, or a
-standard 1.0 m/s per °C when none is entered; factory velocities are referenced to 21 °C (SAAMI, CIP).
+standard 0.5 m/s per °C (Prof. Ejsmond) when none is entered; factory velocities are referenced to 21 °C (SAAMI, CIP).
 
 ### Conditions
 Wind first (it changes most), then temperature, pressure, altitude and humidity, look angle and cant, and

@@ -131,7 +131,7 @@ private fun SeriesDialog(
 
     // The velocity is kept at the load's reference powder temperature, so a series shot
     // in the cold is moved to that temperature with the load's sensitivity.
-    val sensitivity = ammo?.powderSensitivity?.toNumber()?.takeIf { it != 0.0 } ?: STANDARD_POWDER_SENSITIVITY
+    val sensitivity = ammo?.powderSensitivity?.toNumber() ?: STANDARD_POWDER_SENSITIVITY
     val reference = ammo?.powderReferenceTemp?.toNumber() ?: 21.0
     val measuredAt = temperature.toNumber()
     val newVelocity = stats?.let { s -> measuredAt?.let { s.mean + sensitivity * (reference - it) } }
