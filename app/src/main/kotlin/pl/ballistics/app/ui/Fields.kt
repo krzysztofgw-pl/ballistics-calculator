@@ -5,6 +5,12 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.clickable
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.border
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -53,7 +59,7 @@ fun Section(
     trailing: (@Composable () -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    Card(Modifier.fillMaxWidth()) {
+    Card(Modifier.fillMaxWidth(), colors = sectionCardColors()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             if (trailing != null) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -187,23 +193,62 @@ fun <T> Choice(
     options: List<T>,
     name: @Composable (T) -> String,
     icon: ImageVector? = null,
+    /** Given, each option shows a small preview: the option's colour on a page of the first colour. */
+    swatch: ((T) -> Pair<Color, Color>)? = null,
     onSelect: (T) -> Unit,
 ) {
-    var open by remember { mutableStateOf(false) }
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         // The label keeps its width; a long choice wraps inside its button instead of squeezing the label.
         if (icon != null) Icon(icon, label, Modifier.padding(end = 12.dp))
         else Text(label, Modifier.padding(end = 12.dp))
         Box(Modifier.weight(1f), contentAlignment = Alignment.CenterEnd) {
-            // The menu shares a box with the button only, so it drops down from the button.
-            Box {
-                FilledTonalButton(onClick = { open = true }) { Text(name(selected), textAlign = TextAlign.Center) }
-                DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
-                    options.forEach {
-                        DropdownMenuItem(text = { Text(name(it)) }, onClick = { onSelect(it); open = false })
-                    }
-                }
+            ChoiceButton(selected, options, name, swatch, onSelect)
+        }
+    }
+}
+
+/** The button of a [Choice] with its drop-down menu, for a row that has its own label. */
+@Composable
+fun <T> ChoiceButton(
+    selected: T,
+    options: List<T>,
+    name: @Composable (T) -> String,
+    swatch: ((T) -> Pair<Color, Color>)? = null,
+    onSelect: (T) -> Unit,
+) {
+    var open by remember { mutableStateOf(false) }
+    // The menu shares a box with the button only, so it drops down from the button.
+    Box {
+        FilledTonalButton(onClick = { open = true }) {
+            if (swatch != null) {
+                Swatch(swatch(selected))
+                Spacer(Modifier.width(8.dp))
+            }
+            Text(name(selected), textAlign = TextAlign.Center)
+        }
+        DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+            options.forEach {
+                DropdownMenuItem(
+                    text = { Text(name(it)) },
+                    onClick = { onSelect(it); open = false },
+                    leadingIcon = swatch?.let { s -> { Swatch(s(it)) } },
+                )
             }
         }
     }
+}
+
+/** A card of [colors].second on a page of [colors].first, outlined so a white page shows on a white menu. */
+@Composable
+private fun Swatch(colors: Pair<Color, Color>) {
+    Box(
+        Modifier.size(width = 36.dp, height = 24.dp)
+            .clip(RoundedCornerShape(6.dp))
+            .background(colors.first)
+            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(6.dp))
+            .padding(4.dp)
+            .clip(RoundedCornerShape(3.dp))
+            .background(colors.second)
+            .fillMaxSize(),
+    )
 }

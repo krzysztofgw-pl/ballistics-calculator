@@ -106,7 +106,7 @@ fun RifleScreen(
             }
         }
 
-        Card(Modifier.fillMaxWidth()) {
+        Card(Modifier.fillMaxWidth(), colors = sectionCardColors()) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (w == null) {
                     Text(stringResource(R.string.error_no_weapon))
@@ -138,7 +138,7 @@ fun RifleScreen(
         }
 
         if (w != null && w.suppressor) {
-            Card(Modifier.fillMaxWidth()) {
+            Card(Modifier.fillMaxWidth(), colors = sectionCardColors()) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Row(
                         Modifier.fillMaxWidth().clickable { onUpdateWeapon { it.copy(suppressorMounted = !it.suppressorMounted) } },

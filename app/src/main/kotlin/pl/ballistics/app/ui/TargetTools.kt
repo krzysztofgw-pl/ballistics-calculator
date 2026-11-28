@@ -60,7 +60,7 @@ object OpenCards {
 fun Collapsible(title: String, initiallyOpen: Boolean = false, content: @Composable ColumnScope.() -> Unit) {
     var open by rememberSaveable(title) { mutableStateOf(initiallyOpen) }
     LaunchedEffect(title, open) { OpenCards.set(title, open) }
-    Card(Modifier.fillMaxWidth()) {
+    Card(Modifier.fillMaxWidth(), colors = sectionCardColors()) {
         Row(
             Modifier.fillMaxWidth().clickable { open = !open }.padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
