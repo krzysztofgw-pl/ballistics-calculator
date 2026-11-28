@@ -240,7 +240,7 @@ GitHub Pages has to be enabled once: repository **Settings → Pages → Source:
 | `app/.../data/` | Profiles, bullet library, local storage, Firebase sync |
 | `app/.../reticle/` | Reticle definitions |
 | `app/.../ui/` | Screens: Rifle, Profiles, Conditions, DOPE, Target, editors, chronograph, stealth |
-| `fastlane/metadata/android/` | Google Play listing texts and screenshots (framed with `tools/store-screenshots/frame.js`) |
+| `fastlane/metadata/android/` | Google Play listing texts (`en-US`, `pl-PL`) and screenshots (English only) (framed with `tools/store-screenshots/frame.js`) |
 | `web/` | Web app (PWA): Kotlin/JS on the DOM, manifest and service worker in `src/jsMain/resources` |
 | `.github/workflows/build.yml` | CI: solver tests, signed release APK, web app on GitHub Pages |
 
