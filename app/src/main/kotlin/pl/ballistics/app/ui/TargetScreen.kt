@@ -800,7 +800,10 @@ private fun ReticleView(
                             val sz = text.measure(m.text, TextStyle(fontSize = 10.sp)).size
                             androidx.compose.ui.geometry.Rect(at(m.x, m.y) - Offset(sz.width / 2f, sz.height / 2f), Size(sz.width.toFloat(), sz.height.toFloat()))
                         } +
-                        androidx.compose.ui.geometry.Rect(c.x - radius * 0.82f, c.y - radius * 0.60f, c.x - radius * 0.30f, c.y - radius * 0.12f)
+                        androidx.compose.ui.geometry.Rect(c.x - radius * 0.82f, c.y - radius * 0.60f, c.x - radius * 0.30f, c.y - radius * 0.12f) +
+                        // The crosshair, with a few px of air on each side (Krzysiek).
+                        androidx.compose.ui.geometry.Rect(c.x - 4.dp.toPx(), c.y - radius, c.x + 4.dp.toPx(), c.y + radius) +
+                        androidx.compose.ui.geometry.Rect(c.x - radius, c.y - 4.dp.toPx(), c.x + radius, c.y + 4.dp.toPx())
                     val rim = radius - margin
                     val gap = 14.dp.toPx()
                     val step = 2.dp.toPx()
