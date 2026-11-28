@@ -776,15 +776,26 @@ private fun ReticleView(
                 // Its hold sits on a faint plate in a corner of the lens on the lead dot's side (Krzysiek: the
                 // advice belongs with the blue dot): bottom left when the dot is left (the upper left holds the
                 // wind flag), top right or bottom right when it is right. Along the rim of that corner it takes
-                // the spot covering fewest trajectory dots and their figures, then the one deepest in the corner.
+                // the spot covering fewest trajectory dots, their figures and the lead dot, then the one deepest in the corner.
                 leadText?.let { t ->
                     val layout = text.measure(t, TextStyle(fontSize = 11.sp, color = Color(0xFF1565C0)))
                     val pad = 4.dp.toPx()
                     val w = layout.size.width + 2 * pad
                     val hgt = layout.size.height + 2 * pad
                     val margin = 6.dp.toPx()
-                    val figure = 26.dp.toPx()
-                    val dots = holds.map { at(it.x, it.y) }
+                    // What the plate should not cover: each trajectory dot and, where drawn, its distance figure
+                    // (on the side away from the vertical line, as above).
+                    val dotR = 5.dp.toPx()
+                    val obstacles = holds.flatMap { hh ->
+                        val d = at(hh.x, hh.y)
+                        val dot = androidx.compose.ui.geometry.Rect(d, dotR)
+                        if (hh.point == selected || hh.point.rangeM.roundToInt() % 100 != 0) listOf(dot) else {
+                            val fig = text.measure("${hh.point.rangeM.roundToInt()}", TextStyle(fontSize = 10.sp)).size
+                            val gap = 6.dp.toPx()
+                            val fx = if (hh.x < 0) d.x - gap - fig.width else d.x + gap
+                            listOf(dot, androidx.compose.ui.geometry.Rect(fx, d.y - fig.height / 2f, fx + fig.width, d.y + fig.height / 2f))
+                        }
+                    } + androidx.compose.ui.geometry.Rect(p, 11.dp.toPx())
                     val rim = radius - margin
                     val corners = when {
                         p.x < c.x - 1f -> listOf(false to true)
@@ -805,9 +816,8 @@ private fun ReticleView(
                             listOf(o, o + Offset(w, 0f), o + Offset(0f, hgt), o + Offset(w, hgt))
                                 .all { (it - c).getDistance() <= rim + 0.5f }
                         }.map { o ->
-                            val covered = dots.count { d ->
-                                d.x > o.x - figure && d.x < o.x + w + figure && d.y > o.y - 4.dp.toPx() && d.y < o.y + hgt + 4.dp.toPx()
-                            } + (if (abs(p.x - (o.x + w / 2)) < w / 2 + 9.dp.toPx() && abs(p.y - (o.y + hgt / 2)) < hgt / 2 + 9.dp.toPx()) 5 else 0)
+                            val plate = androidx.compose.ui.geometry.Rect(o, Size(w, hgt)).inflate(2.dp.toPx())
+                            val covered = obstacles.count { it.overlaps(plate) }
                             val mid = o + Offset(w / 2, hgt / 2) - c
                             o to covered * 10_000f - (sx * mid.x + sy * mid.y)
                         }
