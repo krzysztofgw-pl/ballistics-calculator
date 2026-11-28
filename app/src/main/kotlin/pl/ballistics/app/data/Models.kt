@@ -20,9 +20,8 @@ enum class AngularUnit(val label: String, val radians: Double) {
 }
 
 /**
- * The unit marked on a scope's turrets. SMOA (shooter's MOA, 1 in at 100 yd) is stored as
- * [AngularUnit.MOA] plus [WeaponProfile.inchMoa], so older versions still read the profile.
- * [decimals] is how finely angles in this unit are shown.
+ * The unit marked on a scope's turrets; SMOA is shooter's MOA (1 in at 100 yd).
+ * [reticleUnit] is the reticle unit it goes with; [decimals] is how finely angles in this unit are shown.
  */
 enum class TurretUnit(val label: String, val radians: Double, val reticleUnit: AngularUnit, val defaultClick: String, val decimals: Int) {
     MRAD("MRAD", Units.MRAD, AngularUnit.MRAD, "0.1", 2),
@@ -38,8 +37,8 @@ fun newId(): String = UUID.randomUUID().toString()
 /** A turret correction as typed; blank, unreadable or not positive is 1. */
 private fun factor(text: String): Double = text.toNumber()?.takeIf { it > 0 } ?: 1.0
 
-/** Typical change of muzzle velocity with powder temperature, used when a load gives none. */
-const val STANDARD_POWDER_SENSITIVITY = 1.0
+/** Typical change of muzzle velocity with powder temperature, used when a load gives none: 0.5 m/s per °C (Prof. Ejsmond). */
+const val STANDARD_POWDER_SENSITIVITY = 0.5
 
 /*
  * Numeric fields are kept as text so the editors can hold half-typed values
@@ -60,10 +59,7 @@ data class WeaponProfile(
     val barrelInches: Boolean = true,
 
     val scopeName: String = "",
-    /** The turret unit as stored; read it through [turretUnit]. */
-    val angularUnit: AngularUnit = AngularUnit.MRAD,
-    /** With [angularUnit] MOA: the turrets are in shooter's MOA (1 in at 100 yd). */
-    val inchMoa: Boolean = false,
+    val turretUnit: TurretUnit = TurretUnit.MRAD,
     val clickValue: String = "0.1",
     /** Turret correction: what the turrets really move per marked unit, measured ÷ dialled; blank is 1. */
     val turretFactor: String = "",
@@ -116,15 +112,6 @@ data class WeaponProfile(
         return copy(zeroSuppressed = suppressed, suppressorShiftUp = flip(suppressorShiftUp), suppressorShiftRight = flip(suppressorShiftRight))
     }
 
-    val turretUnit: TurretUnit
-        get() = when {
-            angularUnit == AngularUnit.MRAD -> TurretUnit.MRAD
-            inchMoa -> TurretUnit.SMOA
-            else -> TurretUnit.MOA
-        }
-
-    fun withTurretUnit(unit: TurretUnit): WeaponProfile = copy(angularUnit = unit.reticleUnit, inchMoa = unit == TurretUnit.SMOA)
-
     val elevationTurret: Turret
         get() = Turret(turretUnit.radians, clickValue.toNumber()?.takeIf { it > 0 }, factor(turretFactor))
 
@@ -158,7 +145,7 @@ data class AmmoProfile(
     /** Reference velocity: from the box, or a chronograph, in a barrel of [testBarrelCm]. */
     val muzzleVelocity: String = "800",
     val testBarrelCm: String = "",
-    /** m/s per °C; empty (or the old default 0) uses [STANDARD_POWDER_SENSITIVITY]. */
+    /** m/s per °C; empty uses [STANDARD_POWDER_SENSITIVITY], 0 means the velocity doesn't change. */
     val powderSensitivity: String = "",
     /** Temperature the reference velocity was measured at; factory data is for 21 °C (SAAMI, CIP). */
     val powderReferenceTemp: String = "21",
@@ -187,10 +174,8 @@ data class Conditions(
     val altitudeM: String = "0",
     val humidityPct: String = "50",
     val windSpeed: String = "0",
-    /** Legacy clock direction, read only when [windFromDeg] is not set. */
-    val windClock: String = "3",
     /** Where the wind blows from, degrees clockwise from the line of fire (0 = from the target). */
-    val windFromDeg: String? = null,
+    val windFromDeg: String = "90",
     /** The wind dial is shown north-up, as in weather forecasts; the stored value stays relative. */
     val windDialNorthUp: Boolean = false,
     val lookAngleDeg: String = "0",
@@ -235,10 +220,6 @@ data class Conditions(
         targetRangeM = t.rangeM, lookAngleDeg = t.lookAngleDeg, azimuthDeg = t.azimuthDeg,
         targetMoving = t.moving, targetSpeedMps = t.speedMps, targetDirectionDeg = t.directionDeg, targetWidthCm = t.widthCm, targetHeightCm = t.heightCm,
     )
-
-    /** Wind direction in degrees from the line of fire, converted from the clock for older data. */
-    val windDirectionDeg: String
-        get() = windFromDeg ?: windClock.toNumber()?.let { (it * 30).let { d -> if (d % 1.0 == 0.0) d.toInt().toString() else d.toString() } } ?: windClock
 }
 
 /** A target on the range card: where it is and how it moves, recalled from a sub-tab of the target screen. */
@@ -281,16 +262,12 @@ data class UiSettings(
     val hiddenCharts: Set<ChartKind> = emptySet(),
     /** A location fix (forecast, compass) also sets the latitude for Coriolis. */
     val locationSetsLatitude: Boolean = true,
-    /** Older setting: the forecast set the altitude. No longer read; kept so older apps decode synced settings the same. */
-    val locationSetsAltitude: Boolean = false,
-    /** Where the altitude comes from; null in settings saved before there was a choice. */
-    val altitudeSource: AltitudeSource? = null,
+    /** Where the altitude comes from; it can always be typed in as well. */
+    val altitudeSource: AltitudeSource = AltitudeSource.TERRAIN,
     /** The forecast shows wind directions as true bearings, north up; otherwise relative to the line of fire, as a clock. */
     val forecastTrueBearing: Boolean = false,
-    /** Offer reading the station pressure from a Garmin watch on the conditions screen. */
-    val garminWatch: Boolean = false,
-    /** Offer reading the station pressure from the phone's own barometer; [garminWatch] wins if both are set. Not an enum, so older apps still decode. */
-    val phoneBarometer: Boolean = false,
+    /** Where the button under the pressure on the conditions screen reads the station pressure from. */
+    val pressureSource: PressureSource = PressureSource.NONE,
     /** Look for a newer release each time the app starts. */
     val checkUpdateOnStart: Boolean = false,
     /** Per reticle design (Reticles.designKey): which corrections the target screen advises dialing; the rest are held. */
@@ -300,20 +277,6 @@ data class UiSettings(
     val charts: Set<ChartKind> get() = if (showCharts) ChartKind.entries.toSet() - hiddenCharts else emptySet()
 
     fun correction(reticleId: String): Correction = corrections[reticleId] ?: Correction.defaultFor(reticleId)
-
-    val pressureFrom: PressureSource
-        get() = when {
-            garminWatch -> PressureSource.GARMIN
-            phoneBarometer -> PressureSource.PHONE
-            else -> PressureSource.NONE
-        }
-
-    fun withPressureFrom(source: PressureSource) =
-        copy(garminWatch = source == PressureSource.GARMIN, phoneBarometer = source == PressureSource.PHONE)
-
-    /** The altitude can always be typed, so the old "typed in" choice (MANUAL) now means the terrain map, the default. */
-    val altitudeFrom: AltitudeSource
-        get() = altitudeSource?.takeIf { it != AltitudeSource.MANUAL } ?: AltitudeSource.TERRAIN
 }
 
 /** The charts on the target screen, each of which can be turned off in Settings. */
@@ -334,7 +297,7 @@ enum class ChartKind(@StringRes val label: Int) {
     }
 }
 
-/** Where the button under the pressure reads the station pressure from. Not stored: see [UiSettings.pressureFrom]. */
+/** Where the button under the pressure reads the station pressure from. */
 enum class PressureSource(@StringRes val label: Int) {
     NONE(R.string.pressure_source_none),
     GARMIN(R.string.pressure_source_garmin),
@@ -343,11 +306,6 @@ enum class PressureSource(@StringRes val label: Int) {
 
 /** Where the altitude of the firing point comes from. */
 enum class AltitudeSource(@StringRes val label: Int) {
-    /**
-     * Typed in: no longer offered (the field can always be typed in, and Stealth mode covers staying offline), read as
-     * [TERRAIN]. Kept so settings synced from older apps still decode, and so older apps can decode ours.
-     */
-    MANUAL(R.string.altitude_manual),
     /** Terrain height at the location from an elevation model: GUGiK's 1 m lidar model in Poland, Copernicus elsewhere. Needs the network. */
     TERRAIN(R.string.altitude_terrain),
     /** The phone's own GPS, converted to height above sea level; works offline. */
@@ -366,7 +324,8 @@ data class Correction(val dialElevation: Boolean = false, val dialWindage: Boole
 /** Everything the app stores; also the export/import file format. */
 @Serializable
 data class AppData(
-    val version: Int = 1,
+    /** The data format; see [DataMigration] for what changed in each. */
+    val version: Int = CURRENT_VERSION,
     val weapons: List<WeaponProfile> = emptyList(),
     val ammo: List<AmmoProfile> = emptyList(),
     val activeWeaponId: String? = null,
@@ -413,6 +372,8 @@ data class AppData(
     }
 
     companion object {
+        const val CURRENT_VERSION = 2
+
         fun sample(): AppData {
             val ammo = AmmoProfile(
                 name = "Sierra MatchKing 175 gr",

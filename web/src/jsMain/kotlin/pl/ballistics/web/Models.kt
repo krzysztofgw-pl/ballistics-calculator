@@ -14,17 +14,15 @@ import kotlin.uuid.Uuid
 
 enum class FocalPlane { FFP, SFP }
 
-enum class AngularUnit(val label: String, val radians: Double) {
-    MRAD("MRAD", Units.MRAD),
-    MOA("MOA", Units.MOA),
+/** The unit marked on the turrets; SMOA is shooter's MOA (1 in at 100 yd). */
+enum class TurretUnit(val label: String, val radians: Double, val defaultClick: String) {
+    MRAD("MRAD", Units.MRAD, "0.1"),
+    MOA("MOA", Units.MOA, "0.25"),
+    SMOA("SMOA", Units.SMOA, "0.25"),
 }
 
-/** The unit marked on the turrets; SMOA is stored as MOA plus [WeaponProfile.inchMoa], as on Android. */
-enum class TurretUnit(val label: String, val radians: Double, val stored: AngularUnit, val defaultClick: String) {
-    MRAD("MRAD", Units.MRAD, AngularUnit.MRAD, "0.1"),
-    MOA("MOA", Units.MOA, AngularUnit.MOA, "0.25"),
-    SMOA("SMOA", Units.SMOA, AngularUnit.MOA, "0.25"),
-}
+/** Where the Android app reads the station pressure from; kept here so the setting survives an export and import. */
+enum class PressureSource { NONE, GARMIN, PHONE }
 
 /** A turret correction as typed; blank, unreadable or not positive is 1. */
 private fun factor(text: String): Double = text.toNumber()?.takeIf { it > 0 } ?: 1.0
@@ -35,8 +33,8 @@ enum class DragType { G1, G7, G2, G5, G6, G8, GI, GS, RA4, CUSTOM }
 @OptIn(ExperimentalUuidApi::class)
 fun newId(): String = Uuid.random().toString()
 
-/** Typical change of muzzle velocity with powder temperature, used when a load gives none. */
-const val STANDARD_POWDER_SENSITIVITY = 1.0
+/** Typical change of muzzle velocity with powder temperature, used when a load gives none: 0.5 m/s per °C (Prof. Ejsmond). */
+const val STANDARD_POWDER_SENSITIVITY = 0.5
 
 @Serializable
 data class WeaponProfile(
@@ -48,9 +46,7 @@ data class WeaponProfile(
     val barrelLengthCm: String = "",
     val barrelInches: Boolean = true,
     val scopeName: String = "",
-    val angularUnit: AngularUnit = AngularUnit.MRAD,
-    /** With [angularUnit] MOA: the turrets are in shooter's MOA (1 in at 100 yd). */
-    val inchMoa: Boolean = false,
+    val turretUnit: TurretUnit = TurretUnit.MRAD,
     val clickValue: String = "0.1",
     /** Turret correction: measured ÷ dialled; blank is 1. */
     val turretFactor: String = "",
@@ -76,15 +72,6 @@ data class WeaponProfile(
     val groupMoa: String = "",
     val muzzleVelocities: Map<String, String> = emptyMap(),
 ) {
-    val turretUnit: TurretUnit
-        get() = when {
-            angularUnit == AngularUnit.MRAD -> TurretUnit.MRAD
-            inchMoa -> TurretUnit.SMOA
-            else -> TurretUnit.MOA
-        }
-
-    fun withTurretUnit(unit: TurretUnit): WeaponProfile = copy(angularUnit = unit.stored, inchMoa = unit == TurretUnit.SMOA)
-
     val elevationTurret: Turret
         get() = Turret(turretUnit.radians, clickValue.toNumber()?.takeIf { it > 0 }, factor(turretFactor))
 
@@ -149,8 +136,8 @@ data class Conditions(
     val altitudeM: String = "0",
     val humidityPct: String = "50",
     val windSpeed: String = "0",
-    val windClock: String = "3",
-    val windFromDeg: String? = null,
+    /** Where the wind blows from, degrees clockwise from the line of fire (0 = from the target). */
+    val windFromDeg: String = "90",
     val windDialNorthUp: Boolean = false,
     val lookAngleDeg: String = "0",
     val cantDeg: String = "0",
@@ -171,11 +158,7 @@ data class Conditions(
     val windMaxMps: String = "",
     val windUncertaintyMps: String = "1",
     val rangeUncertaintyM: String = "5",
-) {
-    /** Wind direction in degrees from the line of fire, converted from the clock for older data. */
-    val windDirectionDeg: String
-        get() = windFromDeg ?: windClock.toNumber()?.let { (it * 30).let { d -> if (d % 1.0 == 0.0) d.toInt().toString() else d.toString() } } ?: windClock
-}
+)
 
 @Serializable
 data class SavedTarget(
@@ -207,8 +190,7 @@ data class UiSettings(
     val subTabsAtTop: Boolean = false,
     val keepScreenOn: Boolean = false,
     val locationSetsLatitude: Boolean = true,
-    val locationSetsAltitude: Boolean = false,
-    val garminWatch: Boolean = false,
+    val pressureSource: PressureSource = PressureSource.NONE,
     val checkUpdateOnStart: Boolean = false,
     val corrections: Map<String, Correction> = emptyMap(),
 ) {
@@ -218,7 +200,7 @@ data class UiSettings(
 /** Everything the app stores; also the export/import file format, shared with Android. */
 @Serializable
 data class AppData(
-    val version: Int = 1,
+    val version: Int = CURRENT_VERSION,
     val weapons: List<WeaponProfile> = emptyList(),
     val ammo: List<AmmoProfile> = emptyList(),
     val activeWeaponId: String? = null,
@@ -233,6 +215,9 @@ data class AppData(
     fun ammoFor(weapon: WeaponProfile): AmmoProfile? = ammo.find { it.id == weapon.ammoId }
 
     companion object {
+        /** Same as on Android; see DataMigration.kt. */
+        const val CURRENT_VERSION = 2
+
         fun sample(): AppData {
             val ammo = AmmoProfile(
                 name = "Sierra MatchKing 175 gr",

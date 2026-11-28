@@ -29,13 +29,18 @@ class Repository(context: Context) {
 
         private val json = Json {
             ignoreUnknownKeys = true
+            // An enum value this version doesn't know (from a newer app) reads as the field's default instead of failing the whole copy.
+            coerceInputValues = true
             encodeDefaults = true
             prettyPrint = true
         }
 
         fun encode(data: AppData): String = json.encodeToString(AppData.serializer(), data)
 
-        fun decode(text: String): AppData? = runCatching { json.decodeFromString(AppData.serializer(), text) }.getOrNull()
+        /** Reads data from this phone, the cloud or an export file, older formats included; null when it can't be read. */
+        fun decode(text: String): AppData? = runCatching {
+            json.decodeFromJsonElement(AppData.serializer(), DataMigration.migrate(json.parseToJsonElement(text))).copy(version = AppData.CURRENT_VERSION)
+        }.getOrNull()
 
         /** Version 0.1 kept a single flat form; split it into one rifle and one load. */
         private fun migrateLegacy(text: String): AppData? = runCatching {
@@ -51,14 +56,14 @@ class Repository(context: Context) {
                 diameterMm = s("diameterMm", "7.82"),
                 lengthMm = s("lengthMm", ""),
                 muzzleVelocity = s("muzzleVelocity", "790"),
-                powderSensitivity = s("powderSensitivity", "0"),
+                powderSensitivity = s("powderSensitivity", "").takeIf { it.toDoubleOrNull() != 0.0 }.orEmpty(),
                 powderReferenceTemp = s("powderReferenceTemp", "15"),
             )
             val weapon = WeaponProfile(
                 name = "My rifle",
                 twistIn = s("twistIn", "10"),
                 rightHandTwist = b("rightHandTwist", true),
-                angularUnit = runCatching { AngularUnit.valueOf(s("angularUnit", "MRAD")) }.getOrDefault(AngularUnit.MRAD),
+                turretUnit = if (s("angularUnit", "MRAD") == "MOA") TurretUnit.MOA else TurretUnit.MRAD,
                 clickValue = s("clickValue", "0.1"),
                 sightHeightCm = s("sightHeightCm", "4.5"),
                 zeroRangeM = s("zeroRangeM", "100"),
@@ -67,7 +72,7 @@ class Repository(context: Context) {
                 ammoId = ammo.id,
             )
             // Conditions used the same field names, so they decode directly.
-            val conditions = json.decodeFromString(Conditions.serializer(), text)
+            val conditions = json.decodeFromJsonElement(Conditions.serializer(), DataMigration.conditions(o))
             AppData(weapons = listOf(weapon), ammo = listOf(ammo), activeWeaponId = weapon.id, conditions = conditions)
         }.getOrNull()
     }
