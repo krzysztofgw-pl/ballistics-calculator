@@ -239,8 +239,9 @@ fun TargetScreen(
         )
     }
 
-    // With the mean wind dialed, the lightest and strongest forecast wind are marks to hold beside the aim point.
-    val gusts = analysis?.bracket?.takeIf { (correction.dialWindage || manualRight != null) && selected != null }?.let { b ->
+    // The lightest and strongest forecast wind are marks to hold beside the aim point, dialed or held, after the turret
+    // (Settings > Display can hide them).
+    val gusts = analysis?.bracket?.takeIf { ui.windBracketOnLens && selected != null }?.let { b ->
         listOf(b.minMps to b.minRad, b.maxMps to b.maxRad)
             .filter { !it.second.isNaN() }
             .distinctBy { it.first }
@@ -518,7 +519,7 @@ fun TargetScreen(
         }
         if (sfp) Text(stringResource(R.string.sfp_note, calMag.magFmt()), style = MaterialTheme.typography.bodySmall)
 
-        TargetTools(result, conditions, update, analysis, inputs, reticle, scale, ui.charts, { setDistance(it) }, onSaveAmmo, onAddAmmoCopy)
+        TargetTools(result, conditions, update, analysis, inputs, reticle, scale, windageTurret.angle(setRight), ui.charts, { setDistance(it) }, onSaveAmmo, onAddAmmoCopy)
         if (analysis != null && ui.charts.any { it in ChartKind.card }) {
             Collapsible(stringResource(R.string.section_charts)) { TargetCharts(result, analysis, distance, ui.charts) { setDistance(it) } }
         }
