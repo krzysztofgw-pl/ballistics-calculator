@@ -4,10 +4,10 @@ An Android ballistic calculator by **KGW Labs** (`com.kgwlabs.ballistics`).
 
 Ballistics computes bullet trajectories with a 3DOF point-mass solver built on established, publicly documented
 models: standard drag functions, Doppler-derived drag curves, a humid-air atmosphere, Coriolis, spin drift and
-aerodynamic jump. It keeps rifle and load profiles, gives a DOPE chart with turret clicks, draws the holds on
-your scope's reticle, and syncs everything to the cloud.
+aerodynamic jump. It keeps rifle and load profiles, gives a DOPE chart with turret clicks, draws the holds and
+the turrets around your scope's reticle, and syncs everything to the cloud.
 
-Current version: **1.1.0**, on [Google Play](https://play.google.com/store/apps/details?id=com.kgwlabs.ballistics)
+Current version: **1.2.0**, on [Google Play](https://play.google.com/store/apps/details?id=com.kgwlabs.ballistics)
 as "Ballistics by KGW Labs", and as an APK from the [latest release](#installing).
 
 | | | | |
@@ -28,7 +28,7 @@ suppressor configured, a switch says whether it is on; the rifle on the Rifle ta
 
 ### Profiles
 Settings → Profiles (or the Profiles button on the Rifle tab) lists and edits rifles and loads.
-- **Rifles**: name, barrel length (inches or cm: tap the unit), scope (turret unit MRAD or MOA, click value, reticle and its scale step when the scope's differs
+- **Rifles**: name, barrel length (inches or cm: tap the unit), scope (turret unit MRAD, MOA or SMOA, click value, turret correction from a tall-target test, reticle and its scale step when the scope's differs
   from the design (e.g. 0.1 MRAD), first or second focal plane,
   calibration and maximum magnification), sight height, zero range and the load it is zeroed with, and the zeroing
   temperature and pressure (station pressure, or QNH with the zeroing altitude).
@@ -56,8 +56,10 @@ Muzzle velocity follows the air temperature (taken as the powder temperature) wi
 standard 0.5 m/s per °C (Prof. Ejsmond) when none is entered; factory velocities are referenced to 21 °C (SAAMI, CIP).
 
 ### Conditions
-Wind first (it changes most), then temperature, pressure, altitude and humidity, look angle and cant, and
-Coriolis (latitude), spin drift and aerodynamic jump. Each tab keeps its scroll position.
+Wind first (it changes most), then temperature, pressure, altitude and humidity, look angle and cant, and the
+latitude (while Coriolis is on). Each tab keeps its scroll position. Focusing a number field empties it, with the
+old value as a dimmed hint, so typing replaces it; leaving it empty keeps the old value. The keyboard pushes the
+content up so the focused field stays visible.
 
 - **Wind dial**: a wind clock (hours.minutes, e.g. 3.30) inside a compass ring. In the shooter view the line
   of fire points up and dragging the ring sets the azimuth; a round map-style button with a red needle
@@ -67,13 +69,14 @@ Coriolis (latitude), spin drift and aerodynamic jump. Each tab keeps its scroll 
 - **Phone compass** for the azimuth, corrected for magnetic declination when the location is known. Each
   reading is checked: the phone's own calibration status and heading accuracy, and the measured field
   against the Earth's field at the location. A warning suggests a figure-eight calibration away from steel.
-- **Shot angle from the camera**: aim the crosshair at the target (the camera starts at 10× zoom, which
+- **Shot angle from the camera**: aim the crosshair at the target and press the shutter button (the camera starts at 10× zoom, which
   picks the telephoto lens where there is one) and the gravity sensor gives the angle, in portrait or
   landscape. A two-aim calibration (the second with the phone turned over) removes the camera's tilt in
   the body; the sensor's own error, typically 0.5–1°, remains.
-- **Latitude** with its hemisphere as the unit (tap °N to switch to °S), or from the phone's location with the Locate button (its accuracy shows under it).
-- **Pressure from a Garmin watch**: the barometer's station pressure, sent by a small Connect IQ watch
-  app through Garmin Connect. See [garmin](garmin/README.md) for installing it.
+- **Latitude** with its hemisphere as the unit (tap °N to switch to °S); the altitude button sets it too.
+- **Pressure measurement** (Settings → Data sources: Off, Garmin or Phone, with a Test button): station
+  pressure from the phone's own barometer, or from a Garmin watch through a small Connect IQ watch app and
+  Garmin Connect ([Station Pressure](https://apps.garmin.com/apps/2ec4993f-ced4-4fde-ad88-8541ef96c7b2) in the Connect IQ Store; see [garmin](garmin/README.md)).
 - **Wind from the forecast**: the hourly forecast for the phone's location
   ([Open-Meteo](https://open-meteo.com), free for non-commercial use) as a 12-hour chart of mean wind, gusts
   and direction arrows (as a clock or true bearings, set in Settings). Drag the window over the hours you will
@@ -81,9 +84,10 @@ Coriolis (latitude), spin drift and aerodynamic jump. Each tab keeps its scroll 
   forecast can be scaled to the shooting height (10 m, open ground or woods at ~2 m), and the direction is
   converted to the line of fire with the shot azimuth. Temperature, humidity and pressure can be filled in
   from the same forecast; the direction swing of the chosen hours feeds the wind bracket chart.
-- **Altitude source** (Settings → Measurements and location): typed in, the terrain map (GUGiK's 1 m lidar
-  model in Poland, a 90 m model via Open-Meteo elsewhere) or GPS, converted to height above sea level. The
-  Garmin and altitude buttons sit side by side under their fields.
+- **Altitude** (Settings → Data sources): the button under the field reads the terrain map (GUGiK's 1 m lidar
+  model in Poland, a 90 m model via Open-Meteo elsewhere) or GPS, converted to height above sea level, and
+  sets the latitude from the same fix (untick "Latitude from location" to keep it). The field can always be
+  typed in. The pressure and altitude buttons sit side by side under their fields.
 
 ### Chronograph import
 The Chrono button on the Rifle tab opens a chronograph file, or the file can be shared or opened into the app
@@ -103,10 +107,19 @@ with an arrow or a tap on the open tab. The DOPE range and step are set below it
 ### Target
 Pick a distance to the metre with the slider, the arrows or by typing it (all in one row), and get the
 hold and the dial correction for it. Per reticle design (MRAD and MOA versions together), Settings chooses whether elevation and windage are dialed
-or held. Dial corrections are whole clicks and holds are to 0.05; the reticle shows the holds left after dialing for the chosen distance.
-- Moving target, switched on with a checkbox: its speed and its course on a small dial (up = away,
-  right = to the right). The lead uses the time of
-  flight to where the target will be, and its hold point is drawn on the reticle in blue.
+or held. Dial corrections are whole clicks and holds are to 0.05; the reticle shows the holds left after dialing for the chosen distance,
+with one line of hold advice per axis under it.
+- Turrets: the elevation turret above the reticle and the windage turret to its right show what to dial, in
+  the scope's unit with its turret correction. Drag a turret to turn it by whole clicks (it stays turned at
+  every distance and the holds follow); the round button in the corner resets both to the computed values.
+  With windage dialed, orange marks show the forecast's lightest and strongest wind beside the aim point.
+- Wind flag: a green flag in the upper left of the lens leans with the wind's strength (Beaufort), with the
+  speed and the expected range beside it and a small top-down dial for its direction.
+- Moving target, switched on with the running figure in the distance row: its speed in the field beside the
+  distance and its course on a small see-through dial in the lens (up = away, right = to the right). The lead
+  uses the time of flight to where the target will be; its hold point is drawn on the reticle in blue, with
+  the hold on a plate beside it.
+- A compass above the lens shows the shot azimuth.
 - Impact points drawn on the scope's reticle, with a magnification slider; the same holds can be
   previewed on any other reticle.
 - Charts at that distance: wind drift correction by wind speed (one line per wind direction) and by wind
@@ -116,13 +129,13 @@ or held. Dial corrections are whole clicks and holds are to 0.05; the reticle sh
   (elevation) by azimuth.
 - Reading the charts: a finger moves a point and its callout along the curve, and the x value shows on a chip
   under the line; the reading stays when the finger lifts, a tap clears it, and on the charts by distance a
-  finger held still picks that distance. Each chart has its own switch in Settings → Layout → Charts, and
+  finger held still picks that distance. Each chart has its own switch in Settings → Display → Charts, and
   charts are worked out only for open cards.
 - Range card: targets saved as sub-tabs (distance, look angle, azimuth, motion and size). Changes made
   while a target is open are saved to it.
 - Wind bracket: holds for the lightest and the strongest expected wind, drawn on a zoomed slice of the
   reticle with the spread between them, and a chart of both by wind direction with the forecast's direction
-  swing as a band; the forecast fills both speeds in.
+  swing as a band; the forecast fills both speeds in, and its gusts raise the strongest.
 - Range error: where the shot lands (rows like "−50 m ↑ 22 cm") when the distance is off by up to ±50 m,
   a chart of it, and the error that still hits a target of the given height.
 - Temperature: muzzle velocity and elevation 10 °C colder and warmer.
@@ -143,13 +156,21 @@ the phone and is never synced.
 
 ### Help
 The question mark on the Rifle tab, next to the gear: short answers on getting started, the zero, QNH or station pressure,
-muzzle velocity, the suppressor, wind, the forecast, altitude, the Garmin watch, shot angle, chronograph import, the Target
+muzzle velocity, the suppressor, turret units and correction, wind, the forecast, altitude, the Garmin watch, shot angle, chronograph import, the Target
 screen, moving targets, the Target tools, charts, the DOPE, sync, stealth mode, updates (GitHub build only) and accuracy.
 
 ### Settings
-The gear on the Rifle tab: light, dark or system theme; keep the screen on; tabs and sub-tabs at the top
-or the bottom; chart switches; QNH (default) or station pressure; forecast direction as a clock or true bearings; external devices (Garmin watch for pressure); whether location sets the latitude, and where the altitude comes from;
-dial or hold for elevation and windage, per reticle; stealth mode (GPS and the watch allowed or not, the bar, the tile); sync and backup.
+The gear on the Rifle tab, in this order:
+- **Profiles**: rifles and loads.
+- **Ballistic model**: spin drift, aerodynamic jump and Coriolis on or off.
+- **Data sources**, in the order of the Conditions tab: QNH (default) or station pressure; pressure
+  measurement (Off, Garmin or Phone) with a Test button; altitude from the terrain map or GPS; whether the
+  location also sets the latitude; forecast direction as a clock or true bearings.
+- **Stealth mode**, with its main switch in the header: GPS and the watch allowed or not, the bar, the tile.
+- **Display**: light, dark or system theme; keep the screen on; tabs and sub-tabs at the top or the bottom;
+  charts (one switch, and an arrow that opens the per-chart list).
+- **Corrections**: dial or hold for elevation and windage, per reticle, with the reticles of your scopes first.
+- **Sync** and backup, and **About**.
 
 ### Sync and backup
 - Google sign-in (the icon-only Sign in with Google button, the Google "G") with live sync through Cloud Firestore (newer change wins). Signed in, Settings shows a cloud icon (red on a sync error) and the same G button, which asks "Sign out <email>?".
