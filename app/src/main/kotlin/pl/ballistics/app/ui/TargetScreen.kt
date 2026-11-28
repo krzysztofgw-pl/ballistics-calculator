@@ -773,10 +773,10 @@ private fun ReticleView(
                 val p = at(h.x, h.y)
                 drawCircle(moving, 5.dp.toPx(), p)
                 drawCircle(moving, 9.dp.toPx(), p, style = Stroke(1.5.dp.toPx()))
-                // Its hold sits on a faint plate in a corner of the lens: bottom left, top right or bottom right
-                // (the upper left holds the wind flag), whichever covers fewest trajectory dots and their
-                // figures, in that order on a tie. The plate is pushed as deep into the corner as the round
-                // lens lets it, so it stays clear of the middle.
+                // Its hold sits on a faint plate in a corner of the lens on the lead dot's side (Krzysiek: the
+                // advice belongs with the blue dot): bottom left when the dot is left (the upper left holds the
+                // wind flag), top right or bottom right when it is right. Along the rim of that corner it takes
+                // the spot covering fewest trajectory dots and their figures, then the one deepest in the corner.
                 leadText?.let { t ->
                     val layout = text.measure(t, TextStyle(fontSize = 11.sp, color = Color(0xFF1565C0)))
                     val pad = 4.dp.toPx()
@@ -786,34 +786,33 @@ private fun ReticleView(
                     val figure = 26.dp.toPx()
                     val dots = holds.map { at(it.x, it.y) }
                     val rim = radius - margin
-                    // [right]/[below]: the corner's side. The plate's outer corner goes on the rim at the angle
-                    // (from the horizontal) that takes it deepest into the corner along the diagonal.
-                    fun corner(right: Boolean, below: Boolean): Offset {
+                    val corners = when {
+                        p.x < c.x - 1f -> listOf(false to true)
+                        p.x > c.x + 1f -> listOf(true to false, true to true)
+                        else -> listOf(false to true, true to false, true to true)
+                    }
+                    // [right]/[below]: the corner's side. The plate's outer corner goes on the rim, at angles
+                    // (from the horizontal) where the whole plate stays inside the lens.
+                    val best = corners.flatMap { (right, below) ->
                         val sx = if (right) 1f else -1f
                         val sy = if (below) 1f else -1f
-                        fun place(dx: Float, dy: Float) = Offset(
-                            if (right) c.x + dx - w else c.x - dx,
-                            if (below) c.y + dy - hgt else c.y - dy,
-                        )
-                        return (5..85).map { deg ->
+                        (5..85).map { deg ->
                             val a = Math.toRadians(deg.toDouble())
-                            place((rim * cos(a)).toFloat(), (rim * sin(a)).toFloat())
+                            val dx = (rim * cos(a)).toFloat()
+                            val dy = (rim * sin(a)).toFloat()
+                            Offset(if (right) c.x + dx - w else c.x - dx, if (below) c.y + dy - hgt else c.y - dy)
                         }.filter { o ->
-                            // All four corners inside the lens.
                             listOf(o, o + Offset(w, 0f), o + Offset(0f, hgt), o + Offset(w, hgt))
                                 .all { (it - c).getDistance() <= rim + 0.5f }
-                        }.maxByOrNull { o ->
+                        }.map { o ->
+                            val covered = dots.count { d ->
+                                d.x > o.x - figure && d.x < o.x + w + figure && d.y > o.y - 4.dp.toPx() && d.y < o.y + hgt + 4.dp.toPx()
+                            } + (if (abs(p.x - (o.x + w / 2)) < w / 2 + 9.dp.toPx() && abs(p.y - (o.y + hgt / 2)) < hgt / 2 + 9.dp.toPx()) 5 else 0)
                             val mid = o + Offset(w / 2, hgt / 2) - c
-                            sx * mid.x + sy * mid.y
-                        } ?: place(rim * 0.7f, rim * 0.7f)
-                    }
-                    val best = listOf(false to true, true to false, true to true).map { (right, below) ->
-                        val o = corner(right, below)
-                        val covered = dots.count { d ->
-                            d.x > o.x - figure && d.x < o.x + w + figure && d.y > o.y - 4.dp.toPx() && d.y < o.y + hgt + 4.dp.toPx()
-                        } + (if (abs(p.x - (o.x + w / 2)) < w / 2 + 9.dp.toPx() && abs(p.y - (o.y + hgt / 2)) < hgt / 2 + 9.dp.toPx()) 5 else 0)
-                        o to covered
-                    }.minBy { it.second }
+                            o to covered * 10_000f - (sx * mid.x + sy * mid.y)
+                        }
+                    }.minByOrNull { it.second }
+                        ?: (Offset(c.x - rim * 0.7f, c.y + rim * 0.7f - hgt) to 0f)
                     val x = best.first.x
                     val y = best.first.y
                     drawRoundRect(Color.White.copy(alpha = 0.6f), Offset(x, y), Size(w, hgt), CornerRadius(4.dp.toPx()))
